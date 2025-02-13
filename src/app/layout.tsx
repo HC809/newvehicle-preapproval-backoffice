@@ -6,10 +6,11 @@ import { NuqsAdapter } from 'nuqs/adapters/next/app';
 import { Lato } from 'next/font/google';
 import NextTopLoader from 'nextjs-toploader';
 import './globals.css';
+import { TokenProvider } from '@/features/auth/TokenContext';
 
 export const metadata: Metadata = {
-  title: 'Next Shadcn',
-  description: 'Basic dashboard with Next.js and Shadcn'
+  title: 'COFISA',
+  description: 'COFISA'
 };
 
 const lato = Lato({
@@ -31,7 +32,7 @@ export default async function RootLayout({
         <NuqsAdapter>
           <Providers session={session}>
             <Toaster />
-            {children}
+            <TokenProvider>{children}</TokenProvider>
           </Providers>
         </NuqsAdapter>
       </body>

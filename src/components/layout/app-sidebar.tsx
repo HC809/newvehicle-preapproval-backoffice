@@ -27,8 +27,8 @@ import {
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
-  SidebarRail,
-  useSidebar
+  SidebarRail
+  //useSidebar
 } from '@/components/ui/sidebar';
 import { navItems } from '@/constants/data';
 import {
@@ -47,7 +47,7 @@ import * as React from 'react';
 import { Icons } from '../icons';
 
 export const company = {
-  name: 'Acme Inc',
+  name: 'COFISA',
   logo: GalleryVerticalEnd,
   plan: 'Enterprise'
 };
@@ -55,7 +55,7 @@ export const company = {
 export default function AppSidebar() {
   const { data: session } = useSession();
   const pathname = usePathname();
-  const { state, isMobile } = useSidebar();
+  // const { state, isMobile } = useSidebar();
 
   return (
     <Sidebar collapsible='icon'>
@@ -191,23 +191,23 @@ export default function AppSidebar() {
                 <DropdownMenuSeparator />
 
                 <DropdownMenuGroup>
-                  <DropdownMenuItem>
+                  {/* <DropdownMenuItem>
                     <BadgeCheck />
                     Account
                   </DropdownMenuItem>
                   <DropdownMenuItem>
                     <CreditCard />
                     Billing
-                  </DropdownMenuItem>
+                  </DropdownMenuItem> */}
                   <DropdownMenuItem>
                     <Bell />
-                    Notifications
+                    Notificationes
                   </DropdownMenuItem>
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => signOut()}>
                   <LogOut />
-                  Log out
+                  Cerrar sesión
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

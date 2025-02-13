@@ -1,9 +1,8 @@
 import { buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { GitHubLogoIcon } from '@radix-ui/react-icons';
-import { StarIcon } from 'lucide-react';
 import { Metadata } from 'next';
 import Link from 'next/link';
+import Image from 'next/image';
 import UserAuthForm from './user-auth-form';
 
 export const metadata: Metadata = {
@@ -26,66 +25,45 @@ export default function SignInViewPage({ stars }: { stars: number }) {
       <div className='relative hidden h-full flex-col bg-muted p-10 text-white dark:border-r lg:flex'>
         <div className='absolute inset-0 bg-zinc-900' />
         <div className='relative z-20 flex items-center text-lg font-medium'>
-          <svg
-            xmlns='http://www.w3.org/2000/svg'
-            viewBox='0 0 24 24'
-            fill='none'
-            stroke='currentColor'
-            strokeWidth='2'
-            strokeLinecap='round'
-            strokeLinejoin='round'
-            className='mr-2 h-6 w-6'
-          >
-            <path d='M15 6v12a3 3 0 1 0 3-3H6a3 3 0 1 0 3 3V6a3 3 0 1 0-3 3h12a3 3 0 1 0-3-3' />
-          </svg>
-          Logo
+          <Image
+            src='/images/cofisa-logo-dark.png'
+            alt='COFISA Logo'
+            width={200}
+            height={80}
+            priority
+          />
         </div>
         <div className='relative z-20 mt-auto'>
           <blockquote className='space-y-2'>
             <p className='text-lg'>
-              &ldquo;This starter template has saved me countless hours of work
-              and helped me deliver projects to my clients faster than ever
-              before.&rdquo;
+              &ldquo;Seamos positivos y veamos oportunidades donde hay
+              dificultades.&rdquo;
             </p>
-            <footer className='text-sm'>Random Dude</footer>
+            <footer className='text-sm'>Roger Valladares</footer>
           </blockquote>
         </div>
       </div>
       <div className='flex h-full items-center p-4 lg:p-8'>
         <div className='mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]'>
-          {/* github link  */}
-          <Link
-            className={cn(
-              buttonVariants({
-                variant: 'ghost'
-              }),
-              'group inline-flex hover:text-yellow-200'
-            )}
-            target='_blank'
-            href={'https://github.com/kiranism/next-shadcn-dashboard-starter'}
-          >
-            <div className='flex items-center'>
-              <GitHubLogoIcon className='size-4' />
-              <span className='ml-1 inline'>Star on GitHub</span>{' '}
-            </div>
-            <div className='ml-2 flex items-center gap-1 text-sm md:flex'>
-              <StarIcon
-                className='size-4 text-gray-500 transition-all duration-300 group-hover:text-yellow-300'
-                fill='currentColor'
-              />
-              <span className='font-display font-medium'>{stars}</span>
-            </div>
-          </Link>
+          <div className='flex justify-center'>
+            <Image
+              src='/images/cofisa-logo.png'
+              alt='COFISA Logo'
+              width={200}
+              height={80}
+              priority
+            />
+          </div>
           <div className='flex flex-col space-y-2 text-center'>
             <h1 className='text-2xl font-semibold tracking-tight'>
-              Create an account
+              Iniciar Sesión
             </h1>
             <p className='text-sm text-muted-foreground'>
-              Enter your email below to create your account
+              Ingrese sus credenciales para acceder al sistema
             </p>
           </div>
           <UserAuthForm />
-          <p className='px-8 text-center text-sm text-muted-foreground'>
+          {/* <p className='px-8 text-center text-sm text-muted-foreground'>
             By clicking continue, you agree to our{' '}
             <Link
               href='/terms'
@@ -101,7 +79,7 @@ export default function SignInViewPage({ stars }: { stars: number }) {
               Privacy Policy
             </Link>
             .
-          </p>
+          </p> */}
         </div>
       </div>
     </div>

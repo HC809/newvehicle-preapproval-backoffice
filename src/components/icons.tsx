@@ -1,4 +1,5 @@
 import {
+  Store,
   AlertTriangle,
   ArrowRight,
   Check,
@@ -64,6 +65,7 @@ export const Icons = {
   sun: SunMedium,
   moon: Moon,
   laptop: Laptop,
+  concesionaria: Store,
   gitHub: ({ ...props }: LucideProps) => (
     <svg
       aria-hidden='true'

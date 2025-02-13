@@ -16,7 +16,6 @@ import { useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import * as z from 'zod';
-import GithubSignInButton from './github-auth-button';
 
 const formSchema = z.object({
   email: z.string().email({ message: 'Enter a valid email address' })
@@ -29,7 +28,7 @@ export default function UserAuthForm() {
   const callbackUrl = searchParams.get('callbackUrl');
   const [loading, startTransition] = useTransition();
   const defaultValues = {
-    email: 'demo@gmail.com'
+    email: 'hector.caballero@cofisa.hn'
   };
   const form = useForm<UserFormValue>({
     resolver: zodResolver(formSchema),
@@ -42,7 +41,7 @@ export default function UserAuthForm() {
         email: data.email,
         callbackUrl: callbackUrl ?? '/dashboard'
       });
-      toast.success('Signed In Successfully!');
+      toast.success('¡Inicio de sesión exitoso!');
     });
   };
 
@@ -58,7 +57,7 @@ export default function UserAuthForm() {
             name='email'
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Email</FormLabel>
+                <FormLabel>Correo Electrónico</FormLabel>
                 <FormControl>
                   <Input
                     type='email'
@@ -73,11 +72,11 @@ export default function UserAuthForm() {
           />
 
           <Button disabled={loading} className='ml-auto w-full' type='submit'>
-            Continue With Email
+            Iniciar Sesión
           </Button>
         </form>
       </Form>
-      <div className='relative'>
+      {/* <div className='relative'>
         <div className='absolute inset-0 flex items-center'>
           <span className='w-full border-t' />
         </div>
@@ -86,8 +85,7 @@ export default function UserAuthForm() {
             Or continue with
           </span>
         </div>
-      </div>
-      <GithubSignInButton />
+      </div> */}
     </>
   );
 }

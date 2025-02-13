@@ -1,6 +1,7 @@
-import { NextAuthConfig } from 'next-auth';
+import { NextAuthConfig, Session, User } from 'next-auth';
 import CredentialProvider from 'next-auth/providers/credentials';
 import GithubProvider from 'next-auth/providers/github';
+import dayjs from 'dayjs';
 
 const authConfig = {
   providers: [
@@ -17,14 +18,31 @@ const authConfig = {
           type: 'password'
         }
       },
-      async authorize(credentials, req) {
+      async authorize(credentials): Promise<User | null> {
         const user = {
           id: '1',
-          name: 'John',
+          name: 'Hector Caballero',
           email: credentials?.email as string
         };
         if (user) {
-          // Any object returned will be saved in `user` property of the JWT
+          // Mock data for testing
+          const mockData = {
+            email: 'hector.caballero@example.com',
+            fullName: 'Hector Caballero',
+            role: 'USER',
+            token: 'mock-jwt-token',
+            expiresIn: new Date(Date.now() + 3600000) // 1 hour from now
+          };
+
+          const user: User = {
+            id: mockData.email,
+            name: mockData.fullName,
+            email: mockData.email,
+            role: mockData.role,
+            token: mockData.token,
+            expiresIn: mockData.expiresIn
+          };
+
           return user;
         } else {
           // If you return null then an error will be displayed advising the user to check their details.
@@ -35,6 +53,42 @@ const authConfig = {
       }
     })
   ],
+  session: {
+    strategy: 'jwt'
+  },
+  callbacks: {
+    async signIn() {
+      return true;
+    },
+    async jwt({ token, user }) {
+      if (user) {
+        token.data = user;
+        token.accessToken = user.token;
+        token.expiresIn = user.expiresIn;
+      }
+
+      return token;
+    },
+    async session({ session, token }) {
+      if (!token) {
+        return {
+          ...session,
+          accessToken: '',
+          user: null as any,
+          isSystemAdmin: false
+        };
+      }
+
+      session.accessToken = String(token.accessToken);
+      session.user = token.data as any;
+      session.isSystemAdmin = session.user.role === 'NoemiSuperAdmin';
+
+      const expiresIn = dayjs(token.expiresIn as Date);
+      session.expires = expiresIn.toDate();
+
+      return session as Session;
+    }
+  },
   pages: {
     signIn: '/' //sigin page
   }
