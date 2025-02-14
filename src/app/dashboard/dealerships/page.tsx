@@ -3,17 +3,15 @@
 import PageContainer from '@/components/layout/page-container';
 import { Heading } from '@/components/ui/heading';
 import { Separator } from '@/components/ui/separator';
-import { DataTableSkeleton } from '@/components/ui/table/data-table-skeleton';
-import { Plus } from 'lucide-react';
-import Link from 'next/link';
 import { cn } from '@/lib/utils';
-import { Button, buttonVariants } from '@/components/ui/button';
+import { Button } from '@/components/ui/button';
 import useAxios from '@/hooks/use-axios';
 import useSWR from 'swr';
 import { Dealership } from 'types/Dealerships';
 import ErrorAlert from '@/components/custom/error-alert';
 import { ReloadIcon } from '@radix-ui/react-icons';
 import DealershipListingPage from '@/features/dealerships/components/dealership-listing';
+import DealershipForm from '@/features/dealerships/components/dealership-form';
 
 export default function DealershipsPage() {
   const apiClient = useAxios();
@@ -22,6 +20,11 @@ export default function DealershipsPage() {
     if (!apiClient) return;
     const response = await apiClient.get(url);
     return response.data;
+  };
+
+  const handleCreateDealership = async (values: any) => {
+    await apiClient?.post('/dealerships/create', values);
+    mutate(); // Recargar la lista después de crear
   };
 
   const {
@@ -45,12 +48,7 @@ export default function DealershipsPage() {
             title='Concesionarias'
             description='Administración de concesionarias.'
           />
-          <Link
-            href='/dashboard/dealerships/new'
-            className={cn(buttonVariants(), 'text-xs md:text-sm')}
-          >
-            <Plus className='mr-2 h-4 w-4' /> Agregar
-          </Link>
+          <DealershipForm onSubmit={handleCreateDealership} />
         </div>
 
         <Separator />

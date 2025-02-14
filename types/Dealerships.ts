@@ -1,7 +1,11 @@
-export interface Dealership {
-  id: string;
+export interface DealershipForm {
   name: string;
   address: string;
   phoneNumber: string;
   email: string;
+  contactPerson: string;
+}
+
+export interface Dealership extends DealershipForm {
+  id: string;
 }
