@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -26,8 +26,9 @@ import * as z from 'zod';
 import { DealershipForm as IDealershipForm } from 'types/Dealerships';
 import { useState } from 'react';
 import { ReloadIcon } from '@radix-ui/react-icons';
-import { cn } from '@/lib/utils';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { SaveIcon } from 'lucide-react';
+import { useDealershipStore } from '@/stores/dealership-store';
 
 const formSchema = z.object({
   name: z.string().min(2, {
@@ -48,57 +49,62 @@ const formSchema = z.object({
 }) satisfies z.ZodType<IDealershipForm>;
 
 type DealershipFormProps = {
-  initialData?: IDealershipForm | null;
-  onSubmit: (values: IDealershipForm) => void;
+  onSubmit: (values: IDealershipForm) => Promise<void>;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 };
 
 export default function DealershipForm({
-  initialData,
-  onSubmit
+  onSubmit,
+  open,
+  onOpenChange
 }: DealershipFormProps) {
+  const { dealershipToEdit } = useDealershipStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const defaultValues = {
-    name: initialData?.name || '',
-    address: initialData?.address || '',
-    phoneNumber: initialData?.phoneNumber || '',
-    email: initialData?.email || '',
-    contactPerson: initialData?.contactPerson || ''
+  const defaultValues: z.infer<typeof formSchema> = {
+    name: dealershipToEdit?.name ?? '',
+    address: dealershipToEdit?.address ?? '',
+    phoneNumber: dealershipToEdit?.phoneNumber ?? '',
+    email: dealershipToEdit?.email ?? '',
+    contactPerson: dealershipToEdit?.contactPerson ?? ''
   };
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues
+    defaultValues,
+    values: defaultValues
   });
+
+  useEffect(() => {
+    if (dealershipToEdit) {
+      const values = {
+        name: dealershipToEdit.name ?? '',
+        address: dealershipToEdit.address ?? '',
+        phoneNumber: dealershipToEdit.phoneNumber ?? '',
+        email: dealershipToEdit.email ?? '',
+        contactPerson: dealershipToEdit.contactPerson ?? ''
+      };
+      form.reset(values);
+    }
+  }, [dealershipToEdit, form]);
 
   const handleSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsSubmitting(true);
     setError(null);
     try {
       await onSubmit(values);
+      onOpenChange(false);
     } catch (err) {
-      console.log(err);
       setError(err as string);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleOpenChange = (open: boolean) => {
-    if (!open) {
-      form.reset();
-      setError(null);
-    }
-  };
-
   return (
-    <Dialog onOpenChange={handleOpenChange}>
-      <DialogTrigger asChild>
-        <Button variant='default'>
-          {initialData ? 'Editar Concesionaria' : 'Agregar Concesionaria'}
-        </Button>
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         className='sm:max-w-[800px]'
         onEscapeKeyDown={(event) => event.preventDefault()}
@@ -106,10 +112,10 @@ export default function DealershipForm({
       >
         <DialogHeader>
           <DialogTitle>
-            {initialData ? 'Editar Concesionaria' : 'Nueva Concesionaria'}
+            {dealershipToEdit ? 'Editar Concesionaria' : 'Nueva Concesionaria'}
           </DialogTitle>
           <DialogDescription>
-            {initialData
+            {dealershipToEdit
               ? 'Modifique los datos de la concesionaria en el formulario a continuación.'
               : 'Complete los datos de la nueva concesionaria en el formulario a continuación.'}
           </DialogDescription>
@@ -222,12 +228,14 @@ export default function DealershipForm({
                 </Button>
               </DialogTrigger>
               <Button type='submit' disabled={isSubmitting}>
-                <ReloadIcon
-                  className={cn('mr-2 h-4 w-4', isSubmitting && 'animate-spin')}
-                />
+                {isSubmitting ? (
+                  <ReloadIcon className='mr-2 h-4 w-4 animate-spin' />
+                ) : (
+                  <SaveIcon className='mr-2 h-4 w-4' />
+                )}
                 {isSubmitting
                   ? 'Guardando...'
-                  : `${initialData ? 'Actualizar' : 'Crear'} Concesionaria`}
+                  : `${dealershipToEdit ? 'Actualizar' : 'Crear'} Concesionaria`}
               </Button>
             </div>
           </form>

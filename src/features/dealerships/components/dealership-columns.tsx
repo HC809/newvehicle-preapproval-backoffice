@@ -8,32 +8,42 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import { MoreHorizontal } from 'lucide-react';
 import { Dealership } from 'types/Dealerships';
 
-export const dealershipColumns: ColumnDef<Dealership>[] = [
+export const DealershipColumns = (
+  setDealershipToEdit: (dealership: Dealership) => void
+): ColumnDef<Dealership>[] => [
   {
     accessorKey: 'name',
-    header: 'Nombre'
+    header: () => <span className='font-bold'>Nombre</span>
   },
   {
     accessorKey: 'address',
-    header: 'Dirección'
+    header: () => <span className='font-bold'>Dirección</span>
   },
   {
     accessorKey: 'email',
-    header: 'Correo Electrónico'
+    header: () => <span className='font-bold'>Correo Electrónico</span>
   },
   {
     accessorKey: 'phoneNumber',
-    header: 'Número de Teléfono'
+    header: () => <span className='font-bold'>Número de Teléfono</span>
   },
   {
     id: 'actions',
-    cell: ({ row }) => {
-      //const dealership = row.original
+    header: function DealershipActionsHeader() {
+      return <span className='font-bold'>Acciones</span>;
+    },
+    cell: function DealershipActionsCell({ row }) {
+      const dealership = row.original;
+
+      function handleEditClick() {
+        setDealershipToEdit(dealership);
+      }
 
       return (
         <DropdownMenu>
@@ -45,7 +55,10 @@ export const dealershipColumns: ColumnDef<Dealership>[] = [
           </DropdownMenuTrigger>
           <DropdownMenuContent align='end'>
             <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-            <DropdownMenuItem>Editar</DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={handleEditClick}>
+              Editar
+            </DropdownMenuItem>
             <DropdownMenuItem>Eliminar</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
