@@ -15,7 +15,8 @@ import { MoreHorizontal } from 'lucide-react';
 import { Dealership } from 'types/Dealerships';
 
 export const DealershipColumns = (
-  setDealershipToEdit: (dealership: Dealership) => void
+  setDealershipToEdit: (dealership: Dealership) => void,
+  setDealershipToDelete: (dealership: Dealership) => void
 ): ColumnDef<Dealership>[] => [
   {
     accessorKey: 'name',
@@ -45,6 +46,10 @@ export const DealershipColumns = (
         setDealershipToEdit(dealership);
       }
 
+      function handleDeleteClick() {
+        setDealershipToDelete(dealership);
+      }
+
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -59,7 +64,9 @@ export const DealershipColumns = (
             <DropdownMenuItem onClick={handleEditClick}>
               Editar
             </DropdownMenuItem>
-            <DropdownMenuItem>Eliminar</DropdownMenuItem>
+            <DropdownMenuItem onClick={handleDeleteClick}>
+              Eliminar
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       );

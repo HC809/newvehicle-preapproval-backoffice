@@ -17,11 +17,18 @@ import { ReloadIcon } from '@radix-ui/react-icons';
 import DealershipListingPage from '@/features/dealerships/components/dealership-listing';
 import DealershipForm from '@/features/dealerships/components/dealership-form';
 import { useDealershipStore } from '@/stores/dealership-store';
+import { AlertModal } from '@/components/modal/alert-modal';
 
 export default function DealershipsPage() {
   const apiClient = useAxios();
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const { dealershipToEdit, setDealershipToEdit } = useDealershipStore();
+  const [isDeleting, setIsDeleting] = useState(false);
+  const {
+    dealershipToEdit,
+    setDealershipToEdit,
+    dealershipToDelete,
+    setDealershipToDelete
+  } = useDealershipStore();
 
   const fetcher = async (url: string) => {
     if (!apiClient) return;
@@ -46,6 +53,19 @@ export default function DealershipsPage() {
         ...values
       });
       mutate();
+    }
+  };
+
+  const handleDeleteDealership = async (): Promise<void> => {
+    if (!dealershipToDelete) return;
+
+    try {
+      setIsDeleting(true);
+      await apiClient?.delete(`/dealerships/delete/${dealershipToDelete.id}`);
+      setDealershipToDelete(null);
+      mutate();
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -109,6 +129,16 @@ export default function DealershipsPage() {
               }
               open={isFormOpen || !!dealershipToEdit}
               onOpenChange={handleOpenChange}
+            />
+            <AlertModal
+              isOpen={!!dealershipToDelete}
+              loading={isDeleting}
+              onClose={() => setDealershipToDelete(null)}
+              onConfirm={handleDeleteDealership}
+              title='Eliminar Concesionaria'
+              description={`¿Está seguro que desea eliminar la concesionaria "${dealershipToDelete?.name}"? Esta acción no se puede deshacer.`}
+              confirmLabel='Eliminar'
+              cancelLabel='Cancelar'
             />
           </>
         )}

@@ -5,6 +5,8 @@ import { Dealership } from 'types/Dealerships';
 interface DealershipStore {
   dealershipToEdit: Dealership | null;
   setDealershipToEdit: (dealership: Dealership | null) => void;
+  dealershipToDelete: Dealership | null;
+  setDealershipToDelete: (dealership: Dealership | null) => void;
 }
 
 let store: ReturnType<typeof createStore>;
@@ -19,6 +21,13 @@ function createStore() {
             { dealershipToEdit: dealership },
             false,
             'dealership/setDealershipToEdit' // Nombre de la acción para Redux DevTools
+          ),
+        dealershipToDelete: null,
+        setDealershipToDelete: (dealership) =>
+          set(
+            { dealershipToDelete: dealership },
+            false,
+            'dealership/setDealershipToDelete'
           )
       }),
       {

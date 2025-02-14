@@ -18,7 +18,7 @@ export default function DealershipListingPage({
   totalItems,
   isLoading
 }: DealershipListingPageProps) {
-  const { setDealershipToEdit } = useDealershipStore();
+  const { setDealershipToEdit, setDealershipToDelete } = useDealershipStore();
 
   if (isLoading) {
     return <DataTableSkeleton columnCount={5} rowCount={10} />;
@@ -30,7 +30,7 @@ export default function DealershipListingPage({
 
   return (
     <DealershipsTable
-      columns={DealershipColumns(setDealershipToEdit)}
+      columns={DealershipColumns(setDealershipToEdit, setDealershipToDelete)}
       data={dealerships}
       totalItems={totalItems}
     />
