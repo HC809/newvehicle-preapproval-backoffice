@@ -13,13 +13,13 @@ import useSWR from 'swr';
 import { Dealership } from 'types/Dealerships';
 import ErrorAlert from '@/components/custom/error-alert';
 import { ReloadIcon } from '@radix-ui/react-icons';
+import DealershipListingPage from '@/features/dealerships/components/dealership-listing';
 
-export default function NamePage() {
+export default function DealershipsPage() {
   const apiClient = useAxios();
 
   const fetcher = async (url: string) => {
     if (!apiClient) return;
-
     const response = await apiClient.get(url);
     return response.data;
   };
@@ -28,21 +28,14 @@ export default function NamePage() {
     data: dealerships,
     error,
     isLoading,
+    isValidating,
     mutate
-  } = useSWR<Dealership[]>(apiClient ? '/dealerships' : null, fetcher);
-
-  if (error)
-    return (
-      <>
-        <ErrorAlert error={error} />
-        <Button className='mt-2' onClick={() => mutate()}>
-          <ReloadIcon className='mr-2 h-4 w-4' /> Reintentar
-        </Button>
-      </>
-    );
-
-  if (!isLoading && dealerships?.length === 0)
-    return <div>No hay concesionarias disponibles.</div>;
+  } = useSWR<Dealership[]>(apiClient ? '/dealerships' : null, fetcher, {
+    revalidateIfStale: false,
+    revalidateOnFocus: false,
+    revalidateOnReconnect: true,
+    refreshInterval: 0
+  });
 
   return (
     <PageContainer scrollable={false}>
@@ -53,21 +46,34 @@ export default function NamePage() {
             description='Administración de concesionarias.'
           />
           <Link
-            href='/dashboard/product/new'
+            href='/dashboard/dealerships/new'
             className={cn(buttonVariants(), 'text-xs md:text-sm')}
           >
-            <Plus className='mr-2 h-4 w-4' /> Add New
+            <Plus className='mr-2 h-4 w-4' /> Agregar
           </Link>
         </div>
+
         <Separator />
-        {isLoading ? (
-          <DataTableSkeleton columnCount={5} rowCount={10} />
-        ) : (
-          <div>
-            {dealerships?.map((dealership) => (
-              <div key={dealership.id}>{dealership.name}</div>
-            ))}
+
+        {error ? (
+          <div className='space-y-4'>
+            <ErrorAlert error={error} />
+            <div className='flex justify-center'>
+              <Button onClick={() => mutate()} disabled={isValidating}>
+                <ReloadIcon
+                  className={cn('mr-2 h-4 w-4', isValidating && 'animate-spin')}
+                />
+                {isValidating ? 'Cargando...' : 'Reintentar'}
+              </Button>
+            </div>
           </div>
+        ) : (
+          <DealershipListingPage
+            dealerships={dealerships || []}
+            totalItems={dealerships?.length || 0}
+            isValidating={isValidating}
+            isLoading={isLoading || !dealerships}
+          />
         )}
       </div>
     </PageContainer>

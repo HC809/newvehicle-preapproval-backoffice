@@ -43,8 +43,10 @@ export const createAxiosInstance = (
       }
 
       if (error.code === 'ERR_NETWORK') {
-        const errorMessage = `Error de red. Por favor, verifica tu conexión a internet o intenta de nuevo más tarde.
-                              Si el problema persiste, comuníquese con el administrador.`;
+        const isOnline = navigator?.onLine ?? true;
+        const errorMessage = isOnline
+          ? 'El servicio no está disponible en este momento. Por favor, intente más tarde o comuníquese con el administrador.'
+          : 'Error de red. Por favor, verifica tu conexión a internet.';
         return Promise.reject(errorMessage);
       }
 
