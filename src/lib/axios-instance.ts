@@ -10,7 +10,8 @@ export const createAxiosInstance = (
     headers: {
       'Content-Type': 'application/json'
     },
-    timeout: 5000
+    // Aumentar el timeout para desarrollo o eliminarlo
+    timeout: process.env.NODE_ENV === 'development' ? 0 : 5000 // 0 significa sin timeout
   });
 
   // Interceptor de solicitud
@@ -28,62 +29,46 @@ export const createAxiosInstance = (
   instance.interceptors.response.use(
     (response) => response,
     async (error: AxiosError) => {
+      let errorMessage = 'Ocurrió un error inesperado';
+
       // Handle 404 Not Found
       if (error.response?.status === 404) {
-        const errorMessage =
+        errorMessage =
           'Recurso no encontrado. Por favor, verifica la URL o intenta de nuevo más tarde.';
-        return Promise.reject(errorMessage);
       }
-
       // Handle network or connection errors
-      if (error.code === 'ECONNREFUSED') {
-        const errorMessage =
+      else if (error.code === 'ECONNREFUSED') {
+        errorMessage =
           'Error de conexión con el servidor. Comuníquese con el administrador.';
-        return Promise.reject(errorMessage);
-      }
-
-      if (error.code === 'ERR_NETWORK') {
+      } else if (error.code === 'ERR_NETWORK') {
         const isOnline = navigator?.onLine ?? true;
-        const errorMessage = isOnline
-          ? 'El servicio no está disponible en este momento. Por favor, intente más tarde o comuníquese con el administrador.'
+        errorMessage = isOnline
+          ? 'El servicio no está disponible en este momento. Por favor, intente más tarde.'
           : 'Error de red. Por favor, verifica tu conexión a internet.';
-        return Promise.reject(errorMessage);
-      }
-
-      if (error.response) {
+      } else if (error.response) {
         const { status, data } = error.response;
 
-        //Unauthorized access
         if (status === 401) {
           await signOut();
-          // const errorMessage = 'No autorizado. Por favor, inicia sesión nuevamente.';
-          // return Promise.reject(errorMessage);
-        }
-
-        // Unprocessable Entity (Validation errors) or Internal Server Error
-        if (status === 422 || status === 500) {
+          errorMessage = 'No autorizado. Por favor, inicia sesión nuevamente.';
+        } else if (status === 422 || status === 500) {
           const problemDetails = data as ProblemDetails;
           if (problemDetails.errors) {
-            const errorMessages = problemDetails.errors
+            errorMessage = problemDetails.errors
               .map((error) => error.errorMessage)
               .join(', ');
-            return Promise.reject(
-              errorMessages || problemDetails.detail || 'Error desconocido.'
-            );
+          } else {
+            errorMessage = problemDetails.detail || 'Error del servidor.';
           }
-          return Promise.reject(problemDetails.detail || 'Error desconocido.');
-        }
-
-        // Bad Request
-        if (status === 400) {
+        } else if (status === 400) {
           const customError = data as CustomError;
-          const errorMessage =
-            customError.description || 'Error en la solicitud.';
-          return Promise.reject(errorMessage);
+          errorMessage = customError.description || 'Error en la solicitud.';
         }
       }
 
-      return Promise.reject(error?.message || 'Ocurrió un error inesperado.');
+      // Crear un nuevo error con el mensaje formateado
+      const customError = new Error(errorMessage);
+      return Promise.reject(customError);
     }
   );
 

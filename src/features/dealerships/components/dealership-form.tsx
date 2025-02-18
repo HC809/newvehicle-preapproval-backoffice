@@ -1,13 +1,12 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
   DialogDescription
 } from '@/components/ui/dialog';
 import {
@@ -20,15 +19,20 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
-import * as z from 'zod';
-import { DealershipForm as IDealershipForm } from 'types/Dealerships';
-import { useState } from 'react';
 import { ReloadIcon } from '@radix-ui/react-icons';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { SaveIcon } from 'lucide-react';
 import { useDealershipStore } from '@/stores/dealership-store';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { DealershipForm as IDealershipForm } from 'types/Dealerships';
+import {
+  useCreateDealership,
+  useUpdateDealership
+} from '../api/dealership-service';
+import useAxios from '@/hooks/use-axios';
+import { getErrorMessage } from '@/utils/error-utils';
 
 const formSchema = z.object({
   name: z.string().min(2, {
@@ -42,79 +46,103 @@ const formSchema = z.object({
   }),
   email: z.string().email({
     message: 'Por favor ingrese un correo electrónico válido.'
-  }),
-  contactPerson: z.string().min(2, {
-    message: 'El nombre del contacto debe tener al menos 2 caracteres.'
   })
 }) satisfies z.ZodType<IDealershipForm>;
 
 type DealershipFormProps = {
-  onSubmit: (values: IDealershipForm) => Promise<void>;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 };
 
 export default function DealershipForm({
-  onSubmit,
   open,
   onOpenChange
 }: DealershipFormProps) {
-  const { dealershipToEdit } = useDealershipStore();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const defaultValues: z.infer<typeof formSchema> = {
-    name: dealershipToEdit?.name ?? '',
-    address: dealershipToEdit?.address ?? '',
-    phoneNumber: dealershipToEdit?.phoneNumber ?? '',
-    email: dealershipToEdit?.email ?? '',
-    contactPerson: dealershipToEdit?.contactPerson ?? ''
-  };
+  const { dealershipToEdit, setDealershipToEdit } = useDealershipStore();
+  const apiClient = useAxios();
+  const createDealershipMutation = useCreateDealership(apiClient);
+  const updateDealershipMutation = useUpdateDealership(apiClient);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues,
-    values: defaultValues
+    defaultValues: {
+      name: dealershipToEdit?.name ?? '',
+      address: dealershipToEdit?.address ?? '',
+      phoneNumber: dealershipToEdit?.phoneNumber ?? '',
+      email: dealershipToEdit?.email ?? ''
+    },
+    mode: 'onChange' // Validación en tiempo real
   });
+
+  const resetForm = useCallback(() => {
+    form.reset({
+      name: '',
+      address: '',
+      phoneNumber: '',
+      email: ''
+    });
+    setDealershipToEdit(null);
+  }, [form, setDealershipToEdit]);
+
+  const handleSubmit = useCallback(
+    async (values: z.infer<typeof formSchema>) => {
+      const handleFormCleanup = () => {
+        resetForm();
+        onOpenChange(false);
+      };
+
+      dealershipToEdit
+        ? updateDealershipMutation.mutate(
+            { ...values, id: dealershipToEdit.id },
+            { onSuccess: () => handleFormCleanup() }
+          )
+        : createDealershipMutation.mutate(values, {
+            onSuccess: () => handleFormCleanup()
+          });
+    },
+    [
+      createDealershipMutation,
+      updateDealershipMutation,
+      dealershipToEdit,
+      resetForm,
+      onOpenChange
+    ]
+  );
+
+  const handleClose = useCallback(() => {
+    resetForm();
+    onOpenChange(false);
+  }, [resetForm, onOpenChange]);
+
+  useEffect(() => {
+    if (!open) {
+      resetForm();
+    }
+  }, [open, resetForm]);
 
   useEffect(() => {
     if (dealershipToEdit) {
-      const values = {
-        name: dealershipToEdit.name ?? '',
-        address: dealershipToEdit.address ?? '',
-        phoneNumber: dealershipToEdit.phoneNumber ?? '',
-        email: dealershipToEdit.email ?? '',
-        contactPerson: dealershipToEdit.contactPerson ?? ''
-      };
-      form.reset(values);
+      form.reset({
+        name: dealershipToEdit.name,
+        address: dealershipToEdit.address || '',
+        phoneNumber: dealershipToEdit.phoneNumber || '',
+        email: dealershipToEdit.email || ''
+      });
     }
   }, [dealershipToEdit, form]);
-
-  const handleSubmit = async (values: z.infer<typeof formSchema>) => {
-    setIsSubmitting(true);
-    setError(null);
-    try {
-      await onSubmit(values);
-      onOpenChange(false);
-    } catch (err) {
-      setError(err as string);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className='sm:max-w-[800px]'
+        className='sm:max-w-[725px]'
         onEscapeKeyDown={(event) => event.preventDefault()}
         onPointerDownOutside={(event) => event.preventDefault()}
       >
         <DialogHeader>
-          <DialogTitle>
+          <DialogTitle className='text-lg md:text-xl'>
             {dealershipToEdit ? 'Editar Concesionaria' : 'Nueva Concesionaria'}
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription className='text-sm md:text-base'>
             {dealershipToEdit
               ? 'Modifique los datos de la concesionaria en el formulario a continuación.'
               : 'Complete los datos de la nueva concesionaria en el formulario a continuación.'}
@@ -123,9 +151,9 @@ export default function DealershipForm({
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(handleSubmit)}
-            className='space-y-6'
+            className='space-y-4 md:space-y-6'
           >
-            <div className='grid grid-cols-1 gap-6 md:grid-cols-2'>
+            <div className='grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6'>
               <FormField
                 control={form.control}
                 name='name'
@@ -134,12 +162,16 @@ export default function DealershipForm({
                     <FormLabel>Nombre</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder='Ingrese el nombre de la concesionaria'
                         {...field}
+                        placeholder='Ingrese el nombre de la concesionaria'
                         autoFocus
                       />
                     </FormControl>
-                    <FormMessage />
+                    {form.formState.errors.name && (
+                      <FormMessage>
+                        {form.formState.errors.name.message}
+                      </FormMessage>
+                    )}
                   </FormItem>
                 )}
               />
@@ -152,11 +184,15 @@ export default function DealershipForm({
                     <FormLabel>Teléfono</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder='Ingrese el número de teléfono'
                         {...field}
+                        placeholder='Ingrese el número de teléfono'
                       />
                     </FormControl>
-                    <FormMessage />
+                    {form.formState.errors.phoneNumber && (
+                      <FormMessage>
+                        {form.formState.errors.phoneNumber.message}
+                      </FormMessage>
+                    )}
                   </FormItem>
                 )}
               />
@@ -169,29 +205,16 @@ export default function DealershipForm({
                     <FormLabel>Correo Electrónico</FormLabel>
                     <FormControl>
                       <Input
+                        {...field}
                         placeholder='Ingrese el correo electrónico'
                         type='email'
-                        {...field}
                       />
                     </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name='contactPerson'
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Persona de Contacto</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder='Ingrese el nombre de la persona de contacto'
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
+                    {form.formState.errors.email && (
+                      <FormMessage>
+                        {form.formState.errors.email.message}
+                      </FormMessage>
+                    )}
                   </FormItem>
                 )}
               />
@@ -205,35 +228,56 @@ export default function DealershipForm({
                   <FormLabel>Dirección</FormLabel>
                   <FormControl>
                     <Textarea
+                      {...field}
                       placeholder='Ingrese la dirección completa'
                       className='resize-none'
-                      {...field}
                     />
                   </FormControl>
-                  <FormMessage />
+                  {form.formState.errors.address && (
+                    <FormMessage>
+                      {form.formState.errors.address.message}
+                    </FormMessage>
+                  )}
                 </FormItem>
               )}
             />
 
-            {error && (
+            {(createDealershipMutation.error ||
+              updateDealershipMutation.error) && (
               <Alert variant='destructive'>
-                <AlertDescription>{error}</AlertDescription>
+                <AlertDescription>
+                  {getErrorMessage(
+                    (dealershipToEdit
+                      ? updateDealershipMutation.error
+                      : createDealershipMutation.error) as Error
+                  )}
+                </AlertDescription>
               </Alert>
             )}
 
             <div className='flex justify-end gap-4'>
-              <DialogTrigger asChild>
-                <Button variant='outline' type='button' disabled={isSubmitting}>
-                  Cancelar
-                </Button>
-              </DialogTrigger>
-              <Button type='submit' disabled={isSubmitting}>
-                {isSubmitting ? (
+              <Button
+                variant='outline'
+                type='button'
+                disabled={
+                  createDealershipMutation.isPending ||
+                  updateDealershipMutation.isPending
+                }
+                onClick={handleClose}
+              >
+                Cancelar
+              </Button>
+              <Button
+                type='submit'
+                disabled={createDealershipMutation.isPending}
+              >
+                {createDealershipMutation.isPending ||
+                updateDealershipMutation.isPending ? (
                   <ReloadIcon className='mr-2 h-4 w-4 animate-spin' />
                 ) : (
                   <SaveIcon className='mr-2 h-4 w-4' />
                 )}
-                {isSubmitting
+                {createDealershipMutation.isPending
                   ? 'Guardando...'
                   : `${dealershipToEdit ? 'Actualizar' : 'Crear'} Concesionaria`}
               </Button>

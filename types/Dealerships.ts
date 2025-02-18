@@ -3,7 +3,6 @@ export interface DealershipForm {
   address: string;
   phoneNumber: string;
   email: string;
-  contactPerson: string;
 }
 
 export interface Dealership extends DealershipForm {

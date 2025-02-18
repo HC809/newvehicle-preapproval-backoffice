@@ -6,7 +6,7 @@ import { NuqsAdapter } from 'nuqs/adapters/next/app';
 import { Lato } from 'next/font/google';
 import NextTopLoader from 'nextjs-toploader';
 import './globals.css';
-import { TokenProvider } from '@/features/auth/TokenContext';
+import { ClientProviders } from '@/providers/client-providers';
 
 export const metadata: Metadata = {
   title: 'COFISA',
@@ -32,7 +32,7 @@ export default async function RootLayout({
         <NuqsAdapter>
           <Providers session={session}>
             <Toaster />
-            <TokenProvider>{children}</TokenProvider>
+            <ClientProviders>{children}</ClientProviders>
           </Providers>
         </NuqsAdapter>
       </body>

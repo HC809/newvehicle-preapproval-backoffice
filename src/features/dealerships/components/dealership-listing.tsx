@@ -1,11 +1,12 @@
 'use client';
 
-import React from 'react';
+import React, { useRef } from 'react';
 import { DataTable as DealershipsTable } from '@/components/ui/table/data-table';
 import { DealershipColumns } from './dealership-columns';
 import { Dealership } from 'types/Dealerships';
 import { DataTableSkeleton } from '@/components/ui/table/data-table-skeleton';
 import { useDealershipStore } from '@/stores/dealership-store';
+// import { useVirtualizer } from '@tanstack/react-virtual';
 
 interface DealershipListingPageProps {
   dealerships: Dealership[];
@@ -19,6 +20,13 @@ export default function DealershipListingPage({
   isLoading
 }: DealershipListingPageProps) {
   const { setDealershipToEdit, setDealershipToDelete } = useDealershipStore();
+  // const parentRef = useRef(null);
+
+  // const rowVirtualizer = useVirtualizer({
+  //   count: dealerships.length,
+  //   getScrollElement: () => parentRef.current,
+  //   estimateSize: () => 45,
+  // });
 
   if (isLoading) {
     return <DataTableSkeleton columnCount={5} rowCount={10} />;

@@ -20,7 +20,7 @@ function createStore() {
           set(
             { dealershipToEdit: dealership },
             false,
-            'dealership/setDealershipToEdit' // Nombre de la acción para Redux DevTools
+            'dealership/setDealershipToEdit'
           ),
         dealershipToDelete: null,
         setDealershipToDelete: (dealership) =>

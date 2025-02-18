@@ -1,93 +1,50 @@
 'use client';
 
 import { useState } from 'react';
+import { PlusIcon, ReloadIcon } from '@radix-ui/react-icons';
 import PageContainer from '@/components/layout/page-container';
 import { Heading } from '@/components/ui/heading';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import useAxios from '@/hooks/use-axios';
-import useSWR from 'swr';
-import {
-  Dealership,
-  DealershipForm as IDealershipForm
-} from 'types/Dealerships';
 import ErrorAlert from '@/components/custom/error-alert';
-import { ReloadIcon } from '@radix-ui/react-icons';
 import DealershipListingPage from '@/features/dealerships/components/dealership-listing';
 import DealershipForm from '@/features/dealerships/components/dealership-form';
 import { useDealershipStore } from '@/stores/dealership-store';
 import { AlertModal } from '@/components/modal/alert-modal';
+import {
+  useDealerships,
+  useDeleteDealership
+} from '@/features/dealerships/api/dealership-service';
+import { getErrorMessage } from '@/utils/error-utils';
 
-export default function DealershipsPage() {
+function DealershipContent() {
   const apiClient = useAxios();
-  const [isFormOpen, setIsFormOpen] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
   const {
-    dealershipToEdit,
-    setDealershipToEdit,
-    dealershipToDelete,
-    setDealershipToDelete
-  } = useDealershipStore();
+    isLoading,
+    isFetching,
+    data: dealerships,
+    error,
+    refetch
+  } = useDealerships(apiClient);
+  const deleteDealershipMutation = useDeleteDealership(apiClient);
+  const { dealershipToEdit, dealershipToDelete, setDealershipToDelete } =
+    useDealershipStore();
 
-  const fetcher = async (url: string) => {
-    if (!apiClient) return;
-    const response = await apiClient.get(url);
-    return response.data;
-  };
-
-  const handleCreateDealership = async (
-    values: IDealershipForm
-  ): Promise<void> => {
-    await apiClient?.post('/dealerships/create', values);
-    setIsFormOpen(false);
-    mutate();
-  };
-
-  const handleEditDealership = async (
-    values: IDealershipForm
-  ): Promise<void> => {
-    if (dealershipToEdit) {
-      await apiClient?.put(`/dealerships/update/${dealershipToEdit.id}`, {
-        id: dealershipToEdit.id,
-        ...values
-      });
-      mutate();
-    }
-  };
+  const [isFormOpen, setIsFormOpen] = useState(false);
 
   const handleDeleteDealership = async (): Promise<void> => {
     if (!dealershipToDelete) return;
 
-    try {
-      setIsDeleting(true);
-      await apiClient?.delete(`/dealerships/delete/${dealershipToDelete.id}`);
-      setDealershipToDelete(null);
-      mutate();
-    } finally {
-      setIsDeleting(false);
-    }
+    deleteDealershipMutation.mutate(dealershipToDelete.id, {
+      onSuccess: () => {
+        setDealershipToDelete(null);
+      }
+    });
   };
 
-  const handleOpenChange = (open: boolean) => {
-    setIsFormOpen(open);
-    if (!open) {
-      if (dealershipToEdit) setDealershipToEdit(null);
-    }
-  };
-
-  const {
-    data: dealerships,
-    error,
-    isLoading,
-    isValidating,
-    mutate
-  } = useSWR<Dealership[]>(apiClient ? '/dealerships' : null, fetcher, {
-    revalidateIfStale: false,
-    revalidateOnFocus: false,
-    revalidateOnReconnect: true,
-    refreshInterval: 0
-  });
+  const handleOpenChange = (open: boolean) => setIsFormOpen(open);
 
   return (
     <PageContainer scrollable={false}>
@@ -97,24 +54,29 @@ export default function DealershipsPage() {
             title='Concesionarias'
             description='Administración de concesionarias.'
           />
-          <Button variant='default' onClick={() => setIsFormOpen(true)}>
-            Agregar Concesionaria
-          </Button>
+          <div className='flex gap-2'>
+            <Button
+              variant='default'
+              size='icon'
+              onClick={() => refetch()}
+              disabled={isFetching}
+            >
+              <ReloadIcon
+                className={cn('h-4 w-4', isFetching && 'animate-spin')}
+              />
+            </Button>
+            <Button variant='default' onClick={() => setIsFormOpen(true)}>
+              <PlusIcon className='mr-2 h-4 w-4' />
+              Agregar Concesionaria
+            </Button>
+          </div>
         </div>
 
         <Separator />
 
         {error ? (
           <div className='space-y-4'>
-            <ErrorAlert error={error} />
-            <div className='flex justify-center'>
-              <Button onClick={() => mutate()} disabled={isValidating}>
-                <ReloadIcon
-                  className={cn('mr-2 h-4 w-4', isValidating && 'animate-spin')}
-                />
-                {isValidating ? 'Cargando...' : 'Reintentar'}
-              </Button>
-            </div>
+            <ErrorAlert error={getErrorMessage(error as Error)} />
           </div>
         ) : (
           <>
@@ -124,17 +86,15 @@ export default function DealershipsPage() {
               isLoading={isLoading || !dealerships}
             />
             <DealershipForm
-              onSubmit={
-                dealershipToEdit ? handleEditDealership : handleCreateDealership
-              }
               open={isFormOpen || !!dealershipToEdit}
               onOpenChange={handleOpenChange}
             />
             <AlertModal
               isOpen={!!dealershipToDelete}
-              loading={isDeleting}
+              loading={deleteDealershipMutation.isPending}
               onClose={() => setDealershipToDelete(null)}
               onConfirm={handleDeleteDealership}
+              error={deleteDealershipMutation.error?.message}
               title='Eliminar Concesionaria'
               description={`¿Está seguro que desea eliminar la concesionaria "${dealershipToDelete?.name}"? Esta acción no se puede deshacer.`}
               confirmLabel='Eliminar'
@@ -144,5 +104,15 @@ export default function DealershipsPage() {
         )}
       </div>
     </PageContainer>
+  );
+}
+
+export default function DealershipsPage() {
+  return (
+    // <ErrorBoundary fallback={<ErrorAlert />}>
+    //   <Suspense fallback={<DataTableSkeleton />}>
+    <DealershipContent />
+    //   </Suspense>
+    // </ErrorBoundary>
   );
 }
