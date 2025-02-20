@@ -1,0 +1,86 @@
+'use client';
+
+import React from 'react';
+import { ColumnDef } from '@tanstack/react-table';
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger
+} from '@/components/ui/dropdown-menu';
+import { MoreHorizontal } from 'lucide-react';
+import { User } from 'types/User';
+import { roleTranslations } from '@/utils/roleTranslations';
+import { verificationTypeTranslations } from '@/utils/verificationTypeTranslations';
+
+export const UserColumns = (
+  setUserToDelete: (user: User) => void
+): ColumnDef<User>[] => [
+  {
+    accessorKey: 'name',
+    header: () => <span className='font-bold'>Nombre</span>
+  },
+  {
+    accessorKey: 'email',
+    header: () => <span className='font-bold'>Correo Electrónico</span>
+  },
+  {
+    accessorKey: 'dealership',
+    header: () => <span className='font-bold'>Concesionaria</span>
+  },
+  {
+    accessorKey: 'role',
+    header: () => <span className='font-bold'>Rol</span>,
+    cell: ({ row }) => {
+      const role = row.original.role;
+      return <span>{roleTranslations[role]}</span>;
+    }
+  },
+  {
+    accessorKey: 'verificationType',
+    header: () => <span className='font-bold'>Tipo de Verificación</span>,
+    cell: ({ row }) => {
+      const verificationType = row.original.verificationType;
+      return <span>{verificationTypeTranslations[verificationType]}</span>;
+    }
+  },
+  {
+    accessorKey: 'isActive',
+    header: () => <span className='font-bold'>Estado</span>,
+    cell: ({ row }) => (
+      <span>{row.original.isActive ? 'Activo' : 'Inactivo'}</span>
+    )
+  },
+  {
+    id: 'actions',
+    header: () => <span className='font-bold'>Acciones</span>,
+    cell: function UserActionsCell({ row }) {
+      const user = row.original;
+
+      function handleDeleteClick() {
+        setUserToDelete(user);
+      }
+
+      return (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant='ghost' className='h-8 w-8 p-0'>
+              <span className='sr-only'>Open menu</span>
+              <MoreHorizontal className='h-4 w-4' />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align='end'>
+            <DropdownMenuLabel>Acciones</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={handleDeleteClick}>
+              Eliminar
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      );
+    }
+  }
+];

@@ -26,7 +26,7 @@ import {
   Settings,
   SunMedium,
   Trash,
-  Twitter,
+  UsersRound,
   User,
   UserCircle2Icon,
   UserPen,
@@ -51,7 +51,7 @@ export const Icons = {
   post: FileText,
   page: File,
   userPen: UserPen,
-  user2: UserCircle2Icon,
+  users: UsersRound,
   media: Image,
   settings: Settings,
   billing: CreditCard,
@@ -83,6 +83,5 @@ export const Icons = {
       ></path>
     </svg>
   ),
-  twitter: Twitter,
   check: Check
 };
