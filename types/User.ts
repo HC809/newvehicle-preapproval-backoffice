@@ -10,13 +10,19 @@ export enum VerificationType {
   ActiveDirectory = 'ActiveDirectory'
 }
 
-export interface User {
-  id: string;
+export interface UserForm {
   name: string;
   email: string;
-  dealership: string;
-  password: string;
   role: UserRole;
-  verificationType: VerificationType;
+  dealershipId: string | null;
   isActive: boolean;
+}
+
+export type CreateUserForm = Omit<UserForm, 'isActive'>;
+
+export interface User extends UserForm {
+  id: string;
+  dealership: string | null;
+  password: string;
+  verificationType: VerificationType;
 }

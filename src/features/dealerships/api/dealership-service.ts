@@ -10,7 +10,8 @@ import { Dealership, DealershipForm } from 'types/Dealerships';
 const DEALERSHIPS_KEY = 'dealerships';
 
 export const useDealerships = (
-  apiClient: AxiosInstance | undefined
+  apiClient: AxiosInstance | undefined,
+  enabled: boolean = true // Añadir parámetro enabled con valor por defecto
 ): UseQueryResult<Dealership[], Error> => {
   return useQuery({
     queryKey: [DEALERSHIPS_KEY],
@@ -19,9 +20,7 @@ export const useDealerships = (
       const response = await apiClient.get<Dealership[]>('/dealerships');
       return response.data;
     },
-    //staleTime: 8 * 60 * 60 * 1000, // 8 horas
-    //gcTime: 7 * 24 * 60 * 60 * 1000, // 7 días
-    enabled: !!apiClient
+    enabled: !!apiClient && enabled // Modificar la condición enabled
   });
 };
 

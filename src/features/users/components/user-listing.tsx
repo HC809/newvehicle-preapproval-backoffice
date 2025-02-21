@@ -5,20 +5,21 @@ import { DataTable as UsersTable } from '@/components/ui/table/data-table';
 import { UserColumns } from './user-columns';
 import { User } from 'types/User';
 import { DataTableSkeleton } from '@/components/ui/table/data-table-skeleton';
+import { useUserStore } from '@/stores/user-store';
 
 interface UserListingPageProps {
   users: User[];
   totalItems: number;
   isLoading?: boolean;
-  setUserToDelete: (user: User) => void;
 }
 
 export default function UserListingPage({
   users,
   totalItems,
-  isLoading,
-  setUserToDelete
+  isLoading
 }: UserListingPageProps) {
+  const { setUserToEdit, setUserToDelete } = useUserStore();
+
   if (isLoading) {
     return <DataTableSkeleton columnCount={6} rowCount={10} />;
   }
@@ -29,7 +30,7 @@ export default function UserListingPage({
 
   return (
     <UsersTable
-      columns={UserColumns(setUserToDelete)}
+      columns={UserColumns(setUserToEdit, setUserToDelete)}
       data={users}
       totalItems={totalItems}
     />

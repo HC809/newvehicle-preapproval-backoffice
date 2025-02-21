@@ -58,8 +58,8 @@ export default function DealershipForm({
   open,
   onOpenChange
 }: DealershipFormProps) {
-  const { dealershipToEdit, setDealershipToEdit } = useDealershipStore();
   const apiClient = useAxios();
+  const { dealershipToEdit, setDealershipToEdit } = useDealershipStore();
   const createDealershipMutation = useCreateDealership(apiClient);
   const updateDealershipMutation = useUpdateDealership(apiClient);
 

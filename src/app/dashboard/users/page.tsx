@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ReloadIcon } from '@radix-ui/react-icons';
+import { PlusIcon, ReloadIcon } from '@radix-ui/react-icons';
 import PageContainer from '@/components/layout/page-container';
 import { Heading } from '@/components/ui/heading';
 import { Separator } from '@/components/ui/separator';
@@ -13,7 +13,8 @@ import UserListingPage from '@/features/users/components/user-listing';
 import { AlertModal } from '@/components/modal/alert-modal';
 import { useUsers, useDeleteUser } from '@/features/users/api/user-service';
 import { getErrorMessage } from '@/utils/error-utils';
-import { User } from 'types/User';
+import { useUserStore } from '@/stores/user-store';
+import UserForm from '@/features/users/components/user-form';
 
 function UserContent() {
   const apiClient = useAxios();
@@ -25,7 +26,9 @@ function UserContent() {
     refetch
   } = useUsers(apiClient);
   const deleteUserMutation = useDeleteUser(apiClient);
-  const [userToDelete, setUserToDelete] = useState<User | null>(null);
+  const { userToEdit, userToDelete, setUserToDelete } = useUserStore();
+
+  const [isFormOpen, setIsFormOpen] = useState(false);
 
   const handleDeleteUser = async (): Promise<void> => {
     if (!userToDelete) return;
@@ -37,21 +40,29 @@ function UserContent() {
     });
   };
 
+  const handleOpenChange = (open: boolean) => setIsFormOpen(open);
+
   return (
     <PageContainer scrollable={false}>
       <div className='flex flex-1 flex-col space-y-4'>
         <div className='flex items-start justify-between'>
           <Heading title='Usuarios' description='Administración de usuarios.' />
-          <Button
-            variant='default'
-            size='icon'
-            onClick={() => refetch()}
-            disabled={isFetching}
-          >
-            <ReloadIcon
-              className={cn('h-4 w-4', isFetching && 'animate-spin')}
-            />
-          </Button>
+          <div className='flex gap-2'>
+            <Button
+              variant='default'
+              size='icon'
+              onClick={() => refetch()}
+              disabled={isFetching}
+            >
+              <ReloadIcon
+                className={cn('h-4 w-4', isFetching && 'animate-spin')}
+              />
+            </Button>
+            <Button variant='default' onClick={() => setIsFormOpen(true)}>
+              <PlusIcon className='mr-2 h-4 w-4' />
+              Agregar Usuario
+            </Button>
+          </div>
         </div>
 
         <Separator />
@@ -66,7 +77,10 @@ function UserContent() {
               users={users || []}
               totalItems={users?.length || 0}
               isLoading={isLoading || !users}
-              setUserToDelete={setUserToDelete}
+            />
+            <UserForm
+              open={isFormOpen || !!userToEdit}
+              onOpenChange={handleOpenChange}
             />
             <AlertModal
               isOpen={!!userToDelete}

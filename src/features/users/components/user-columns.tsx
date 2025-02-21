@@ -17,6 +17,7 @@ import { roleTranslations } from '@/utils/roleTranslations';
 import { verificationTypeTranslations } from '@/utils/verificationTypeTranslations';
 
 export const UserColumns = (
+  setUserToEdit: (user: User) => void,
   setUserToDelete: (user: User) => void
 ): ColumnDef<User>[] => [
   {
@@ -60,6 +61,10 @@ export const UserColumns = (
     cell: function UserActionsCell({ row }) {
       const user = row.original;
 
+      function handleEditClick() {
+        setUserToEdit(user);
+      }
+
       function handleDeleteClick() {
         setUserToDelete(user);
       }
@@ -75,6 +80,9 @@ export const UserColumns = (
           <DropdownMenuContent align='end'>
             <DropdownMenuLabel>Acciones</DropdownMenuLabel>
             <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={handleEditClick}>
+              Editar
+            </DropdownMenuItem>
             <DropdownMenuItem onClick={handleDeleteClick}>
               Eliminar
             </DropdownMenuItem>
