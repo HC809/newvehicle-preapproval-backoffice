@@ -189,11 +189,20 @@ export default function UserForm({ open, onOpenChange }: UserFormProps) {
   const isLoadingDealerships =
     isDealershipsLoading || isDealershipsFetching || !isDealershipsSuccess;
 
+  const isFormLocked =
+    isLoadingDealerships ||
+    createUserMutation.isPending ||
+    updateUserMutation.isPending;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         className='sm:max-w-[725px]'
-        onEscapeKeyDown={(event) => event.preventDefault()}
+        onEscapeKeyDown={(event) => {
+          if (isFormLocked) {
+            event.preventDefault();
+          }
+        }}
         onPointerDownOutside={(event) => event.preventDefault()}
       >
         <DialogHeader>

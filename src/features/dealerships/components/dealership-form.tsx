@@ -131,11 +131,18 @@ export default function DealershipForm({
     }
   }, [dealershipToEdit, form]);
 
+  const isFormLocked =
+    createDealershipMutation.isPending || updateDealershipMutation.isPending;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         className='sm:max-w-[725px]'
-        onEscapeKeyDown={(event) => event.preventDefault()}
+        onEscapeKeyDown={(event) => {
+          if (isFormLocked) {
+            event.preventDefault();
+          }
+        }}
         onPointerDownOutside={(event) => event.preventDefault()}
       >
         <DialogHeader>
