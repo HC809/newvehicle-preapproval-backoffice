@@ -8,7 +8,7 @@ import {
   KBarSearch
 } from 'kbar';
 import { useRouter } from 'next/navigation';
-import { useMemo } from 'react';
+import { useMemo, useCallback } from 'react';
 import RenderResults from './render-result';
 import useThemeSwitching from './use-theme-switching';
 
@@ -16,6 +16,7 @@ import useThemeSwitching from './use-theme-switching';
 type CustomActions = {
   openUserForm?: () => void;
   handleLogout?: () => void;
+  openDealershipForm?: () => void; // Add this line
 };
 
 export default function KBar({
@@ -27,12 +28,29 @@ export default function KBar({
 }) {
   const router = useRouter();
 
-  const navigateTo = (url: string) => {
-    router.push(url);
-  };
+  const navigateTo = useCallback(
+    (url: string) => {
+      router.push(url);
+    },
+    [router]
+  );
 
   const actions = useMemo(
     () => [
+      // Add dealership form action
+      ...(customActions?.openDealershipForm
+        ? [
+            {
+              id: 'addDealership',
+              name: 'Agregar Concesionaria',
+              shortcut: ['a', 'g'],
+              keywords: 'nueva concesionaria agregar crear add dealership',
+              section: 'Concesionarias',
+              subtitle: 'Crear nueva concesionaria',
+              perform: customActions.openDealershipForm
+            }
+          ]
+        : []),
       // Agregar acciones personalizadas
       ...(customActions?.openUserForm
         ? [

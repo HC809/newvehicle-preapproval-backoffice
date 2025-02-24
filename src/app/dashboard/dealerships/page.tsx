@@ -18,6 +18,7 @@ import {
   useDeleteDealership
 } from '@/features/dealerships/api/dealership-service';
 import { getErrorMessage } from '@/utils/error-utils';
+import KBar from '@/components/kbar';
 
 function DealershipContent() {
   const apiClient = useAxios();
@@ -46,64 +47,70 @@ function DealershipContent() {
 
   const handleOpenChange = (open: boolean) => setIsFormOpen(open);
 
+  const kbarActions = {
+    openUserForm: () => setIsFormOpen(true)
+  };
+
   return (
-    <PageContainer scrollable={false}>
-      <div className='flex flex-1 flex-col space-y-4'>
-        <div className='flex items-start justify-between'>
-          <Heading
-            title='Concesionarias'
-            description='Administración de concesionarias.'
-          />
-          <div className='flex gap-2'>
-            <Button
-              variant='default'
-              size='icon'
-              onClick={() => refetch()}
-              disabled={isFetching}
-            >
-              <ReloadIcon
-                className={cn('h-4 w-4', isFetching && 'animate-spin')}
+    <KBar actions={kbarActions}>
+      <PageContainer scrollable={false}>
+        <div className='flex flex-1 flex-col space-y-4'>
+          <div className='flex items-start justify-between'>
+            <Heading
+              title='Concesionarias'
+              description='Administración de concesionarias.'
+            />
+            <div className='flex gap-2'>
+              <Button
+                variant='default'
+                size='icon'
+                onClick={() => refetch()}
+                disabled={isFetching}
+              >
+                <ReloadIcon
+                  className={cn('h-4 w-4', isFetching && 'animate-spin')}
+                />
+              </Button>
+              <Button variant='default' onClick={() => setIsFormOpen(true)}>
+                <PlusIcon className='mr-2 h-4 w-4' />
+                Agregar Concesionaria
+              </Button>
+            </div>
+          </div>
+
+          <Separator />
+
+          {error ? (
+            <div className='space-y-4'>
+              <ErrorAlert error={getErrorMessage(error as Error)} />
+            </div>
+          ) : (
+            <>
+              <DealershipListingPage
+                dealerships={dealerships || []}
+                totalItems={dealerships?.length || 0}
+                isLoading={isLoading || !dealerships}
               />
-            </Button>
-            <Button variant='default' onClick={() => setIsFormOpen(true)}>
-              <PlusIcon className='mr-2 h-4 w-4' />
-              Agregar Concesionaria
-            </Button>
-          </div>
+              <DealershipForm
+                open={isFormOpen || !!dealershipToEdit}
+                onOpenChange={handleOpenChange}
+              />
+              <AlertModal
+                isOpen={!!dealershipToDelete}
+                loading={deleteDealershipMutation.isPending}
+                onClose={() => setDealershipToDelete(null)}
+                onConfirm={handleDeleteDealership}
+                error={deleteDealershipMutation.error?.message}
+                title='Eliminar Concesionaria'
+                description={`¿Está seguro que desea eliminar la concesionaria "${dealershipToDelete?.name}"? Esta acción no se puede deshacer.`}
+                confirmLabel='Eliminar'
+                cancelLabel='Cancelar'
+              />
+            </>
+          )}
         </div>
-
-        <Separator />
-
-        {error ? (
-          <div className='space-y-4'>
-            <ErrorAlert error={getErrorMessage(error as Error)} />
-          </div>
-        ) : (
-          <>
-            <DealershipListingPage
-              dealerships={dealerships || []}
-              totalItems={dealerships?.length || 0}
-              isLoading={isLoading || !dealerships}
-            />
-            <DealershipForm
-              open={isFormOpen || !!dealershipToEdit}
-              onOpenChange={handleOpenChange}
-            />
-            <AlertModal
-              isOpen={!!dealershipToDelete}
-              loading={deleteDealershipMutation.isPending}
-              onClose={() => setDealershipToDelete(null)}
-              onConfirm={handleDeleteDealership}
-              error={deleteDealershipMutation.error?.message}
-              title='Eliminar Concesionaria'
-              description={`¿Está seguro que desea eliminar la concesionaria "${dealershipToDelete?.name}"? Esta acción no se puede deshacer.`}
-              confirmLabel='Eliminar'
-              cancelLabel='Cancelar'
-            />
-          </>
-        )}
-      </div>
-    </PageContainer>
+      </PageContainer>
+    </KBar>
   );
 }
 
