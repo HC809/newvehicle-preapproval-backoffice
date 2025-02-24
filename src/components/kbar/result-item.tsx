@@ -1,19 +1,14 @@
-import type { ActionId, ActionImpl } from 'kbar';
-import * as React from 'react';
+import { ActionImpl, ActionId } from 'kbar';
+import React, { forwardRef } from 'react';
 
-const ResultItem = React.forwardRef(
-  (
-    {
-      action,
-      active,
-      currentRootActionId
-    }: {
-      action: ActionImpl;
-      active: boolean;
-      currentRootActionId: ActionId;
-    },
-    ref: React.Ref<HTMLDivElement>
-  ) => {
+interface ResultItemProps {
+  action: ActionImpl;
+  active: boolean;
+  currentRootActionId: ActionId;
+}
+
+const ResultItem = forwardRef<HTMLDivElement, ResultItemProps>(
+  ({ action, active, currentRootActionId }, ref) => {
     const ancestors = React.useMemo(() => {
       if (!currentRootActionId) return action.ancestors;
       const index = action.ancestors.findIndex(
@@ -48,7 +43,9 @@ const ResultItem = React.forwardRef(
             </div>
             {action.subtitle && (
               <span className='text-sm text-muted-foreground'>
-                {action.subtitle}
+                {action.subtitle.startsWith('Go to')
+                  ? action.subtitle.replace('Go to', 'Ir a')
+                  : action.subtitle}
               </span>
             )}
           </div>
@@ -70,6 +67,6 @@ const ResultItem = React.forwardRef(
   }
 );
 
-ResultItem.displayName = 'KBarResultItem';
+ResultItem.displayName = 'ResultItem';
 
 export default ResultItem;

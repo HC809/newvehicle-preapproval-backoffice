@@ -3,6 +3,7 @@
 import React from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -52,7 +53,9 @@ export const UserColumns = (
     accessorKey: 'isActive',
     header: () => <span className='font-bold'>Estado</span>,
     cell: ({ row }) => (
-      <span>{row.original.isActive ? 'Activo' : 'Inactivo'}</span>
+      <Badge variant={row.original.isActive ? 'success' : 'destructive'}>
+        {row.original.isActive ? 'Activo' : 'Inactivo'}
+      </Badge>
     )
   },
   {

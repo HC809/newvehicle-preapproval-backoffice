@@ -12,17 +12,55 @@ import { useMemo } from 'react';
 import RenderResults from './render-result';
 import useThemeSwitching from './use-theme-switching';
 
-export default function KBar({ children }: { children: React.ReactNode }) {
+// Agregar este tipo
+type CustomActions = {
+  openUserForm?: () => void;
+  handleLogout?: () => void;
+};
+
+export default function KBar({
+  children,
+  actions: customActions
+}: {
+  children: React.ReactNode;
+  actions?: CustomActions;
+}) {
   const router = useRouter();
 
   const navigateTo = (url: string) => {
     router.push(url);
   };
 
-  // These action are for the navigation
   const actions = useMemo(
-    () =>
-      navItems.flatMap((navItem) => {
+    () => [
+      // Agregar acciones personalizadas
+      ...(customActions?.openUserForm
+        ? [
+            {
+              id: 'addUser',
+              name: 'Agregar Usuario',
+              shortcut: ['a', 'g'],
+              keywords: 'nuevo usuario agregar crear add',
+              section: 'Usuarios',
+              subtitle: 'Crear nuevo usuario', // Texto en español
+              perform: customActions.openUserForm
+            }
+          ]
+        : []),
+      ...(customActions?.handleLogout
+        ? [
+            {
+              id: 'logout',
+              name: 'Cerrar Sesión',
+              shortcut: ['ctrl', 'q'], // Cambiado a ctrl + q
+              keywords: 'logout salir exit',
+              section: 'Sistema',
+              perform: customActions.handleLogout
+            }
+          ]
+        : []),
+      // Mantener las acciones de navegación existentes
+      ...navItems.flatMap((navItem) => {
         // Only include base action if the navItem has a real URL and is not just a container
         const baseAction =
           navItem.url !== '#'
@@ -31,8 +69,8 @@ export default function KBar({ children }: { children: React.ReactNode }) {
                 name: navItem.title,
                 shortcut: navItem.shortcut,
                 keywords: navItem.title.toLowerCase(),
-                section: 'Navigation',
-                subtitle: `Go to ${navItem.title}`,
+                section: 'Navegación', // Cambiado de 'Navigation' a 'Navegación'
+                subtitle: `Ir a ${navItem.title}`, // Cambiado de 'Go to' a 'Ir a'
                 perform: () => navigateTo(navItem.url)
               }
             : null;
@@ -51,8 +89,9 @@ export default function KBar({ children }: { children: React.ReactNode }) {
 
         // Return only valid actions (ignoring null base actions for containers)
         return baseAction ? [baseAction, ...childActions] : childActions;
-      }),
-    []
+      })
+    ],
+    [navigateTo, customActions]
   );
 
   return (
@@ -71,7 +110,11 @@ const KBarComponent = ({ children }: { children: React.ReactNode }) => {
           <KBarAnimator className='relative !mt-64 w-full max-w-[600px] !-translate-y-12 overflow-hidden rounded-lg border bg-background text-foreground shadow-lg'>
             <div className='bg-background'>
               <div className='border-x-0 border-b-2'>
-                <KBarSearch className='w-full border-none bg-background px-6 py-4 text-lg outline-none focus:outline-none focus:ring-0 focus:ring-offset-0' />
+                <KBarSearch
+                  className='w-full border-none bg-background px-6 py-4 text-lg outline-none focus:outline-none focus:ring-0 focus:ring-offset-0'
+                  defaultPlaceholder='Escribe un comando o busca...' // Añadir defaultPlaceholder
+                  placeholder='Escribe un comando o busca...' // Añadir placeholder en español
+                />
               </div>
               <RenderResults />
             </div>

@@ -15,6 +15,7 @@ import { useUsers, useDeleteUser } from '@/features/users/api/user-service';
 import { getErrorMessage } from '@/utils/error-utils';
 import { useUserStore } from '@/stores/user-store';
 import UserForm from '@/features/users/components/user-form';
+import KBar from '@/components/kbar';
 
 function UserContent() {
   const apiClient = useAxios();
@@ -42,61 +43,70 @@ function UserContent() {
 
   const handleOpenChange = (open: boolean) => setIsFormOpen(open);
 
+  const kbarActions = {
+    openUserForm: () => setIsFormOpen(true)
+  };
+
   return (
-    <PageContainer scrollable={false}>
-      <div className='flex flex-1 flex-col space-y-4'>
-        <div className='flex items-start justify-between'>
-          <Heading title='Usuarios' description='Administración de usuarios.' />
-          <div className='flex gap-2'>
-            <Button
-              variant='default'
-              size='icon'
-              onClick={() => refetch()}
-              disabled={isFetching}
-            >
-              <ReloadIcon
-                className={cn('h-4 w-4', isFetching && 'animate-spin')}
+    <KBar actions={kbarActions}>
+      <PageContainer scrollable={false}>
+        <div className='flex flex-1 flex-col space-y-4'>
+          <div className='flex items-start justify-between'>
+            <Heading
+              title='Usuarios'
+              description='Administración de usuarios.'
+            />
+            <div className='flex gap-2'>
+              <Button
+                variant='default'
+                size='icon'
+                onClick={() => refetch()}
+                disabled={isFetching}
+              >
+                <ReloadIcon
+                  className={cn('h-4 w-4', isFetching && 'animate-spin')}
+                />
+              </Button>
+              <Button variant='default' onClick={() => setIsFormOpen(true)}>
+                <PlusIcon className='mr-2 h-4 w-4' />
+                Agregar Usuario
+              </Button>
+            </div>
+          </div>
+
+          <Separator />
+
+          {error ? (
+            <div className='space-y-4'>
+              <ErrorAlert error={getErrorMessage(error as Error)} />
+            </div>
+          ) : (
+            <>
+              <UserListingPage
+                users={users || []}
+                totalItems={users?.length || 0}
+                isLoading={isLoading || !users}
               />
-            </Button>
-            <Button variant='default' onClick={() => setIsFormOpen(true)}>
-              <PlusIcon className='mr-2 h-4 w-4' />
-              Agregar Usuario
-            </Button>
-          </div>
+              <UserForm
+                open={isFormOpen || !!userToEdit}
+                onOpenChange={handleOpenChange}
+              />
+              <AlertModal
+                isOpen={!!userToDelete}
+                loading={deleteUserMutation.isPending}
+                onClose={() => setUserToDelete(null)}
+                onConfirm={handleDeleteUser}
+                error={deleteUserMutation.error?.message}
+                title='Eliminar Usuario'
+                description={`¿Está seguro que desea eliminar el usuario "${userToDelete?.name}"? Esta acción no se puede deshacer.`}
+                confirmLabel='Eliminar'
+                cancelLabel='Cancelar'
+              />
+            </>
+          )}
         </div>
-
-        <Separator />
-
-        {error ? (
-          <div className='space-y-4'>
-            <ErrorAlert error={getErrorMessage(error as Error)} />
-          </div>
-        ) : (
-          <>
-            <UserListingPage
-              users={users || []}
-              totalItems={users?.length || 0}
-              isLoading={isLoading || !users}
-            />
-            <UserForm
-              open={isFormOpen || !!userToEdit}
-              onOpenChange={handleOpenChange}
-            />
-            <AlertModal
-              isOpen={!!userToDelete}
-              loading={deleteUserMutation.isPending}
-              onClose={() => setUserToDelete(null)}
-              onConfirm={handleDeleteUser}
-              error={deleteUserMutation.error?.message}
-              title='Eliminar Usuario'
-              description={`¿Está seguro que desea eliminar el usuario "${userToDelete?.name}"? Esta acción no se puede deshacer.`}
-              confirmLabel='Eliminar'
-              cancelLabel='Cancelar'
-            />
-          </>
-        )}
-      </div>
-    </PageContainer>
+      </PageContainer>
+    </KBar>
   );
 }
 
