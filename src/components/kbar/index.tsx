@@ -1,5 +1,5 @@
 'use client';
-import { navItems } from '@/constants/data';
+import { adminNavItems, navItems } from '@/constants/data';
 import {
   KBarAnimator,
   KBarPortal,
@@ -11,6 +11,7 @@ import { useRouter } from 'next/navigation';
 import { useMemo, useCallback } from 'react';
 import RenderResults from './render-result';
 import useThemeSwitching from './use-theme-switching';
+import { useSession } from 'next-auth/react';
 
 // Agregar este tipo
 type CustomActions = {
@@ -27,6 +28,7 @@ export default function KBar({
   actions?: CustomActions;
 }) {
   const router = useRouter();
+  const { data: session } = useSession();
 
   const navigateTo = useCallback(
     (url: string) => {
@@ -34,6 +36,10 @@ export default function KBar({
     },
     [router]
   );
+
+  const userNavItems = useMemo(() => {
+    return session?.isSystemAdmin ? adminNavItems : navItems;
+  }, [session]);
 
   const actions = useMemo(
     () => [
@@ -77,8 +83,8 @@ export default function KBar({
             }
           ]
         : []),
-      // Mantener las acciones de navegación existentes
-      ...navItems.flatMap((navItem) => {
+      // Mantener las acciones de navegación 'GENERAL' existentes
+      ...userNavItems.flatMap((navItem) => {
         // Only include base action if the navItem has a real URL and is not just a container
         const baseAction =
           navItem.url !== '#'
@@ -109,7 +115,7 @@ export default function KBar({
         return baseAction ? [baseAction, ...childActions] : childActions;
       })
     ],
-    [navigateTo, customActions]
+    [navigateTo, customActions, userNavItems]
   );
 
   return (

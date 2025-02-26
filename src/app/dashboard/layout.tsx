@@ -24,8 +24,8 @@ export default async function DashboardLayout({
   const cookieStore = await cookies();
   const defaultOpen = cookieStore.get('sidebar:state')?.value === 'true';
   return (
-    <KBar>
-      <Providers session={session}>
+    <Providers session={session}>
+      <KBar>
         <SidebarProvider defaultOpen={defaultOpen}>
           <AppSidebar />
           <SidebarInset>
@@ -33,7 +33,7 @@ export default async function DashboardLayout({
             <ClientProviders>{children}</ClientProviders>
           </SidebarInset>
         </SidebarProvider>
-      </Providers>
-    </KBar>
+      </KBar>
+    </Providers>
   );
 }
