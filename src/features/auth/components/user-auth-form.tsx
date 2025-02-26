@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { toast } from 'sonner';
@@ -32,6 +32,15 @@ export default function UserAuthForm() {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  // Agregamos un useEffect para limpiar los estados cuando el componente se desmonte
+  useEffect(() => {
+    // Esta función se ejecuta cuando el componente se desmonta
+    return () => {
+      setLoading(false);
+      setErrorMessage(null);
+    };
+  }, []);
+
   const form = useForm<UserFormValue>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -43,22 +52,40 @@ export default function UserAuthForm() {
   const onSubmit: SubmitHandler<UserFormValue> = async (
     credentials: UserFormValue
   ) => {
+    // Creamos un flag para saber si el componente está montado
+    let isMounted = true;
     setLoading(true);
 
-    const authResponse = await authenticate(
-      credentials.email,
-      credentials.password
-    );
+    try {
+      const authResponse = await authenticate(
+        credentials.email,
+        credentials.password
+      );
 
-    if (!authResponse.ok) {
-      toast.error('¡Error al iniciar sesión!');
-      setErrorMessage(authResponse.message);
-      setLoading(false);
-      return;
+      // Verificamos si el componente sigue montado antes de actualizar estados
+      if (!isMounted) return;
+
+      if (!authResponse.ok) {
+        toast.error('¡Error al iniciar sesión!');
+        setErrorMessage(authResponse.message);
+        setLoading(false);
+        return;
+      }
+
+      toast.success('¡Inicio de sesión exitoso!');
+      router.push('/dashboard');
+    } catch (error) {
+      // Verificamos si el componente sigue montado antes de actualizar estados
+      if (isMounted) {
+        setErrorMessage('Error inesperado durante la autenticación');
+        setLoading(false);
+      }
     }
 
-    toast.success('¡Inicio de sesión exitoso!');
-    router.push('/dashboard');
+    // Función de cleanup para el manejador de submit
+    return () => {
+      isMounted = false;
+    };
   };
 
   return (
