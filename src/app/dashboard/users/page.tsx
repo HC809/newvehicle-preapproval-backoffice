@@ -12,7 +12,6 @@ import ErrorAlert from '@/components/custom/error-alert';
 import UserListingPage from '@/features/users/components/user-listing';
 import { AlertModal } from '@/components/modal/alert-modal';
 import { useUsers, useDeleteUser } from '@/features/users/api/user-service';
-import { getErrorMessage } from '@/utils/error-utils';
 import { useUserStore } from '@/stores/user-store';
 import UserForm from '@/features/users/components/user-form';
 import KBar from '@/components/kbar';
@@ -78,7 +77,7 @@ function UserContent() {
 
           {error ? (
             <div className='space-y-4'>
-              <ErrorAlert error={getErrorMessage(error as Error)} />
+              <ErrorAlert error={error?.message || String(error)} />
             </div>
           ) : (
             <>
@@ -96,7 +95,7 @@ function UserContent() {
                 loading={deleteUserMutation.isPending}
                 onClose={() => setUserToDelete(null)}
                 onConfirm={handleDeleteUser}
-                error={deleteUserMutation.error?.message}
+                error={String(deleteUserMutation.error)}
                 title='Eliminar Usuario'
                 description={`¿Está seguro que desea eliminar el usuario "${userToDelete?.name}"? Esta acción no se puede deshacer.`}
                 confirmLabel='Eliminar'

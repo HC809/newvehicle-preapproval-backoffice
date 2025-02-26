@@ -32,7 +32,6 @@ import {
   useUpdateDealership
 } from '../api/dealership-service';
 import useAxios from '@/hooks/use-axios';
-import { getErrorMessage } from '@/utils/error-utils';
 
 const formSchema = z.object({
   name: z.string().min(2, {
@@ -253,11 +252,9 @@ export default function DealershipForm({
               updateDealershipMutation.error) && (
               <Alert variant='destructive'>
                 <AlertDescription>
-                  {getErrorMessage(
-                    (dealershipToEdit
-                      ? updateDealershipMutation.error
-                      : createDealershipMutation.error) as Error
-                  )}
+                  {dealershipToEdit
+                    ? String(updateDealershipMutation.error)
+                    : String(createDealershipMutation.error)}
                 </AlertDescription>
               </Alert>
             )}

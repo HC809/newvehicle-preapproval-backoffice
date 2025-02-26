@@ -24,3 +24,12 @@ export function formatBytes(
       : (sizes[i] ?? 'Bytes')
   }`;
 }
+
+export function sanitizeErrorMessage(message: string): string {
+  const readMoreIndex = message.indexOf('. Read more at');
+  if (readMoreIndex !== -1) {
+    return message.substring(0, readMoreIndex).trim();
+  }
+
+  return message;
+}

@@ -1,9 +1,8 @@
 // nextauth.d.ts
-import { DefaultSession, DefaultUser } from 'next-auth';
+import { DefaultUser } from 'next-auth';
 
 interface IUser extends DefaultUser {
   role: string;
-  businessId?: string;
   token: string;
   expiresIn: Date;
 }

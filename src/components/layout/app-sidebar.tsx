@@ -32,15 +32,15 @@ import {
 } from '@/components/ui/sidebar';
 import { navItems } from '@/constants/data';
 import {
-  BadgeCheck,
+  //BadgeCheck,
   Bell,
   ChevronRight,
   ChevronsUpDown,
-  CreditCard,
+  //CreditCard,
   GalleryVerticalEnd,
   LogOut
 } from 'lucide-react';
-import { signOut, useSession } from 'next-auth/react';
+import { signIn, signOut, useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import * as React from 'react';
@@ -205,7 +205,12 @@ export default function AppSidebar() {
                   </DropdownMenuItem>
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => signOut()}>
+                <DropdownMenuItem
+                  onClick={async () => {
+                    await signOut();
+                    await signIn();
+                  }}
+                >
                   <LogOut />
                   Cerrar sesión
                 </DropdownMenuItem>

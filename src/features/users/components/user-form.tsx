@@ -35,7 +35,6 @@ import * as z from 'zod';
 import { UserRole } from 'types/User';
 import { useCreateUser, useUpdateUser } from '../api/user-service';
 import useAxios from '@/hooks/use-axios';
-import { getErrorMessage } from '@/utils/error-utils';
 import { roleTranslations } from '@/utils/roleTranslations';
 import { useUserStore } from '@/stores/user-store';
 import { useDealerships } from '@/features/dealerships/api/dealership-service';
@@ -360,11 +359,9 @@ export default function UserForm({ open, onOpenChange }: UserFormProps) {
               {(createUserMutation.error || updateUserMutation.error) && (
                 <Alert variant='destructive'>
                   <AlertDescription>
-                    {getErrorMessage(
-                      (userToEdit
-                        ? updateUserMutation.error
-                        : createUserMutation.error) as Error
-                    )}
+                    {userToEdit
+                      ? String(updateUserMutation.error)
+                      : String(createUserMutation.error)}
                   </AlertDescription>
                 </Alert>
               )}

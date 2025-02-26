@@ -10,8 +10,13 @@ export const createAxiosInstance = (
     headers: {
       'Content-Type': 'application/json'
     },
-    // Aumentar el timeout para desarrollo o eliminarlo
-    timeout: process.env.NODE_ENV === 'development' ? 0 : 5000 // 0 significa sin timeout
+    // Configuración para desarrollo
+    ...(process.env.NODE_ENV === 'development' && {
+      httpsAgent: new (require('https').Agent)({
+        rejectUnauthorized: false
+      })
+    }),
+    timeout: Number(process.env.NEXT_PUBLIC_API_TIMEOUT || 5000) // 0 significa sin timeoutrrollo, 5 en producción
   });
 
   // Interceptor de solicitud
@@ -66,9 +71,7 @@ export const createAxiosInstance = (
         }
       }
 
-      // Crear un nuevo error con el mensaje formateado
-      const customError = new Error(errorMessage);
-      return Promise.reject(customError);
+      return Promise.reject(errorMessage);
     }
   );
 

@@ -1,55 +1,44 @@
-import { NextAuthConfig, Session, User } from 'next-auth';
+import NextAuth, { NextAuthConfig, Session, User } from 'next-auth';
 import CredentialProvider from 'next-auth/providers/credentials';
-import GithubProvider from 'next-auth/providers/github';
+import { createAxiosInstance } from '@/lib/axios-instance';
+import { LoginPayload } from 'types/AuthTypes';
+import { loginUser } from '@/features/auth/api/auth-api';
 import dayjs from 'dayjs';
 
-const authConfig = {
+export const BASE_PATH = '/api/auth';
+const SECRET = process.env.AUTH_SECRET!;
+
+const authOptions = {
   providers: [
-    GithubProvider({
-      clientId: process.env.GITHUB_ID ?? '',
-      clientSecret: process.env.GITHUB_SECRET ?? ''
-    }),
     CredentialProvider({
       credentials: {
-        email: {
-          type: 'email'
-        },
-        password: {
-          type: 'password'
-        }
+        email: { type: 'email' },
+        password: { type: 'password' }
       },
       async authorize(credentials): Promise<User | null> {
-        const user = {
-          id: '1',
-          name: 'Hector Caballero',
-          email: credentials?.email as string
+        const loginPayload: LoginPayload = {
+          email: credentials.email as string,
+          password: credentials.password as string
         };
-        if (user) {
-          // Mock data for testing
-          const mockData = {
-            email: 'hector.caballero@example.com',
-            fullName: 'Hector Caballero',
-            role: 'USER',
-            token: 'mock-jwt-token',
-            expiresIn: new Date(Date.now() + 3600000) // 1 hour from now
-          };
 
+        const apiClient = createAxiosInstance();
+
+        const data = await loginUser(apiClient, loginPayload);
+
+        if (data && data.token) {
           const user: User = {
-            id: mockData.email,
-            name: mockData.fullName,
-            email: mockData.email,
-            role: mockData.role,
-            token: mockData.token,
-            expiresIn: mockData.expiresIn
+            id: data.email,
+            name: data.name,
+            email: data.email,
+            role: data.role,
+            token: data.token,
+            expiresIn: data.expiresIn
           };
 
           return user;
-        } else {
-          // If you return null then an error will be displayed advising the user to check their details.
-          return null;
-
-          // You can also Reject this callback with an Error thus the user will be sent to the error page with the error message as a query parameter
         }
+
+        return null;
       }
     })
   ],
@@ -66,7 +55,6 @@ const authConfig = {
         token.accessToken = user.token;
         token.expiresIn = user.expiresIn;
       }
-
       return token;
     },
     async session({ session, token }) {
@@ -81,7 +69,9 @@ const authConfig = {
 
       session.accessToken = String(token.accessToken);
       session.user = token.data as any;
-      session.isSystemAdmin = session.user.role === 'NoemiSuperAdmin';
+      session.isSystemAdmin =
+        session.user.role === 'IT_Admin' ||
+        session.user.role === 'BusinessDevelopment_Admin';
 
       const expiresIn = dayjs(token.expiresIn as Date);
       session.expires = expiresIn.toDate();
@@ -90,8 +80,10 @@ const authConfig = {
     }
   },
   pages: {
-    signIn: '/' //sigin page
-  }
+    signIn: '/'
+  },
+  secret: SECRET,
+  basePath: BASE_PATH
 } satisfies NextAuthConfig;
 
-export default authConfig;
+export const { handlers, signIn, signOut, auth } = NextAuth(authOptions);

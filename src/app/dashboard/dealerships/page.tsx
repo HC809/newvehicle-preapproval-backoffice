@@ -17,7 +17,6 @@ import {
   useDealerships,
   useDeleteDealership
 } from '@/features/dealerships/api/dealership-service';
-import { getErrorMessage } from '@/utils/error-utils';
 import KBar from '@/components/kbar';
 
 function DealershipContent() {
@@ -82,7 +81,7 @@ function DealershipContent() {
 
           {error ? (
             <div className='space-y-4'>
-              <ErrorAlert error={getErrorMessage(error as Error)} />
+              <ErrorAlert error={error?.message || String(error)} />
             </div>
           ) : (
             <>
@@ -100,7 +99,7 @@ function DealershipContent() {
                 loading={deleteDealershipMutation.isPending}
                 onClose={() => setDealershipToDelete(null)}
                 onConfirm={handleDeleteDealership}
-                error={deleteDealershipMutation.error?.message}
+                error={String(deleteDealershipMutation.error)}
                 title='Eliminar Concesionaria'
                 description={`¿Está seguro que desea eliminar la concesionaria "${dealershipToDelete?.name}"? Esta acción no se puede deshacer.`}
                 confirmLabel='Eliminar'
