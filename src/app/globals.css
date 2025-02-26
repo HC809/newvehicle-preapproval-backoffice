@@ -106,6 +106,56 @@
     background-color: rgba(255, 255, 255, 0.03);
   }
 }
+
+/* Estilos personalizados para toasts */
+[data-sonner-toast][data-type='success'] {
+  background-color: hsl(var(--green) / 0.2) !important;
+  color: hsl(142.1 76.2% 36.3%) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+}
+
+[data-sonner-toast][data-type='error'] {
+  background-color: hsl(var(--red) / 0.2) !important;
+  color: hsl(0 72.2% 50.6%) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+}
+
+[data-sonner-toast][data-type='warning'] {
+  background-color: hsl(var(--yellow) / 0.2) !important;
+  color: hsl(38 92.7% 50.2%) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+}
+
+[data-sonner-toast][data-type='info'] {
+  background-color: hsl(var(--blue) / 0.2) !important;
+  color: hsl(221.2 83.2% 53.3%) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Estilos para modo oscuro */
+.dark [data-sonner-toast][data-type='success'],
+.dark [data-sonner-toast][data-type='error'],
+.dark [data-sonner-toast][data-type='warning'],
+.dark [data-sonner-toast][data-type='info'] {
+  color: hsl(var(--foreground)) !important;
+}
+
+/* Estilos para los botones dentro de los toasts */
+[data-sonner-toast] [data-button='action'] {
+  background-color: hsl(var(--primary)) !important;
+  color: hsl(var(--primary-foreground)) !important;
+}
+
+[data-sonner-toast] [data-button='cancel'] {
+  background-color: white !important;
+  color: black !important;
+}
+
+/* Estilos para la descripción */
+[data-sonner-toast] [data-description] {
+  color: hsl(var(--muted-foreground)) !important;
+}
+
 @layer utilities {
   .min-h-screen {
     min-height: 100vh; /* Fallback */

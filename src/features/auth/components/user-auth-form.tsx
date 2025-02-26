@@ -51,6 +51,7 @@ export default function UserAuthForm() {
     );
 
     if (!authResponse.ok) {
+      toast.error('¡Error al iniciar sesión!');
       setErrorMessage(authResponse.message);
       setLoading(false);
       return;
