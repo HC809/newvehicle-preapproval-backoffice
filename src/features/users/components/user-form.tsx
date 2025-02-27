@@ -39,6 +39,7 @@ import { roleTranslations } from '@/utils/roleTranslations';
 import { useUserStore } from '@/stores/user-store';
 import { useDealerships } from '@/features/dealerships/api/dealership-service';
 import { Checkbox } from '@/components/ui/checkbox';
+import { toast } from 'sonner';
 
 const DEFAULT_DEALERSHIP_NAME = 'COFISA';
 
@@ -120,11 +121,23 @@ export default function UserForm({ open, onOpenChange }: UserFormProps) {
       if (userToEdit) {
         updateUserMutation.mutate(
           { ...values, id: userToEdit.id },
-          { onSuccess: () => handleFormCleanup() }
+          {
+            onSuccess: () => {
+              handleFormCleanup();
+              toast.success('Usuario actualizado', {
+                description: `El usuario "${values.name}" ha sido actualizado correctamente.`
+              });
+            }
+          }
         );
       } else {
         createUserMutation.mutate(values, {
-          onSuccess: () => handleFormCleanup()
+          onSuccess: () => {
+            handleFormCleanup();
+            toast.success('Usuario creado', {
+              description: `El usuario "${values.name}" ha sido creado correctamente.`
+            });
+          }
         });
       }
     },
