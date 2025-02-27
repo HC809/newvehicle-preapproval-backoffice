@@ -32,6 +32,7 @@ import {
   useUpdateDealership
 } from '../api/dealership-service';
 import useAxios from '@/hooks/use-axios';
+import { toast } from 'sonner';
 
 const formSchema = z.object({
   name: z.string().min(2, {
@@ -93,10 +94,22 @@ export default function DealershipForm({
       dealershipToEdit
         ? updateDealershipMutation.mutate(
             { ...values, id: dealershipToEdit.id },
-            { onSuccess: () => handleFormCleanup() }
+            {
+              onSuccess: () => {
+                handleFormCleanup();
+                toast.success('Concesionaria actualizada', {
+                  description: `La concesionaria "${values.name}" ha sido actualizada correctamente.`
+                });
+              }
+            }
           )
         : createDealershipMutation.mutate(values, {
-            onSuccess: () => handleFormCleanup()
+            onSuccess: () => {
+              handleFormCleanup();
+              toast.success('Concesionaria creada', {
+                description: `La concesionaria "${values.name}" ha sido creado correctamente.`
+              });
+            }
           });
     },
     [
