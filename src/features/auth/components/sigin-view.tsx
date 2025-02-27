@@ -6,6 +6,8 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import Image from 'next/image';
 import UserAuthForm from './user-auth-form';
+import { useTheme } from 'next-themes';
+import { useEffect, useState } from 'react';
 
 export const metadata: Metadata = {
   title: 'Authentication',
@@ -13,6 +15,20 @@ export const metadata: Metadata = {
 };
 
 export default function SignInViewPage({ stars }: { stars: number }) {
+  const { resolvedTheme, theme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  // Only show correct image after component is mounted to avoid hydration mismatch
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Determine which logo to show
+  const logoSrc =
+    mounted && resolvedTheme === 'dark'
+      ? '/images/cofisa-logo-dark.png'
+      : '/images/cofisa-logo.png';
+
   return (
     <div className='relative h-screen flex-col items-center justify-center md:grid lg:max-w-none lg:grid-cols-2 lg:px-0'>
       <Link
@@ -50,7 +66,7 @@ export default function SignInViewPage({ stars }: { stars: number }) {
         <div className='mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]'>
           <div className='flex justify-center'>
             <Image
-              src='/images/cofisa-logo.png'
+              src={logoSrc}
               alt='COFISA Logo'
               width={200}
               height={80}
