@@ -15,6 +15,7 @@ import { useUsers, useDeleteUser } from '@/features/users/api/user-service';
 import { useUserStore } from '@/stores/user-store';
 import UserForm from '@/features/users/components/user-form';
 import KBar from '@/components/kbar';
+import { toast } from 'sonner';
 
 function UserContent() {
   const apiClient = useAxios();
@@ -36,6 +37,7 @@ function UserContent() {
     deleteUserMutation.mutate(userToDelete.id, {
       onSuccess: () => {
         setUserToDelete(null);
+        toast.success('Usuario eliminado correctamente.');
       }
     });
   };
@@ -95,7 +97,11 @@ function UserContent() {
                 loading={deleteUserMutation.isPending}
                 onClose={() => setUserToDelete(null)}
                 onConfirm={handleDeleteUser}
-                error={String(deleteUserMutation.error)}
+                error={
+                  deleteUserMutation.error
+                    ? String(deleteUserMutation.error)
+                    : null
+                }
                 title='Eliminar Usuario'
                 description={`¿Está seguro que desea eliminar el usuario "${userToDelete?.name}"? Esta acción no se puede deshacer.`}
                 confirmLabel='Eliminar'

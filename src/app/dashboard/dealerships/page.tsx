@@ -18,6 +18,7 @@ import {
   useDeleteDealership
 } from '@/features/dealerships/api/dealership-service';
 import KBar from '@/components/kbar';
+import { toast } from 'sonner';
 
 function DealershipContent() {
   const apiClient = useAxios();
@@ -40,6 +41,7 @@ function DealershipContent() {
     deleteDealershipMutation.mutate(dealershipToDelete.id, {
       onSuccess: () => {
         setDealershipToDelete(null);
+        toast.success('Concesionaria eliminada correctamente.');
       }
     });
   };
@@ -99,7 +101,11 @@ function DealershipContent() {
                 loading={deleteDealershipMutation.isPending}
                 onClose={() => setDealershipToDelete(null)}
                 onConfirm={handleDeleteDealership}
-                error={String(deleteDealershipMutation.error)}
+                error={
+                  deleteDealershipMutation.error
+                    ? String(deleteDealershipMutation.error)
+                    : null
+                }
                 title='Eliminar Concesionaria'
                 description={`¿Está seguro que desea eliminar la concesionaria "${dealershipToDelete?.name}"? Esta acción no se puede deshacer.`}
                 confirmLabel='Eliminar'

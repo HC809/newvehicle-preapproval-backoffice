@@ -13,7 +13,7 @@ interface AlertModalProps {
   description: string;
   confirmLabel?: string;
   cancelLabel?: string;
-  error?: string; // Add error prop
+  error?: string | null; // Add error prop
 }
 
 export const AlertModal: React.FC<AlertModalProps> = ({
