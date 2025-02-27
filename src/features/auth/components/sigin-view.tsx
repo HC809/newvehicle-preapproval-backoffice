@@ -32,6 +32,7 @@ export default function SignInViewPage({ stars }: { stars: number }) {
             alt='COFISA Logo'
             width={200}
             height={80}
+            style={{ width: 'auto', height: 'auto' }}
             priority
           />
         </div>
@@ -53,6 +54,7 @@ export default function SignInViewPage({ stars }: { stars: number }) {
               alt='COFISA Logo'
               width={200}
               height={80}
+              style={{ width: 'auto', height: 'auto' }}
               priority
             />
           </div>
