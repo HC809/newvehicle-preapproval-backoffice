@@ -25,4 +25,5 @@ export interface User extends UserForm {
   dealership: string | null;
   password: string;
   verificationType: VerificationType;
+  isDeleted: boolean;
 }

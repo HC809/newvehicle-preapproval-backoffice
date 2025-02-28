@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { MoreHorizontal } from 'lucide-react';
 import { Dealership } from 'types/Dealerships';
+import { Badge } from '@/components/ui/badge';
 
 export const DealershipColumns = (
   setDealershipToEdit: (dealership: Dealership) => void,
@@ -35,6 +36,20 @@ export const DealershipColumns = (
     header: () => <span className='font-bold'>Número de Teléfono</span>
   },
   {
+    accessorKey: 'isActive',
+    header: () => <span className='font-bold'>Estado</span>,
+    cell: ({ row }) => {
+      if (row.original.isDeleted) {
+        return <Badge variant='destructive'>Eliminado</Badge>;
+      }
+      return (
+        <Badge variant={row.original.isActive ? 'success' : 'secondary'}>
+          {row.original.isActive ? 'Activo' : 'Inactivo'}
+        </Badge>
+      );
+    }
+  },
+  {
     id: 'actions',
     header: function DealershipActionsHeader() {
       return <span className='font-bold'>Acciones</span>;
@@ -50,6 +65,10 @@ export const DealershipColumns = (
         setDealershipToDelete(dealership);
       }
 
+      function handleRestoreClick() {
+        // Empty function for now
+      }
+
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -61,12 +80,20 @@ export const DealershipColumns = (
           <DropdownMenuContent align='end'>
             <DropdownMenuLabel>Acciones</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleEditClick}>
-              Editar
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={handleDeleteClick}>
-              Eliminar
-            </DropdownMenuItem>
+            {dealership.isDeleted ? (
+              <DropdownMenuItem onClick={handleRestoreClick}>
+                Restaurar
+              </DropdownMenuItem>
+            ) : (
+              <>
+                <DropdownMenuItem onClick={handleEditClick}>
+                  Editar
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleDeleteClick}>
+                  Eliminar
+                </DropdownMenuItem>
+              </>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       );

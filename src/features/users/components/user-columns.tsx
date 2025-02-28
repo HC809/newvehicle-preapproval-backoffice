@@ -52,11 +52,16 @@ export const UserColumns = (
   {
     accessorKey: 'isActive',
     header: () => <span className='font-bold'>Estado</span>,
-    cell: ({ row }) => (
-      <Badge variant={row.original.isActive ? 'success' : 'destructive'}>
-        {row.original.isActive ? 'Activo' : 'Inactivo'}
-      </Badge>
-    )
+    cell: ({ row }) => {
+      if (row.original.isDeleted) {
+        return <Badge variant='destructive'>Eliminado</Badge>;
+      }
+      return (
+        <Badge variant={row.original.isActive ? 'success' : 'secondary'}>
+          {row.original.isActive ? 'Activo' : 'Inactivo'}
+        </Badge>
+      );
+    }
   },
   {
     id: 'actions',
@@ -72,6 +77,10 @@ export const UserColumns = (
         setUserToDelete(user);
       }
 
+      function handleRestoreClick() {
+        // Empty function for now
+      }
+
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -83,12 +92,20 @@ export const UserColumns = (
           <DropdownMenuContent align='end'>
             <DropdownMenuLabel>Acciones</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleEditClick}>
-              Editar
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={handleDeleteClick}>
-              Eliminar
-            </DropdownMenuItem>
+            {user.isDeleted ? (
+              <DropdownMenuItem onClick={handleRestoreClick}>
+                Restaurar
+              </DropdownMenuItem>
+            ) : (
+              <>
+                <DropdownMenuItem onClick={handleEditClick}>
+                  Editar
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleDeleteClick}>
+                  Eliminar
+                </DropdownMenuItem>
+              </>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       );
