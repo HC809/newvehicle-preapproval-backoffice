@@ -42,6 +42,11 @@ function UserContent() {
     });
   };
 
+  const handleCloseDeleteModal = () => {
+    setUserToDelete(null);
+    deleteUserMutation.reset(); // Reset the mutation state when closing the modal
+  };
+
   const handleOpenChange = (open: boolean) => setIsFormOpen(open);
 
   const kbarActions = {
@@ -95,7 +100,7 @@ function UserContent() {
               <AlertModal
                 isOpen={!!userToDelete}
                 loading={deleteUserMutation.isPending}
-                onClose={() => setUserToDelete(null)}
+                onClose={handleCloseDeleteModal}
                 onConfirm={handleDeleteUser}
                 error={
                   deleteUserMutation.error
