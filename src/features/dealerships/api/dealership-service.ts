@@ -8,6 +8,7 @@ import { AxiosInstance } from 'axios';
 import { Dealership, DealershipForm } from 'types/Dealerships';
 
 const DEALERSHIPS_KEY = 'dealerships';
+const USERS_KEY = 'users'; // Added USERS_KEY for invalidating users queries
 
 export const useDealerships = (
   apiClient: AxiosInstance | undefined,
@@ -73,6 +74,7 @@ export const useDeleteDealership = (apiClient: AxiosInstance | undefined) => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [DEALERSHIPS_KEY] });
+      queryClient.invalidateQueries({ queryKey: [USERS_KEY] }); // Also invalidate users queries
     }
   });
 };

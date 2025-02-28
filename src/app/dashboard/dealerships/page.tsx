@@ -46,6 +46,11 @@ function DealershipContent() {
     });
   };
 
+  const handleCloseDeleteModal = () => {
+    setDealershipToDelete(null);
+    deleteDealershipMutation.reset(); // Reset the mutation state when closing the modal
+  };
+
   const handleOpenChange = (open: boolean) => setIsFormOpen(open);
 
   const kbarActions = {
@@ -99,7 +104,7 @@ function DealershipContent() {
               <AlertModal
                 isOpen={!!dealershipToDelete}
                 loading={deleteDealershipMutation.isPending}
-                onClose={() => setDealershipToDelete(null)}
+                onClose={handleCloseDeleteModal}
                 onConfirm={handleDeleteDealership}
                 error={
                   deleteDealershipMutation.error

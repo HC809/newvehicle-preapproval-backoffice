@@ -25,7 +25,7 @@ export const AlertModal: React.FC<AlertModalProps> = ({
   description,
   confirmLabel = 'Continuar',
   cancelLabel = 'Cancelar',
-  error
+  error = null // Set default value to null
 }) => {
   const [isMounted, setIsMounted] = useState(false);
 
