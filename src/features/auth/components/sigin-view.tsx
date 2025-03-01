@@ -51,8 +51,8 @@ export default function SignInViewPage({ stars }: { stars: number }) {
           <Image
             src={logoDark}
             alt='COFISA Logo'
-            width={200}
-            height={80}
+            width={140}
+            height={20}
             style={{ width: 'auto', height: 'auto' }}
           />
         </div>
@@ -75,7 +75,7 @@ export default function SignInViewPage({ stars }: { stars: number }) {
             <Image
               src={logoSrc}
               alt='COFISA Logo'
-              width={200}
+              width={300}
               height={80}
               style={{ width: 'auto', height: 'auto' }}
             />

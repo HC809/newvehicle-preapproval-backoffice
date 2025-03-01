@@ -37,38 +37,55 @@ import {
   ChevronRight,
   ChevronsUpDown,
   //CreditCard,
-  GalleryVerticalEnd,
-  LogOut
+  //GalleryVerticalEnd,
+  LogOut,
+  CarFrontIcon
 } from 'lucide-react';
 import { signIn, signOut, useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import Image from 'next/image';
 import * as React from 'react';
 import { Icons } from '../icons';
-
-export const company = {
-  name: 'COFISA',
-  logo: GalleryVerticalEnd,
-  plan: 'Enterprise'
-};
+import { useTheme } from 'next-themes';
 
 export default function AppSidebar() {
   const { data: session } = useSession();
   const pathname = usePathname();
+  const { resolvedTheme } = useTheme();
   // const { state, isMobile } = useSidebar();
 
   const userNavItems = session?.isSystemAdmin ? adminNavItems : navItems;
+
+  const logos = {
+    light: {
+      main: '/images/logo.png'
+    },
+    dark: {
+      main: '/images/logo-dark.png'
+    }
+  };
+
+  const currentTheme = resolvedTheme === 'dark' ? 'dark' : 'light';
 
   return (
     <Sidebar collapsible='icon'>
       <SidebarHeader>
         <div className='flex gap-2 py-2 text-sidebar-accent-foreground'>
           <div className='flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground'>
-            <company.logo className='size-4' />
+            <CarFrontIcon className='size-4' />
           </div>
-          <div className='grid flex-1 text-left text-sm leading-tight'>
-            <span className='truncate font-semibold'>{company.name}</span>
-            <span className='truncate text-xs'>{company.plan}</span>
+          <div className='flex flex-1 items-center'>
+            <div className='h-8 w-full'>
+              <Image
+                src={logos[currentTheme].main}
+                alt='COFISA'
+                width={180}
+                height={40}
+                className='h-full w-auto object-contain'
+                priority
+              />
+            </div>
           </div>
         </div>
       </SidebarHeader>
