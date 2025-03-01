@@ -120,7 +120,11 @@ export default function UserForm({ open, onOpenChange }: UserFormProps) {
 
       if (userToEdit) {
         updateUserMutation.mutate(
-          { ...values, id: userToEdit.id },
+          {
+            ...values,
+            id: userToEdit.id,
+            isDeleted: userToEdit.isDeleted
+          },
           {
             onSuccess: () => {
               handleFormCleanup();

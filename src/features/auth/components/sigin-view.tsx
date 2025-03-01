@@ -8,6 +8,9 @@ import Image from 'next/image';
 import UserAuthForm from './user-auth-form';
 import { useTheme } from 'next-themes';
 import { useEffect, useState } from 'react';
+import AnimatedBackground from '@/components/custom/animated-background';
+import logo from '../../../../public/images/logo.png';
+import logoDark from '../../../../public/images/logo-dark.png';
 
 export const metadata: Metadata = {
   title: 'Authentication',
@@ -15,19 +18,14 @@ export const metadata: Metadata = {
 };
 
 export default function SignInViewPage({ stars }: { stars: number }) {
-  const { resolvedTheme, theme } = useTheme();
+  const { resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
-  // Only show correct image after component is mounted to avoid hydration mismatch
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // Determine which logo to show
-  const logoSrc =
-    mounted && resolvedTheme === 'dark'
-      ? '/images/cofisa-logo-dark.png'
-      : '/images/cofisa-logo.png';
+  const logoSrc = mounted && resolvedTheme === 'dark' ? logoDark : logo;
 
   return (
     <div className='relative h-screen flex-col items-center justify-center md:grid lg:max-w-none lg:grid-cols-2 lg:px-0'>
@@ -40,19 +38,26 @@ export default function SignInViewPage({ stars }: { stars: number }) {
       >
         Login
       </Link>
-      <div className='relative hidden h-full flex-col bg-muted p-10 text-white dark:border-r lg:flex'>
-        <div className='absolute inset-0 bg-zinc-900' />
-        <div className='relative z-20 flex items-center text-lg font-medium'>
+
+      {/* Mitad Izquierda - Cambiado a azul marino muy oscuro, casi negro */}
+      <div className='relative hidden h-full flex-col overflow-hidden bg-[#000000] p-10 text-white lg:flex'>
+        {/* Contenedor para el fondo animado */}
+        <div className='absolute inset-0 overflow-hidden'>
+          <AnimatedBackground />
+        </div>
+
+        {/* Contenido del lado izquierdo */}
+        <div className='relative z-30 flex items-center text-lg font-medium'>
           <Image
-            src='/images/cofisa-logo-dark.png'
+            src={logoDark}
             alt='COFISA Logo'
             width={200}
             height={80}
             style={{ width: 'auto', height: 'auto' }}
-            priority
           />
         </div>
-        <div className='relative z-20 mt-auto'>
+
+        <div className='relative z-30 mt-auto'>
           <blockquote className='space-y-2'>
             <p className='text-lg'>
               &ldquo;Seamos positivos y veamos oportunidades donde hay
@@ -62,6 +67,8 @@ export default function SignInViewPage({ stars }: { stars: number }) {
           </blockquote>
         </div>
       </div>
+
+      {/* Mitad Derecha */}
       <div className='flex h-full items-center p-4 lg:p-8'>
         <div className='mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]'>
           <div className='flex justify-center'>
@@ -71,7 +78,6 @@ export default function SignInViewPage({ stars }: { stars: number }) {
               width={200}
               height={80}
               style={{ width: 'auto', height: 'auto' }}
-              priority
             />
           </div>
           <div className='flex flex-col space-y-2 text-center'>
@@ -83,23 +89,6 @@ export default function SignInViewPage({ stars }: { stars: number }) {
             </p>
           </div>
           <UserAuthForm />
-          {/* <p className='px-8 text-center text-sm text-muted-foreground'>
-            By clicking continue, you agree to our{' '}
-            <Link
-              href='/terms'
-              className='underline underline-offset-4 hover:text-primary'
-            >
-              Terms of Service
-            </Link>{' '}
-            and{' '}
-            <Link
-              href='/privacy'
-              className='underline underline-offset-4 hover:text-primary'
-            >
-              Privacy Policy
-            </Link>
-            .
-          </p> */}
         </div>
       </div>
     </div>

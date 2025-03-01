@@ -46,7 +46,8 @@ const formSchema = z.object({
   }),
   email: z.string().email({
     message: 'Por favor ingrese un correo electrónico válido.'
-  })
+  }),
+  isActive: z.boolean()
 }) satisfies z.ZodType<IDealershipForm>;
 
 type DealershipFormProps = {
@@ -69,7 +70,8 @@ export default function DealershipForm({
       name: dealershipToEdit?.name ?? '',
       address: dealershipToEdit?.address ?? '',
       phoneNumber: dealershipToEdit?.phoneNumber ?? '',
-      email: dealershipToEdit?.email ?? ''
+      email: dealershipToEdit?.email ?? '',
+      isActive: true
     },
     mode: 'onChange' // Validación en tiempo real
   });
@@ -93,7 +95,11 @@ export default function DealershipForm({
 
       dealershipToEdit
         ? updateDealershipMutation.mutate(
-            { ...values, id: dealershipToEdit.id },
+            {
+              ...values,
+              id: dealershipToEdit.id,
+              isDeleted: dealershipToEdit.isDeleted
+            },
             {
               onSuccess: () => {
                 handleFormCleanup();

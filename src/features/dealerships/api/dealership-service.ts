@@ -5,7 +5,7 @@ import {
   UseQueryResult
 } from '@tanstack/react-query';
 import { AxiosInstance } from 'axios';
-import { Dealership, DealershipForm } from 'types/Dealerships';
+import { CreateDelaershipForm, Dealership } from 'types/Dealerships';
 
 const DEALERSHIPS_KEY = 'dealerships';
 const USERS_KEY = 'users'; // Added USERS_KEY for invalidating users queries
@@ -28,8 +28,8 @@ export const useDealerships = (
 export const useCreateDealership = (apiClient: AxiosInstance | undefined) => {
   const queryClient = useQueryClient();
 
-  return useMutation<string, Error, DealershipForm>({
-    mutationFn: async (dealership: DealershipForm) => {
+  return useMutation<string, Error, CreateDelaershipForm>({
+    mutationFn: async (dealership: CreateDelaershipForm) => {
       if (!apiClient) throw new Error('API client not initialized');
       const response = await apiClient.post<string>(
         '/dealerships/create',

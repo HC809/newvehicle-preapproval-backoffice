@@ -4,9 +4,11 @@ export interface DealershipForm {
   phoneNumber: string;
   email: string;
   isActive: boolean;
-  isDeleted: boolean;
 }
+
+export type CreateDelaershipForm = Omit<DealershipForm, 'isActive'>;
 
 export interface Dealership extends DealershipForm {
   id: string;
+  isDeleted: boolean;
 }
