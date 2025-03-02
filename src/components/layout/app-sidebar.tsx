@@ -53,7 +53,13 @@ export default function AppSidebar() {
   const { data: session } = useSession();
   const pathname = usePathname();
   const { resolvedTheme } = useTheme();
+  const [mounted, setMounted] = React.useState(false);
   // const { state, isMobile } = useSidebar();
+
+  // Efecto para manejar el montaje del cliente
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const userNavItems = session?.isSystemAdmin ? adminNavItems : navItems;
 
@@ -66,7 +72,8 @@ export default function AppSidebar() {
     }
   };
 
-  const currentTheme = resolvedTheme === 'dark' ? 'dark' : 'light';
+  const logoSrc =
+    mounted && resolvedTheme === 'dark' ? logos.dark.main : logos.light.main;
 
   return (
     <Sidebar collapsible='icon'>
@@ -78,7 +85,7 @@ export default function AppSidebar() {
           <div className='flex flex-1 items-center'>
             <div className='h-8 w-full'>
               <Image
-                src={logos[currentTheme].main}
+                src={logoSrc}
                 alt='COFISA'
                 width={180}
                 height={40}

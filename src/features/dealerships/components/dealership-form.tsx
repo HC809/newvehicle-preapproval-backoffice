@@ -15,7 +15,8 @@ import {
   FormField,
   FormItem,
   FormLabel,
-  FormMessage
+  FormMessage,
+  FormDescription
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -33,6 +34,7 @@ import {
 } from '../api/dealership-service';
 import useAxios from '@/hooks/use-axios';
 import { toast } from 'sonner';
+import { Checkbox } from '@/components/ui/checkbox';
 
 const formSchema = z.object({
   name: z.string().min(2, {
@@ -81,7 +83,8 @@ export default function DealershipForm({
       name: '',
       address: '',
       phoneNumber: '',
-      email: ''
+      email: '',
+      isActive: true
     });
     setDealershipToEdit(null);
   }, [form, setDealershipToEdit]);
@@ -144,7 +147,8 @@ export default function DealershipForm({
         name: dealershipToEdit.name,
         address: dealershipToEdit.address || '',
         phoneNumber: dealershipToEdit.phoneNumber || '',
-        email: dealershipToEdit.email || ''
+        email: dealershipToEdit.email || '',
+        isActive: dealershipToEdit.isActive
       });
     }
   }, [dealershipToEdit, form]);
@@ -178,7 +182,7 @@ export default function DealershipForm({
             onSubmit={form.handleSubmit(handleSubmit)}
             className='space-y-4 md:space-y-6'
           >
-            <div className='grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6'>
+            <div className='space-y-4'>
               <FormField
                 control={form.control}
                 name='name'
@@ -243,29 +247,54 @@ export default function DealershipForm({
                   </FormItem>
                 )}
               />
-            </div>
 
-            <FormField
-              control={form.control}
-              name='address'
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Dirección</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      {...field}
-                      placeholder='Ingrese la dirección completa'
-                      className='resize-none'
-                    />
-                  </FormControl>
-                  {form.formState.errors.address && (
-                    <FormMessage>
-                      {form.formState.errors.address.message}
-                    </FormMessage>
+              <FormField
+                control={form.control}
+                name='address'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Dirección</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        {...field}
+                        placeholder='Ingrese la dirección completa'
+                        className='resize-none'
+                      />
+                    </FormControl>
+                    {form.formState.errors.address && (
+                      <FormMessage>
+                        {form.formState.errors.address.message}
+                      </FormMessage>
+                    )}
+                  </FormItem>
+                )}
+              />
+
+              {dealershipToEdit && (
+                <FormField
+                  control={form.control}
+                  name='isActive'
+                  render={({ field }) => (
+                    <FormItem className='flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4'>
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                      <div className='space-y-1 leading-none'>
+                        <FormLabel>Concesionaria Activa</FormLabel>
+                        <FormDescription>
+                          Al desactivar una concesionaria, los usuarios
+                          asesores/vendedores asociados a ella quedarán
+                          desactivados y no podrán iniciar sesión en el sistema.
+                        </FormDescription>
+                      </div>
+                    </FormItem>
                   )}
-                </FormItem>
+                />
               )}
-            />
+            </div>
 
             {(createDealershipMutation.error ||
               updateDealershipMutation.error) && (
