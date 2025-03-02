@@ -30,8 +30,12 @@ function DealershipContent() {
     refetch
   } = useDealerships(apiClient);
   const deleteDealershipMutation = useDeleteDealership(apiClient);
-  const { dealershipToEdit, dealershipToDelete, setDealershipToDelete } =
-    useDealershipStore();
+  const {
+    dealershipToEdit,
+    dealershipToDelete,
+    setDealershipToDelete,
+    setDealershipToEdit
+  } = useDealershipStore();
 
   const [isFormOpen, setIsFormOpen] = useState(false);
 
@@ -51,7 +55,13 @@ function DealershipContent() {
     deleteDealershipMutation.reset(); // Reset the mutation state when closing the modal
   };
 
-  const handleOpenChange = (open: boolean) => setIsFormOpen(open);
+  const handleOpenChange = (open: boolean) => {
+    setIsFormOpen(open);
+    if (!open) {
+      // Also clear the edit state when closing the form
+      setDealershipToEdit(null);
+    }
+  };
 
   const kbarActions = {
     openUserForm: () => setIsFormOpen(true)

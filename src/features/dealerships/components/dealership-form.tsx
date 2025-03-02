@@ -130,10 +130,14 @@ export default function DealershipForm({
     ]
   );
 
+  const isFormLocked =
+    createDealershipMutation.isPending || updateDealershipMutation.isPending;
+
   const handleClose = useCallback(() => {
+    if (isFormLocked) return; // Prevent closing if mutations are pending
     resetForm();
     onOpenChange(false);
-  }, [resetForm, onOpenChange]);
+  }, [resetForm, onOpenChange, isFormLocked]);
 
   useEffect(() => {
     if (!open) {
@@ -153,11 +157,14 @@ export default function DealershipForm({
     }
   }, [dealershipToEdit, form]);
 
-  const isFormLocked =
-    createDealershipMutation.isPending || updateDealershipMutation.isPending;
-
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog
+      open={open}
+      onOpenChange={(newOpenState) => {
+        if (!newOpenState && isFormLocked) return; // Prevent closing if mutations are pending
+        onOpenChange(newOpenState);
+      }}
+    >
       <DialogContent
         className='sm:max-w-[725px]'
         onEscapeKeyDown={(event) => {
@@ -165,7 +172,11 @@ export default function DealershipForm({
             event.preventDefault();
           }
         }}
-        onPointerDownOutside={(event) => event.preventDefault()}
+        onPointerDownOutside={(event) => {
+          if (isFormLocked) {
+            event.preventDefault();
+          }
+        }}
       >
         <DialogHeader>
           <DialogTitle className='text-lg md:text-xl'>

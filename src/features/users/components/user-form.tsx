@@ -154,12 +154,22 @@ export default function UserForm({ open, onOpenChange }: UserFormProps) {
     ]
   );
 
+  const isFormLocked =
+    createUserMutation.isPending || updateUserMutation.isPending;
+
   const handleClose = useCallback(() => {
+    if (isFormLocked) return; // Prevent closing if mutations are pending
     resetForm();
     createUserMutation.reset();
     updateUserMutation.reset();
     onOpenChange(false);
-  }, [resetForm, onOpenChange, createUserMutation, updateUserMutation]);
+  }, [
+    resetForm,
+    onOpenChange,
+    createUserMutation,
+    updateUserMutation,
+    isFormLocked
+  ]);
 
   useEffect(() => {
     if (open) {
@@ -205,13 +215,14 @@ export default function UserForm({ open, onOpenChange }: UserFormProps) {
   const isLoadingDealerships =
     isDealershipsLoading || isDealershipsFetching || !isDealershipsSuccess;
 
-  const isFormLocked =
-    isLoadingDealerships ||
-    createUserMutation.isPending ||
-    updateUserMutation.isPending;
-
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog
+      open={open}
+      onOpenChange={(newOpenState) => {
+        if (!newOpenState && isFormLocked) return; // Prevent closing if mutations are pending
+        onOpenChange(newOpenState);
+      }}
+    >
       <DialogContent
         className='sm:max-w-[725px]'
         onEscapeKeyDown={(event) => {
@@ -219,7 +230,11 @@ export default function UserForm({ open, onOpenChange }: UserFormProps) {
             event.preventDefault();
           }
         }}
-        onPointerDownOutside={(event) => event.preventDefault()}
+        onPointerDownOutside={(event) => {
+          if (isFormLocked) {
+            event.preventDefault();
+          }
+        }}
       >
         <DialogHeader>
           <DialogTitle className='text-lg md:text-xl'>

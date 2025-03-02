@@ -27,7 +27,8 @@ function UserContent() {
     refetch
   } = useUsers(apiClient);
   const deleteUserMutation = useDeleteUser(apiClient);
-  const { userToEdit, userToDelete, setUserToDelete } = useUserStore();
+  const { userToEdit, userToDelete, setUserToDelete, setUserToEdit } =
+    useUserStore();
 
   const [isFormOpen, setIsFormOpen] = useState(false);
 
@@ -47,7 +48,13 @@ function UserContent() {
     deleteUserMutation.reset(); // Reset the mutation state when closing the modal
   };
 
-  const handleOpenChange = (open: boolean) => setIsFormOpen(open);
+  const handleOpenChange = (open: boolean) => {
+    setIsFormOpen(open);
+    if (!open) {
+      // Also clear the edit state when closing the form
+      setUserToEdit(null);
+    }
+  };
 
   const kbarActions = {
     openUserForm: () => setIsFormOpen(true)
