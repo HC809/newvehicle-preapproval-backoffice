@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef } from 'react';
+import React from 'react';
 import { DataTable as DealershipsTable } from '@/components/ui/table/data-table';
 import { DealershipColumns } from './dealership-columns';
 import { Dealership } from 'types/Dealerships';
@@ -19,7 +19,8 @@ export default function DealershipListingPage({
   totalItems,
   isLoading
 }: DealershipListingPageProps) {
-  const { setDealershipToEdit, setDealershipToDelete } = useDealershipStore();
+  const { setDealershipToEdit, setDealershipToDelete, setDealershipToRestore } =
+    useDealershipStore();
   // const parentRef = useRef(null);
 
   // const rowVirtualizer = useVirtualizer({
@@ -38,7 +39,11 @@ export default function DealershipListingPage({
 
   return (
     <DealershipsTable
-      columns={DealershipColumns(setDealershipToEdit, setDealershipToDelete)}
+      columns={DealershipColumns(
+        setDealershipToEdit,
+        setDealershipToDelete,
+        setDealershipToRestore
+      )}
       data={dealerships}
       totalItems={totalItems}
     />

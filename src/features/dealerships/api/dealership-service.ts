@@ -78,3 +78,20 @@ export const useDeleteDealership = (apiClient: AxiosInstance | undefined) => {
     }
   });
 };
+
+export const useRestoreDealership = (apiClient: AxiosInstance | undefined) => {
+  const queryClient = useQueryClient();
+
+  return useMutation<boolean, Error, string>({
+    mutationFn: async (id: string) => {
+      if (!apiClient) throw new Error('API client not initialized');
+      const response = await apiClient.put<boolean>(
+        `/dealerships/restore/${id}`
+      );
+      return response.data; // Returns true/false
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [DEALERSHIPS_KEY] });
+    }
+  });
+};

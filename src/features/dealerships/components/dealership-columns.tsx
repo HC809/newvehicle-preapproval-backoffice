@@ -17,7 +17,8 @@ import { Badge } from '@/components/ui/badge';
 
 export const DealershipColumns = (
   setDealershipToEdit: (dealership: Dealership) => void,
-  setDealershipToDelete: (dealership: Dealership) => void
+  setDealershipToDelete: (dealership: Dealership) => void,
+  setDealershipToRestore: (dealership: Dealership) => void
 ): ColumnDef<Dealership>[] => [
   {
     accessorKey: 'name',
@@ -66,7 +67,7 @@ export const DealershipColumns = (
       }
 
       function handleRestoreClick() {
-        // Empty function for now
+        setDealershipToRestore(dealership);
       }
 
       return (

@@ -15,7 +15,8 @@ import { useDealershipStore } from '@/stores/dealership-store';
 import { AlertModal } from '@/components/modal/alert-modal';
 import {
   useDealerships,
-  useDeleteDealership
+  useDeleteDealership,
+  useRestoreDealership
 } from '@/features/dealerships/api/dealership-service';
 import KBar from '@/components/kbar';
 import { toast } from 'sonner';
@@ -29,12 +30,17 @@ function DealershipContent() {
     error,
     refetch
   } = useDealerships(apiClient);
+
   const deleteDealershipMutation = useDeleteDealership(apiClient);
+  const restoreDealershipMutation = useRestoreDealership(apiClient);
+
   const {
     dealershipToEdit,
     dealershipToDelete,
+    dealershipToRestore,
     setDealershipToDelete,
-    setDealershipToEdit
+    setDealershipToEdit,
+    setDealershipToRestore
   } = useDealershipStore();
 
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -50,15 +56,31 @@ function DealershipContent() {
     });
   };
 
+  const handleRestoreDealership = async (): Promise<void> => {
+    if (!dealershipToRestore) return;
+
+    restoreDealershipMutation.mutate(dealershipToRestore.id, {
+      onSuccess: () => {
+        setDealershipToRestore(null);
+        toast.success('Concesionaria restaurada correctamente.');
+        refetch();
+      }
+    });
+  };
+
   const handleCloseDeleteModal = () => {
     setDealershipToDelete(null);
-    deleteDealershipMutation.reset(); // Reset the mutation state when closing the modal
+    deleteDealershipMutation.reset();
+  };
+
+  const handleCloseRestoreModal = () => {
+    setDealershipToRestore(null);
+    restoreDealershipMutation.reset();
   };
 
   const handleOpenChange = (open: boolean) => {
     setIsFormOpen(open);
     if (!open) {
-      // Also clear the edit state when closing the form
       setDealershipToEdit(null);
     }
   };
@@ -125,6 +147,23 @@ function DealershipContent() {
                 description={`¿Está seguro que desea eliminar la concesionaria "${dealershipToDelete?.name}"? Esta acción no se puede deshacer.`}
                 confirmLabel='Eliminar'
                 cancelLabel='Cancelar'
+                intent='delete'
+              />
+              <AlertModal
+                isOpen={!!dealershipToRestore}
+                loading={restoreDealershipMutation.isPending}
+                onClose={handleCloseRestoreModal}
+                onConfirm={handleRestoreDealership}
+                error={
+                  restoreDealershipMutation.error
+                    ? String(restoreDealershipMutation.error)
+                    : null
+                }
+                title='Restaurar Concesionaria'
+                description={`¿Está seguro que desea restaurar la concesionaria "${dealershipToRestore?.name}"?`}
+                confirmLabel='Restaurar'
+                cancelLabel='Cancelar'
+                intent='restore'
               />
             </>
           )}

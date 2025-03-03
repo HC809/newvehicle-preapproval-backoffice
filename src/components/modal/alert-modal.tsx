@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Modal } from '@/components/ui/modal';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { cn } from '@/lib/utils'; // Make sure this import exists
 
 interface AlertModalProps {
   isOpen: boolean;
@@ -13,7 +14,9 @@ interface AlertModalProps {
   description: string;
   confirmLabel?: string;
   cancelLabel?: string;
-  error?: string | null; // Add error prop
+  error?: string | null;
+  // Use 'intent' instead of 'variant' to avoid type conflicts
+  intent?: 'delete' | 'restore' | 'default';
 }
 
 export const AlertModal: React.FC<AlertModalProps> = ({
@@ -25,7 +28,8 @@ export const AlertModal: React.FC<AlertModalProps> = ({
   description,
   confirmLabel = 'Continuar',
   cancelLabel = 'Cancelar',
-  error = null // Set default value to null
+  error = null,
+  intent = 'default'
 }) => {
   const [isMounted, setIsMounted] = useState(false);
 
@@ -36,6 +40,29 @@ export const AlertModal: React.FC<AlertModalProps> = ({
   if (!isMounted) {
     return null;
   }
+
+  // Map intent to button styling
+  const getButtonStyling = () => {
+    switch (intent) {
+      case 'delete':
+        return {
+          variant: 'destructive' as const,
+          className: ''
+        };
+      case 'restore':
+        return {
+          variant: 'default' as const,
+          className: 'bg-yellow-600 hover:bg-yellow-700 text-white'
+        };
+      default:
+        return {
+          variant: 'default' as const,
+          className: ''
+        };
+    }
+  };
+
+  const buttonStyle = getButtonStyling();
 
   return (
     <Modal
@@ -53,7 +80,12 @@ export const AlertModal: React.FC<AlertModalProps> = ({
         <Button disabled={loading} variant='outline' onClick={onClose}>
           {cancelLabel}
         </Button>
-        <Button disabled={loading} variant='destructive' onClick={onConfirm}>
+        <Button
+          disabled={loading}
+          variant={buttonStyle.variant}
+          className={cn(buttonStyle.className)}
+          onClick={onConfirm}
+        >
           {confirmLabel}
         </Button>
       </div>
