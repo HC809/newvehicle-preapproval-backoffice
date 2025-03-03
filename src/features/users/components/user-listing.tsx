@@ -18,7 +18,7 @@ export default function UserListingPage({
   totalItems,
   isLoading
 }: UserListingPageProps) {
-  const { setUserToEdit, setUserToDelete } = useUserStore();
+  const { setUserToEdit, setUserToDelete, setUserToRestore } = useUserStore();
 
   if (isLoading) {
     return <DataTableSkeleton columnCount={6} rowCount={10} />;
@@ -30,7 +30,7 @@ export default function UserListingPage({
 
   return (
     <UsersTable
-      columns={UserColumns(setUserToEdit, setUserToDelete)}
+      columns={UserColumns(setUserToEdit, setUserToDelete, setUserToRestore)}
       data={users}
       totalItems={totalItems}
     />

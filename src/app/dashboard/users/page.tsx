@@ -10,10 +10,15 @@ import { Button } from '@/components/ui/button';
 import useAxios from '@/hooks/use-axios';
 import ErrorAlert from '@/components/custom/error-alert';
 import UserListingPage from '@/features/users/components/user-listing';
-import { AlertModal } from '@/components/modal/alert-modal';
-import { useUsers, useDeleteUser } from '@/features/users/api/user-service';
-import { useUserStore } from '@/stores/user-store';
 import UserForm from '@/features/users/components/user-form';
+import { useUserStore } from '@/stores/user-store';
+import { AlertModal } from '@/components/modal/alert-modal';
+import {
+  useUsers,
+  useDeleteUser,
+  useRestoreUser
+} from '@/features/users/api/user-service';
+import { getUserModalProps } from '@/features/users/helpers/modal-helpers';
 import KBar from '@/components/kbar';
 import { toast } from 'sonner';
 
@@ -26,32 +31,62 @@ function UserContent() {
     error,
     refetch
   } = useUsers(apiClient);
+
   const deleteUserMutation = useDeleteUser(apiClient);
-  const { userToEdit, userToDelete, setUserToDelete, setUserToEdit } =
-    useUserStore();
+  const restoreUserMutation = useRestoreUser(apiClient);
+
+  const {
+    userToEdit,
+    userToDelete,
+    userToRestore,
+    setUserToDelete,
+    setUserToEdit,
+    setUserToRestore
+  } = useUserStore();
 
   const [isFormOpen, setIsFormOpen] = useState(false);
 
-  const handleDeleteUser = async (): Promise<void> => {
-    if (!userToDelete) return;
+  const modalAction = userToDelete
+    ? 'delete'
+    : userToRestore
+      ? 'restore'
+      : null;
 
-    deleteUserMutation.mutate(userToDelete.id, {
-      onSuccess: () => {
-        setUserToDelete(null);
-        toast.success('Usuario eliminado correctamente.');
-      }
-    });
+  // Handle confirmation based on the current action
+  const handleConfirmAction = async (): Promise<void> => {
+    if (modalAction === 'delete' && userToDelete) {
+      deleteUserMutation.mutate(userToDelete.id, {
+        onSuccess: () => {
+          setUserToDelete(null);
+          toast.success('Usuario eliminado correctamente.');
+          refetch();
+        }
+      });
+    } else if (modalAction === 'restore' && userToRestore) {
+      restoreUserMutation.mutate(userToRestore.id, {
+        onSuccess: () => {
+          setUserToRestore(null);
+          toast.success('Usuario restaurado correctamente.');
+          refetch();
+        }
+      });
+    }
   };
 
-  const handleCloseDeleteModal = () => {
-    setUserToDelete(null);
-    deleteUserMutation.reset(); // Reset the mutation state when closing the modal
+  // Handle closing the modal based on the current action
+  const handleCloseModal = () => {
+    if (modalAction === 'delete') {
+      setUserToDelete(null);
+      deleteUserMutation.reset();
+    } else if (modalAction === 'restore') {
+      setUserToRestore(null);
+      restoreUserMutation.reset();
+    }
   };
 
   const handleOpenChange = (open: boolean) => {
     setIsFormOpen(open);
     if (!open) {
-      // Also clear the edit state when closing the form
       setUserToEdit(null);
     }
   };
@@ -59,6 +94,26 @@ function UserContent() {
   const kbarActions = {
     openUserForm: () => setIsFormOpen(true)
   };
+
+  const selectedUser = userToDelete || userToRestore;
+
+  const isModalOpen = Boolean(modalAction);
+
+  const isModalLoading =
+    modalAction === 'delete'
+      ? deleteUserMutation.isPending
+      : restoreUserMutation.isPending;
+
+  const modalError =
+    modalAction === 'delete'
+      ? deleteUserMutation.error
+        ? String(deleteUserMutation.error)
+        : null
+      : restoreUserMutation.error
+        ? String(restoreUserMutation.error)
+        : null;
+
+  const modalProps = getUserModalProps(modalAction, selectedUser);
 
   return (
     <KBar actions={kbarActions}>
@@ -100,25 +155,26 @@ function UserContent() {
                 totalItems={users?.length || 0}
                 isLoading={isLoading || !users}
               />
+
               <UserForm
                 open={isFormOpen || !!userToEdit}
                 onOpenChange={handleOpenChange}
               />
-              <AlertModal
-                isOpen={!!userToDelete}
-                loading={deleteUserMutation.isPending}
-                onClose={handleCloseDeleteModal}
-                onConfirm={handleDeleteUser}
-                error={
-                  deleteUserMutation.error
-                    ? String(deleteUserMutation.error)
-                    : null
-                }
-                title='Eliminar Usuario'
-                description={`¿Está seguro que desea eliminar el usuario "${userToDelete?.name}"? Esta acción no se puede deshacer.`}
-                confirmLabel='Eliminar'
-                cancelLabel='Cancelar'
-              />
+
+              {modalAction && (
+                <AlertModal
+                  isOpen={isModalOpen}
+                  loading={isModalLoading}
+                  onClose={handleCloseModal}
+                  onConfirm={handleConfirmAction}
+                  error={modalError}
+                  title={modalProps.title}
+                  description={modalProps.description}
+                  confirmLabel={modalProps.confirmLabel}
+                  cancelLabel='Cancelar'
+                  intent={modalProps.intent}
+                />
+              )}
             </>
           )}
         </div>

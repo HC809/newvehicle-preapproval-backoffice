@@ -70,3 +70,18 @@ export const useDeleteUser = (apiClient: AxiosInstance | undefined) => {
     }
   });
 };
+
+export const useRestoreUser = (apiClient: AxiosInstance | undefined) => {
+  const queryClient = useQueryClient();
+
+  return useMutation<boolean, Error, string>({
+    mutationFn: async (id: string) => {
+      if (!apiClient) throw new Error('API client not initialized');
+      const response = await apiClient.put<boolean>(`/users/restore/${id}`);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [USERS_KEY] });
+    }
+  });
+};

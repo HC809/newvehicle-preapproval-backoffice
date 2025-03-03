@@ -19,7 +19,8 @@ import { verificationTypeTranslations } from '@/utils/verificationTypeTranslatio
 
 export const UserColumns = (
   setUserToEdit: (user: User) => void,
-  setUserToDelete: (user: User) => void
+  setUserToDelete: (user: User) => void,
+  setUserToRestore: (user: User) => void
 ): ColumnDef<User>[] => [
   {
     accessorKey: 'name',
@@ -78,7 +79,7 @@ export const UserColumns = (
       }
 
       function handleRestoreClick() {
-        // Empty function for now
+        setUserToRestore(user);
       }
 
       return (

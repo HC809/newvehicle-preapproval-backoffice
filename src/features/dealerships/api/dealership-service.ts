@@ -57,6 +57,7 @@ export const useUpdateDealership = (apiClient: AxiosInstance | undefined) => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [DEALERSHIPS_KEY] });
+      queryClient.invalidateQueries({ queryKey: [USERS_KEY] });
     }
   });
 };
@@ -74,7 +75,7 @@ export const useDeleteDealership = (apiClient: AxiosInstance | undefined) => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [DEALERSHIPS_KEY] });
-      queryClient.invalidateQueries({ queryKey: [USERS_KEY] }); // Also invalidate users queries
+      queryClient.invalidateQueries({ queryKey: [USERS_KEY] });
     }
   });
 };
