@@ -1,7 +1,10 @@
 'use client';
 
 import React, { useEffect, useRef } from 'react';
-import { useTheme } from 'next-themes';
+
+interface AnimatedBackgroundProps {
+  theme?: string;
+}
 
 declare global {
   interface Window {
@@ -9,9 +12,10 @@ declare global {
   }
 }
 
-const AnimatedBackground = () => {
+const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({
+  theme = 'dark'
+}) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const { resolvedTheme } = useTheme();
 
   useEffect(() => {
     // Dynamically import particles.js script
@@ -23,6 +27,9 @@ const AnimatedBackground = () => {
 
       script.onload = () => {
         if (window.particlesJS && containerRef.current) {
+          // Set background color based on theme
+          const backgroundColor = theme === 'dark' ? '#000000' : '#0c2461';
+
           window.particlesJS('particles-js', {
             particles: {
               number: {
@@ -103,6 +110,11 @@ const AnimatedBackground = () => {
             },
             retina_detect: true
           });
+
+          // Apply background color to the container
+          if (containerRef.current) {
+            containerRef.current.style.backgroundColor = backgroundColor;
+          }
         }
       };
 
@@ -116,13 +128,14 @@ const AnimatedBackground = () => {
     };
 
     loadParticlesScript();
-  }, [resolvedTheme]);
+  }, [theme]); // Add theme as dependency to reload when theme changes
 
   return (
     <div
       ref={containerRef}
       id='particles-js'
-      className='absolute inset-0'
+      className='absolute inset-0 z-0' // Ensure z-index is below content
+      style={{ pointerEvents: 'none' }} // Prevent particles from blocking interactions
     ></div>
   );
 };

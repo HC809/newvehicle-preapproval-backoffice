@@ -40,14 +40,14 @@ export default function SignInViewPage({ stars }: { stars: number }) {
       </Link>
 
       {/* Mitad Izquierda - Cambiado a azul marino muy oscuro, casi negro */}
-      <div className='relative hidden h-full flex-col overflow-hidden bg-[#000000] p-10 text-white lg:flex'>
-        {/* Contenedor para el fondo animado */}
+      <div className='relative hidden h-full flex-col overflow-hidden p-10 text-white lg:flex'>
+        {/* Contenedor para el fondo animado - Note that we're now applying background color in the component */}
         <div className='absolute inset-0 overflow-hidden'>
-          <AnimatedBackground />
+          <AnimatedBackground theme={resolvedTheme} />
         </div>
 
-        {/* Contenido del lado izquierdo */}
-        <div className='relative z-30 flex items-center text-lg font-medium'>
+        {/* Contenido del lado izquierdo - increasing z-index to ensure visibility */}
+        <div className='relative z-20 flex items-center text-lg font-medium'>
           <Image
             src={logoDark}
             alt='COFISA Logo'
@@ -57,7 +57,7 @@ export default function SignInViewPage({ stars }: { stars: number }) {
           />
         </div>
 
-        <div className='relative z-30 mt-auto'>
+        <div className='relative z-20 mt-auto'>
           <blockquote className='space-y-2'>
             <p className='text-lg'>
               &ldquo;Seamos positivos y veamos oportunidades donde hay
