@@ -10,7 +10,8 @@ import { User, CreateUserForm } from 'types/User';
 const USERS_KEY = 'users';
 
 export const useUsers = (
-  apiClient: AxiosInstance | undefined
+  apiClient: AxiosInstance | undefined,
+  enabled: boolean = true // Add the enabled parameter with default value of true
 ): UseQueryResult<User[], Error> => {
   return useQuery({
     queryKey: [USERS_KEY],
@@ -19,7 +20,7 @@ export const useUsers = (
       const response = await apiClient.get<User[]>('/users');
       return response.data;
     },
-    enabled: !!apiClient
+    enabled: !!apiClient && enabled // Only run the query when API client is available and enabled is true
   });
 };
 

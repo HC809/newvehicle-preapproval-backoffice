@@ -84,9 +84,8 @@ export default function UserForm({ open, onOpenChange }: UserFormProps) {
     isLoading: isDealershipsLoading,
     isFetching: isDealershipsFetching,
     isSuccess: isDealershipsSuccess
-  } = useDealerships(apiClient, open); // Pasar open como parámetro enabled
+  } = useDealerships(apiClient, open);
 
-  // Mover el filtrado aquí arriba y usar memo para evitar recálculos innecesarios
   const filteredDealerships = React.useMemo(
     () => dealerships.filter((d) => d.name !== DEFAULT_DEALERSHIP_NAME),
     [dealerships]

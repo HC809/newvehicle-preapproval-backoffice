@@ -25,8 +25,13 @@ export const DealershipColumns = (
     header: () => <span className='font-bold'>Nombre</span>
   },
   {
-    accessorKey: 'address',
-    header: () => <span className='font-bold'>Dirección</span>
+    accessorKey: 'managerName',
+    header: () => <span className='font-bold'>Responsable</span>,
+    cell: ({ row }) => (
+      <Badge variant={row.original.managerId ? 'default' : 'outline'}>
+        {row.original.managerName}
+      </Badge>
+    )
   },
   {
     accessorKey: 'email',
@@ -35,6 +40,10 @@ export const DealershipColumns = (
   {
     accessorKey: 'phoneNumber',
     header: () => <span className='font-bold'>Número de Teléfono</span>
+  },
+  {
+    accessorKey: 'address',
+    header: () => <span className='font-bold'>Dirección</span>
   },
   {
     accessorKey: 'isActive',

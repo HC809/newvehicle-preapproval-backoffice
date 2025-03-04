@@ -15,18 +15,18 @@ export const navItems: NavItem[] = [
 export const adminNavItems: NavItem[] = [
   ...navItems,
   {
-    title: 'Concesionarias',
-    url: '/dashboard/dealerships',
-    icon: 'concesionaria',
-    shortcut: ['c', 'c'],
-    isActive: false,
-    items: []
-  },
-  {
     title: 'Usuarios',
     url: '/dashboard/users',
     icon: 'users',
     shortcut: ['u', 'u'],
+    isActive: false,
+    items: []
+  },
+  {
+    title: 'Concesionarias',
+    url: '/dashboard/dealerships',
+    icon: 'concesionaria',
+    shortcut: ['c', 'c'],
     isActive: false,
     items: []
   }

@@ -46,12 +46,12 @@ export const useCreateDealership = (apiClient: AxiosInstance | undefined) => {
 export const useUpdateDealership = (apiClient: AxiosInstance | undefined) => {
   const queryClient = useQueryClient();
 
-  return useMutation<boolean, Error, Dealership>({
-    mutationFn: async (dealership: Dealership) => {
+  return useMutation<boolean, Error, Partial<Dealership> & { id: string }>({
+    mutationFn: async (dealershipUpdate): Promise<boolean> => {
       if (!apiClient) throw new Error('API client not initialized');
       const response = await apiClient.put<boolean>(
-        `/dealerships/update/${dealership.id}`,
-        dealership
+        `/dealerships/update/${dealershipUpdate.id}`,
+        dealershipUpdate
       );
       return response.data; // Returns true/false
     },
