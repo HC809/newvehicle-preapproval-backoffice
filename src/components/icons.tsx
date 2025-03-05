@@ -28,9 +28,9 @@ import {
   Trash,
   UsersRound,
   User,
-  UserCircle2Icon,
   UserPen,
   UserX2Icon,
+  CarIcon,
   X
 } from 'lucide-react';
 
@@ -66,6 +66,7 @@ export const Icons = {
   moon: Moon,
   laptop: Laptop,
   concesionaria: Store,
+  car: CarIcon,
   gitHub: ({ ...props }: LucideProps) => (
     <svg
       aria-hidden='true'

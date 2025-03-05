@@ -89,10 +89,6 @@ function DealershipContent() {
     }
   };
 
-  const kbarActions = {
-    openUserForm: () => setIsFormOpen(true)
-  };
-
   const selectedDealership = dealershipToDelete || dealershipToRestore;
   const isModalOpen = Boolean(modalAction);
   const isModalLoading =
@@ -109,6 +105,10 @@ function DealershipContent() {
         : null;
 
   const modalProps = getDealershipModalProps(modalAction, selectedDealership);
+
+  const kbarActions = {
+    openUserForm: () => setIsFormOpen(true)
+  };
 
   return (
     <KBar actions={kbarActions}>

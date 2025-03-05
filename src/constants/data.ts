@@ -15,6 +15,14 @@ export const navItems: NavItem[] = [
 export const adminNavItems: NavItem[] = [
   ...navItems,
   {
+    title: 'Tipos de Vehículos',
+    url: '/dashboard/vehicle-types',
+    icon: 'car',
+    shortcut: ['v', 'v'],
+    isActive: false,
+    items: []
+  },
+  {
     title: 'Usuarios',
     url: '/dashboard/users',
     icon: 'users',

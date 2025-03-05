@@ -13,11 +13,12 @@ import RenderResults from './render-result';
 import useThemeSwitching from './use-theme-switching';
 import { useSession } from 'next-auth/react';
 
-// Agregar este tipo
+// Actualizar el tipo CustomActions
 type CustomActions = {
   openUserForm?: () => void;
   handleLogout?: () => void;
-  openDealershipForm?: () => void; // Add this line
+  openDealershipForm?: () => void;
+  openVehicleTypeForm?: () => void;
 };
 
 export default function KBar({
@@ -43,6 +44,20 @@ export default function KBar({
 
   const actions = useMemo(
     () => [
+      // Add vehicle type form action
+      ...(customActions?.openVehicleTypeForm
+        ? [
+            {
+              id: 'addVehicleType',
+              name: 'Agregar Tipo de Vehículo',
+              shortcut: ['a', 'g'],
+              keywords: 'nuevo tipo vehículo agregar crear add vehicle type',
+              section: 'Tipos de Vehículos',
+              subtitle: 'Crear nuevo tipo de vehículo',
+              perform: customActions.openVehicleTypeForm
+            }
+          ]
+        : []),
       // Add dealership form action
       ...(customActions?.openDealershipForm
         ? [

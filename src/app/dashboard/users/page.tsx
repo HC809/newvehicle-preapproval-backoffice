@@ -91,10 +91,6 @@ function UserContent() {
     }
   };
 
-  const kbarActions = {
-    openUserForm: () => setIsFormOpen(true)
-  };
-
   const selectedUser = userToDelete || userToRestore;
 
   const isModalOpen = Boolean(modalAction);
@@ -114,6 +110,10 @@ function UserContent() {
         : null;
 
   const modalProps = getUserModalProps(modalAction, selectedUser);
+
+  const kbarActions = {
+    openUserForm: () => setIsFormOpen(true)
+  };
 
   return (
     <KBar actions={kbarActions}>
