@@ -21,7 +21,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { ReloadIcon } from '@radix-ui/react-icons';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { SaveIcon, Loader2 } from 'lucide-react';
+import { SaveIcon } from 'lucide-react';
 import { useVehicleTypeStore } from '@/stores/vehicle-type-store';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
