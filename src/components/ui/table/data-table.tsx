@@ -26,7 +26,8 @@ import {
   getCoreRowModel,
   getPaginationRowModel,
   PaginationState,
-  useReactTable
+  useReactTable,
+  Row
 } from '@tanstack/react-table';
 import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
 import { parseAsInteger, useQueryState } from 'nuqs';
@@ -36,13 +37,15 @@ interface DataTableProps<TData, TValue> {
   data: TData[];
   totalItems: number;
   pageSizeOptions?: number[];
+  onRowClick?: (row: Row<TData>) => void;
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
   totalItems,
-  pageSizeOptions = [10, 20, 30, 40, 50]
+  pageSizeOptions = [10, 20, 30, 40, 50],
+  onRowClick
 }: DataTableProps<TData, TValue>) {
   const [currentPage, setCurrentPage] = useQueryState(
     'page',
@@ -118,6 +121,12 @@ export function DataTable<TData, TValue>({
                     <TableRow
                       key={row.id}
                       data-state={row.getIsSelected() && 'selected'}
+                      className={
+                        onRowClick
+                          ? 'cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800'
+                          : ''
+                      }
+                      onClick={() => onRowClick && onRowClick(row)}
                     >
                       {row.getVisibleCells().map((cell) => (
                         <TableCell key={cell.id}>

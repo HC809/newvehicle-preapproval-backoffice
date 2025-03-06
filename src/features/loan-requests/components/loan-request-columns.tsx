@@ -14,6 +14,8 @@ import {
 import { MoreHorizontal, Building, User, UserCog } from 'lucide-react';
 import { LoanRequest } from 'types/LoanRequests';
 import { Badge } from '@/components/ui/badge';
+import { formatUSD } from '@/utils/formatCurrency';
+import { formatLoanRequestId } from '@/utils/formatId';
 
 export const LoanRequestColumns = (
   viewMode: 'assigned' | 'all' = 'assigned',
@@ -22,6 +24,15 @@ export const LoanRequestColumns = (
   const showManagerColumn = isAdmin || viewMode === 'all';
 
   const baseColumns: ColumnDef<LoanRequest>[] = [
+    {
+      accessorKey: 'id',
+      header: () => <span className='font-bold'>ID</span>,
+      cell: ({ row }) => (
+        <span className='font-medium'>
+          {formatLoanRequestId(row.original.id)}
+        </span>
+      )
+    },
     {
       accessorKey: 'dealershipName',
       header: () => <span className='font-bold'>Concesionaria</span>,
@@ -50,22 +61,22 @@ export const LoanRequestColumns = (
       accessorKey: 'dni',
       header: () => <span className='font-bold'>DNI</span>
     },
-    {
-      accessorKey: 'city',
-      header: () => <span className='font-bold'>Ciudad</span>
-    },
+    // {
+    //   accessorKey: 'city',
+    //   header: () => <span className='font-bold'>Ciudad</span>
+    // },
     {
       accessorKey: 'vehicleTypeName',
       header: () => <span className='font-bold'>Tipo de Vehículo</span>
     },
-    {
-      accessorKey: 'vehicleBrand',
-      header: () => <span className='font-bold'>Marca</span>
-    },
-    {
-      accessorKey: 'vehicleModel',
-      header: () => <span className='font-bold'>Modelo</span>
-    },
+    // {
+    //   accessorKey: 'vehicleBrand',
+    //   header: () => <span className='font-bold'>Marca</span>
+    // },
+    // {
+    //   accessorKey: 'vehicleModel',
+    //   header: () => <span className='font-bold'>Modelo</span>
+    // },
     {
       accessorKey: 'vehicleYear',
       header: () => <span className='font-bold'>Año</span>
@@ -73,20 +84,16 @@ export const LoanRequestColumns = (
     {
       accessorKey: 'requestedAmount',
       header: () => <span className='font-bold'>Monto Solicitado</span>,
-      cell: ({ row }) => (
-        <span>
-          ${' '}
-          {row.original.requestedAmount.toLocaleString('en-US', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-          })}
-        </span>
-      )
+      cell: ({ row }) => <span>{formatUSD(row.original.requestedAmount)}</span>
     },
     // {
-    //   accessorKey: 'requestedLoanTermMonths',
-    //   header: () => <span className='font-bold'>Plazo Máximo</span>,
-    //   cell: ({ row }) => <span>{row.original.requestedLoanTermMonths} meses</span>
+    //   accessorKey: 'monthlyIncome',
+    //   header: () => <span className='font-bold'>Ingreso Mensual</span>,
+    //   cell: ({ row }) => (
+    //     <span>
+    //       {formatHNL(row.original.monthlyIncome)}
+    //     </span>
+    //   )
     // },
     {
       accessorKey: 'status',
@@ -143,20 +150,27 @@ export const LoanRequestColumns = (
       return <span className='font-bold'>Acciones</span>;
     },
     cell: function LoanRequestActionsCell({ row }) {
+      // Evitar que el clic en el menú de acciones propague al clic de la fila
+      const handleActionClick = (e: React.MouseEvent) => {
+        e.stopPropagation();
+      };
+
       return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant='ghost' className='h-8 w-8 p-0'>
-              <span className='sr-only'>Open menu</span>
-              <MoreHorizontal className='h-4 w-4' />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align='end'>
-            <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>Ver Detalles</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <div onClick={handleActionClick}>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant='ghost' className='h-8 w-8 p-0'>
+                <span className='sr-only'>Open menu</span>
+                <MoreHorizontal className='h-4 w-4' />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align='end'>
+              <DropdownMenuLabel>Acciones</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem>Otras acciones</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       );
     }
   };
