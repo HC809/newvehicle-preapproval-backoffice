@@ -10,15 +10,19 @@ interface LoanRequestListingPageProps {
   loanRequests: LoanRequest[];
   totalItems: number;
   isLoading?: boolean;
+  viewMode: 'assigned' | 'all';
+  isAdmin: boolean;
 }
 
 export default function LoanRequestListingPage({
   loanRequests,
   totalItems,
-  isLoading
+  isLoading,
+  viewMode,
+  isAdmin
 }: LoanRequestListingPageProps) {
   if (isLoading) {
-    return <DataTableSkeleton columnCount={9} rowCount={10} />;
+    return <DataTableSkeleton columnCount={10} rowCount={10} />;
   }
 
   if (!loanRequests || loanRequests.length === 0) {
@@ -27,7 +31,7 @@ export default function LoanRequestListingPage({
 
   return (
     <LoanRequestsTable
-      columns={LoanRequestColumns()}
+      columns={LoanRequestColumns(viewMode, isAdmin)}
       data={loanRequests}
       totalItems={totalItems}
     />

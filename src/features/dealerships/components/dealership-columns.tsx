@@ -11,7 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal } from 'lucide-react';
+import { MoreHorizontal, Building, UserCog } from 'lucide-react';
 import { Dealership } from 'types/Dealerships';
 import { Badge } from '@/components/ui/badge';
 
@@ -22,15 +22,26 @@ export const DealershipColumns = (
 ): ColumnDef<Dealership>[] => [
   {
     accessorKey: 'name',
-    header: () => <span className='font-bold'>Nombre</span>
+    header: () => <span className='font-bold'>Nombre</span>,
+    cell: ({ row }) => (
+      <div className='flex items-center gap-2'>
+        <Building className='h-4 w-4 text-blue-500 dark:text-blue-400' />
+        <span className='font-medium text-blue-700 dark:text-blue-300'>
+          {row.original.name}
+        </span>
+      </div>
+    )
   },
   {
     accessorKey: 'managerName',
     header: () => <span className='font-bold'>Responsable</span>,
     cell: ({ row }) => (
-      <Badge variant={row.original.managerId ? 'default' : 'outline'}>
-        {row.original.managerName}
-      </Badge>
+      <div className='flex items-center gap-2'>
+        <UserCog className='h-4 w-4 text-purple-500 dark:text-purple-400' />
+        <span className='font-medium text-purple-700 dark:text-purple-300'>
+          {row.original.managerName || 'Sin asignar'}
+        </span>
+      </div>
     )
   },
   {

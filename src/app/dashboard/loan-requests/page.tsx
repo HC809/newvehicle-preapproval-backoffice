@@ -12,12 +12,14 @@ import ErrorAlert from '@/components/custom/error-alert';
 import LoanRequestListingPage from '@/features/loan-requests/components/loan-request-listing';
 import { useLoanRequests } from '@/features/loan-requests/api/loan-request-service';
 import KBar from '@/components/kbar';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useSession } from 'next-auth/react';
 
 function LoanRequestContent() {
   const apiClient = useAxios();
-  const [viewAll, setViewAll] = useState(false);
+  const { data: session } = useSession();
+  const isAdmin = !!session?.isSystemAdmin;
+  const [viewMode, setViewMode] = useState<'assigned' | 'all'>('assigned');
 
   const {
     isLoading,
@@ -25,7 +27,7 @@ function LoanRequestContent() {
     data: loanRequests,
     error,
     refetch
-  } = useLoanRequests(apiClient, { viewAll }, true);
+  } = useLoanRequests(apiClient, { viewAll: viewMode === 'all' }, true);
 
   const kbarActions = {};
 
@@ -39,14 +41,20 @@ function LoanRequestContent() {
               description='Administración de solicitudes de préstamo para vehículos.'
             />
             <div className='flex items-center gap-4'>
-              <div className='flex items-center space-x-2'>
-                <Switch
-                  id='view-all'
-                  checked={viewAll}
-                  onCheckedChange={setViewAll}
-                />
-                <Label htmlFor='view-all'>Ver todos</Label>
-              </div>
+              {!isAdmin && (
+                <Tabs
+                  value={viewMode}
+                  onValueChange={(value) =>
+                    setViewMode(value as 'assigned' | 'all')
+                  }
+                  className='mr-2'
+                >
+                  <TabsList>
+                    <TabsTrigger value='assigned'>Asignadas</TabsTrigger>
+                    <TabsTrigger value='all'>Todas</TabsTrigger>
+                  </TabsList>
+                </Tabs>
+              )}
               <Button
                 variant='default'
                 size='icon'
@@ -72,6 +80,8 @@ function LoanRequestContent() {
                 loanRequests={loanRequests || []}
                 totalItems={loanRequests?.length || 0}
                 isLoading={isLoading || !loanRequests}
+                viewMode={viewMode}
+                isAdmin={isAdmin}
               />
             </>
           )}
