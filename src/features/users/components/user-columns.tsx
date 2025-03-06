@@ -12,7 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal } from 'lucide-react';
+import { MoreHorizontal, Building } from 'lucide-react';
 import { User } from 'types/User';
 import { roleTranslations } from '@/utils/roleTranslations';
 import { verificationTypeTranslations } from '@/utils/verificationTypeTranslations';
@@ -32,7 +32,15 @@ export const UserColumns = (
   },
   {
     accessorKey: 'dealership',
-    header: () => <span className='font-bold'>Concesionaria</span>
+    header: () => <span className='font-bold'>Concesionaria</span>,
+    cell: ({ row }) => (
+      <div className='flex items-center gap-2'>
+        <Building className='h-4 w-4 text-blue-500 dark:text-blue-400' />
+        <span className='font-medium text-blue-700 dark:text-blue-300'>
+          {row.original.dealership}
+        </span>
+      </div>
+    )
   },
   {
     accessorKey: 'role',
@@ -66,7 +74,9 @@ export const UserColumns = (
   },
   {
     id: 'actions',
-    header: () => <span className='font-bold'>Acciones</span>,
+    header: function UserActionsHeader() {
+      return <span className='font-bold'>Acciones</span>;
+    },
     cell: function UserActionsCell({ row }) {
       const user = row.original;
 
