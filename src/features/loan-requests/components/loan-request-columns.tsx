@@ -100,7 +100,7 @@ export const LoanRequestColumns = (
       header: () => <span className='font-bold'>Estado</span>,
       cell: ({ row }) => {
         const status = row.original.status;
-        let variant: 'default' | 'success' | 'destructive' | 'secondary' =
+        let variant: 'default' | 'success' | 'destructive' | 'warning' =
           'default';
 
         switch (status) {
@@ -111,7 +111,7 @@ export const LoanRequestColumns = (
             variant = 'destructive';
             break;
           case 'Pending':
-            variant = 'secondary';
+            variant = 'warning';
             break;
           default:
             variant = 'default';

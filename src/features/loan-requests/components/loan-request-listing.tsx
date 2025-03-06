@@ -8,7 +8,6 @@ import { DataTableSkeleton } from '@/components/ui/table/data-table-skeleton';
 import { useRouter } from 'next/navigation';
 import { useLoanRequestStore } from '@/stores/loan-request-store';
 import { Row } from '@tanstack/react-table';
-import { formatLoanRequestId } from '@/utils/formatId';
 
 interface LoanRequestListingPageProps {
   loanRequests: LoanRequest[];
@@ -26,11 +25,7 @@ export default function LoanRequestListingPage({
   isAdmin
 }: LoanRequestListingPageProps) {
   const router = useRouter();
-  const {
-    setSelectedLoanRequest,
-    clearSelectedLoanRequest,
-    selectedLoanRequest
-  } = useLoanRequestStore();
+  const { setSelectedLoanRequest } = useLoanRequestStore();
 
   // Ya no limpiamos automáticamente la solicitud seleccionada
   // Esto permite que al navegar de vuelta desde la página de detalle,
