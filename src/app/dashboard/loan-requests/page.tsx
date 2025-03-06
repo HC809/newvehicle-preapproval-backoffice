@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense, useEffect } from 'react';
 import { ReloadIcon } from '@radix-ui/react-icons';
 import PageContainer from '@/components/layout/page-container';
 import { Heading } from '@/components/ui/heading';
@@ -14,12 +14,25 @@ import { useLoanRequests } from '@/features/loan-requests/api/loan-request-servi
 import KBar from '@/components/kbar';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useSession } from 'next-auth/react';
+import LoanRequestTableAction from '@/features/loan-requests/components/loan-request-table-action';
+import { DataTableSkeleton } from '@/components/ui/table/data-table-skeleton';
+import { useSearchParams } from 'next/navigation';
 
 function LoanRequestContent() {
   const apiClient = useAxios();
   const { data: session } = useSession();
   const isAdmin = !!session?.isSystemAdmin;
   const [viewMode, setViewMode] = useState<'assigned' | 'all'>('assigned');
+  const searchParams = useSearchParams();
+
+  // Obtener los valores de los filtros desde la URL
+  const dniFilter = searchParams.get('dni') || '';
+  const dealershipFilter = searchParams.get('dealership') || '';
+  const managerFilter = searchParams.get('manager') || '';
+
+  // Logs para depuración
+  //console.log('searchParams:', searchParams.toString());
+  //console.log('Filtros aplicados:', { dniFilter, dealershipFilter, managerFilter });
 
   const {
     isLoading,
@@ -27,7 +40,40 @@ function LoanRequestContent() {
     data: loanRequests,
     error,
     refetch
-  } = useLoanRequests(apiClient, { viewAll: viewMode === 'all' }, true);
+  } = useLoanRequests(
+    apiClient,
+    {
+      viewAll: viewMode === 'all',
+      dni: dniFilter,
+      dealership: dealershipFilter,
+      manager: managerFilter
+    },
+    true
+  );
+
+  // Logs para depuración
+  //console.log('Datos recibidos:', loanRequests?.length || 0);
+
+  // Refetch cuando cambien los filtros o el modo de vista
+  useEffect(() => {
+    //console.log('Filtros o modo de vista cambiaron, refetching...');
+    refetch();
+  }, [dniFilter, dealershipFilter, managerFilter, viewMode, refetch]);
+
+  // Forzar refetch cuando se monte el componente
+  useEffect(() => {
+    //console.log('Componente montado, refetching...');
+    refetch();
+  }, [refetch]);
+
+  // Actualizar dniFilter cuando cambie el valor en el campo de búsqueda
+  //   useEffect(() => {
+  //     const dniValue = searchParams.get('dni');
+  //     if (dniValue !== dniFilter) {
+  //       //console.log('Actualizando dniFilter a:', dniValue);
+  //       refetch();
+  //     }
+  //   }, [searchParams]);
 
   const kbarActions = {};
 
@@ -70,19 +116,25 @@ function LoanRequestContent() {
 
           <Separator />
 
+          <LoanRequestTableAction />
+
           {error ? (
             <div className='space-y-4'>
               <ErrorAlert error={error?.message || String(error)} />
             </div>
           ) : (
             <>
-              <LoanRequestListingPage
-                loanRequests={loanRequests || []}
-                totalItems={loanRequests?.length || 0}
-                isLoading={isLoading || !loanRequests}
-                viewMode={viewMode}
-                isAdmin={isAdmin}
-              />
+              <Suspense
+                fallback={<DataTableSkeleton columnCount={10} rowCount={10} />}
+              >
+                <LoanRequestListingPage
+                  loanRequests={loanRequests || []}
+                  totalItems={loanRequests?.length || 0}
+                  isLoading={isLoading || !loanRequests}
+                  viewMode={viewMode}
+                  isAdmin={isAdmin}
+                />
+              </Suspense>
             </>
           )}
         </div>

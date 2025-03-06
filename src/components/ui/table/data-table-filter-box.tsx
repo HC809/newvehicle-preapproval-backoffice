@@ -38,6 +38,8 @@ interface FilterBoxProps {
     options?: Options | undefined
   ) => Promise<URLSearchParams>;
   filterValue: string;
+  translatedSelected?: string;
+  translatedClear?: string;
 }
 
 export function DataTableFilterBox({
@@ -45,7 +47,9 @@ export function DataTableFilterBox({
   title,
   options,
   setFilterValue,
-  filterValue
+  filterValue,
+  translatedSelected,
+  translatedClear
 }: FilterBoxProps) {
   const selectedValuesSet = React.useMemo(() => {
     if (!filterValue) return new Set<string>();
@@ -68,7 +72,7 @@ export function DataTableFilterBox({
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant='outline' className='border-dashed'>
+        <Button variant='outline' className='h-8 border-dashed'>
           <PlusCircledIcon className='mr-2 h-4 w-4' />
           {title}
           {selectedValuesSet.size > 0 && (
@@ -86,19 +90,20 @@ export function DataTableFilterBox({
                     variant='secondary'
                     className='rounded-sm px-1 font-normal'
                   >
-                    {selectedValuesSet.size} selected
+                    {selectedValuesSet.size} {translatedSelected || 'selected'}
                   </Badge>
                 ) : (
-                  Array.from(selectedValuesSet).map((value) => (
-                    <Badge
-                      variant='secondary'
-                      key={value}
-                      className='rounded-sm px-1 font-normal'
-                    >
-                      {options.find((option) => option.value === value)
-                        ?.label || value}
-                    </Badge>
-                  ))
+                  options
+                    .filter((option) => selectedValuesSet.has(option.value))
+                    .map((option) => (
+                      <Badge
+                        variant='secondary'
+                        key={option.value}
+                        className='rounded-sm px-1 font-normal'
+                      >
+                        {option.label}
+                      </Badge>
+                    ))
                 )}
               </div>
             </>
@@ -109,32 +114,32 @@ export function DataTableFilterBox({
         <Command>
           <CommandInput placeholder={title} />
           <CommandList>
-            <CommandEmpty>No results found.</CommandEmpty>
+            <CommandEmpty>No se encontraron resultados.</CommandEmpty>
             <CommandGroup>
-              {options.map((option) => (
-                <CommandItem
-                  key={option.value}
-                  onSelect={() => handleSelect(option.value)}
-                >
-                  <div
-                    className={cn(
-                      'mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary',
-                      selectedValuesSet.has(option.value)
-                        ? 'bg-primary text-primary-foreground'
-                        : 'opacity-50 [&_svg]:invisible'
-                    )}
+              {options.map((option) => {
+                const isSelected = selectedValuesSet.has(option.value);
+                return (
+                  <CommandItem
+                    key={option.value}
+                    onSelect={() => handleSelect(option.value)}
                   >
-                    <CheckIcon className='h-4 w-4' aria-hidden='true' />
-                  </div>
-                  {option.icon && (
-                    <option.icon
-                      className='mr-2 h-4 w-4 text-muted-foreground'
-                      aria-hidden='true'
-                    />
-                  )}
-                  <span>{option.label}</span>
-                </CommandItem>
-              ))}
+                    <div
+                      className={cn(
+                        'mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary',
+                        isSelected
+                          ? 'bg-primary text-primary-foreground'
+                          : 'opacity-50 [&_svg]:invisible'
+                      )}
+                    >
+                      <CheckIcon className={cn('h-4 w-4')} />
+                    </div>
+                    {option.icon && (
+                      <option.icon className='mr-2 h-4 w-4 text-muted-foreground' />
+                    )}
+                    <span>{option.label}</span>
+                  </CommandItem>
+                );
+              })}
             </CommandGroup>
             {selectedValuesSet.size > 0 && (
               <>
@@ -144,7 +149,7 @@ export function DataTableFilterBox({
                     onSelect={resetFilter}
                     className='justify-center text-center'
                   >
-                    Clear filters
+                    {translatedClear || 'Clear filters'}
                   </CommandItem>
                 </CommandGroup>
               </>

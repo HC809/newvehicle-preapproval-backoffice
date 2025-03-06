@@ -24,4 +24,7 @@ export interface LoanRequest {
 
 export interface LoanRequestListingParams {
   viewAll?: boolean;
+  dni?: string;
+  dealership?: string;
+  manager?: string;
 }
