@@ -31,7 +31,7 @@ import {
   UserPen,
   UserX2Icon,
   CarIcon,
-  ListIcon,
+  PercentIcon,
   X,
   List
 } from 'lucide-react';
@@ -70,6 +70,7 @@ export const Icons = {
   concesionaria: Store,
   car: CarIcon,
   requests: List,
+  tasas: PercentIcon,
   gitHub: ({ ...props }: LucideProps) => (
     <svg
       aria-hidden='true'

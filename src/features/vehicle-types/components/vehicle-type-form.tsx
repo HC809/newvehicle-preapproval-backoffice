@@ -34,7 +34,7 @@ import {
 import useAxios from '@/hooks/use-axios';
 import { toast } from 'sonner';
 import { Checkbox } from '@/components/ui/checkbox';
-import { InputNumber } from '@/components/ui/input-number';
+import { NumberInput } from '@/components/number-input';
 
 // Update the schema to properly validate and show custom error messages
 const formSchema = z.object({
@@ -70,7 +70,7 @@ export default function VehicleTypeForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: '',
-      maxLoanTermMonths: 84,
+      maxLoanTermMonths: 1,
       isActive: true
     },
     mode: 'onChange'
@@ -79,7 +79,7 @@ export default function VehicleTypeForm({
   const resetForm = useCallback(() => {
     form.reset({
       name: '',
-      maxLoanTermMonths: 84,
+      maxLoanTermMonths: 1,
       isActive: true
     });
     setVehicleTypeToEdit(null);
@@ -233,11 +233,14 @@ export default function VehicleTypeForm({
                   <FormItem>
                     <FormLabel>Plazo máximo de préstamo (meses)</FormLabel>
                     <FormControl>
-                      <InputNumber
-                        {...field}
+                      <NumberInput
                         placeholder='Ingrese el plazo máximo en meses'
                         min={1}
                         max={240}
+                        value={field.value}
+                        onValueChange={(value: number | undefined) => {
+                          field.onChange(value === undefined ? 1 : value);
+                        }}
                       />
                     </FormControl>
                     <FormDescription>
@@ -253,67 +256,64 @@ export default function VehicleTypeForm({
                 )}
               />
 
-              {vehicleTypeToEdit && (
-                <FormField
-                  control={form.control}
-                  name='isActive'
-                  render={({ field }) => (
-                    <FormItem className='flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4'>
-                      <FormControl>
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                      <div className='space-y-1 leading-none'>
-                        <FormLabel>Tipo de Vehículo Activo</FormLabel>
-                        <FormDescription>
-                          Al desactivar un tipo de vehículo, no estará
-                          disponible para nuevos préstamos.
-                        </FormDescription>
-                      </div>
-                    </FormItem>
-                  )}
-                />
-              )}
+              <FormField
+                control={form.control}
+                name='isActive'
+                render={({ field }) => (
+                  <FormItem className='flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4'>
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <div className='space-y-1 leading-none'>
+                      <FormLabel>Activo</FormLabel>
+                      <FormDescription>
+                        Indica si este tipo de vehículo está activo y disponible
+                        para nuevos préstamos.
+                      </FormDescription>
+                    </div>
+                  </FormItem>
+                )}
+              />
             </div>
 
-            {(createVehicleTypeMutation.error ||
-              updateVehicleTypeMutation.error) && (
+            {createVehicleTypeMutation.error ||
+            updateVehicleTypeMutation.error ? (
               <Alert variant='destructive'>
                 <AlertDescription>
-                  {vehicleTypeToEdit
-                    ? String(updateVehicleTypeMutation.error)
-                    : String(createVehicleTypeMutation.error)}
+                  {createVehicleTypeMutation.error?.message ||
+                    updateVehicleTypeMutation.error?.message ||
+                    'Ha ocurrido un error. Por favor, inténtelo de nuevo.'}
                 </AlertDescription>
               </Alert>
-            )}
+            ) : null}
 
-            <div className='flex justify-end gap-4'>
+            <div className='flex justify-end space-x-2'>
               <Button
-                variant='outline'
                 type='button'
-                disabled={
-                  createVehicleTypeMutation.isPending ||
-                  updateVehicleTypeMutation.isPending
-                }
+                variant='outline'
                 onClick={handleClose}
+                disabled={isFormLocked}
               >
                 Cancelar
               </Button>
               <Button
                 type='submit'
-                disabled={createVehicleTypeMutation.isPending}
+                disabled={isFormLocked || !form.formState.isValid}
               >
-                {createVehicleTypeMutation.isPending ||
-                updateVehicleTypeMutation.isPending ? (
-                  <ReloadIcon className='mr-2 h-4 w-4 animate-spin' />
+                {isFormLocked ? (
+                  <>
+                    <ReloadIcon className='mr-2 h-4 w-4 animate-spin' />
+                    {vehicleTypeToEdit ? 'Actualizando...' : 'Creando...'}
+                  </>
                 ) : (
-                  <SaveIcon className='mr-2 h-4 w-4' />
+                  <>
+                    <SaveIcon className='mr-2 h-4 w-4' />
+                    {vehicleTypeToEdit ? 'Actualizar' : 'Crear'}
+                  </>
                 )}
-                {createVehicleTypeMutation.isPending
-                  ? 'Guardando...'
-                  : `${vehicleTypeToEdit ? 'Actualizar' : 'Crear'} Tipo de Vehículo`}
               </Button>
             </div>
           </form>

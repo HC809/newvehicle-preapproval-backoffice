@@ -50,7 +50,7 @@ export const GeneralInfoTab = ({ loanRequest }: GeneralInfoTabProps) => {
         // darkTextColor='dark:text-amber-300'
       />
       <InfoItem
-        label='Concesionario'
+        label='Concesionaria'
         value={loanRequest.dealershipName}
         icon={<Building size={18} />}
         iconColor='text-blue-500'

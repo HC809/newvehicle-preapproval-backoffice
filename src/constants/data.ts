@@ -23,6 +23,14 @@ export const navItems: NavItem[] = [
 export const adminNavItems: NavItem[] = [
   ...navItems,
   {
+    title: 'Configuración de Tasas',
+    url: '/dashboard/company-configurations',
+    icon: 'tasas',
+    shortcut: ['c', 't'],
+    isActive: false,
+    items: []
+  },
+  {
     title: 'Tipos de Vehículos',
     url: '/dashboard/vehicle-types',
     icon: 'car',
