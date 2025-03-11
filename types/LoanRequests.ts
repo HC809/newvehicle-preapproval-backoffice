@@ -20,6 +20,7 @@ export interface LoanRequest {
   comment: string;
   status: string;
   rejectionReason: string | null;
+  createdAt: string;
 }
 
 export interface LoanRequestListingParams {

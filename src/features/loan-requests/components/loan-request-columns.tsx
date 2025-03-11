@@ -16,6 +16,8 @@ import { LoanRequest } from 'types/LoanRequests';
 import { Badge } from '@/components/ui/badge';
 import { formatUSD } from '@/utils/formatCurrency';
 import { formatLoanRequestId } from '@/utils/formatId';
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale/es';
 
 export const LoanRequestColumns = (
   viewMode: 'assigned' | 'all' = 'assigned',
@@ -125,6 +127,20 @@ export const LoanRequestColumns = (
           }[status] || status;
 
         return <Badge variant={variant}>{statusText}</Badge>;
+      }
+    },
+    {
+      accessorKey: 'createdAt',
+      header: () => <span className='font-bold'>Fecha de Solicitud</span>,
+      cell: ({ row }) => {
+        const createdAt = row.getValue('createdAt') as string;
+        const date = new Date(createdAt);
+
+        return (
+          <div className='font-medium'>
+            {format(date, 'PPpp', { locale: es })}
+          </div>
+        );
       }
     }
   ];
