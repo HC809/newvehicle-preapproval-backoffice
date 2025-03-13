@@ -42,6 +42,8 @@ export default function LoanRequestListingPage({
   // Función para manejar el clic en la fila
   const handleRowClick = (row: Row<LoanRequest>) => {
     const loanRequest = row.original;
+    // Guardamos la solicitud en el store para facilitar la navegación
+    // pero los datos reales se obtendrán del API en la página de detalle
     setSelectedLoanRequest(loanRequest);
     router.push(`/dashboard/loan-requests/${loanRequest.id}`);
   };

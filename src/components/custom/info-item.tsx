@@ -2,7 +2,7 @@ import React from 'react';
 
 interface InfoItemProps {
   label: string;
-  value: string | number | null;
+  value: string | number | null | React.ReactNode;
   icon?: React.ReactNode;
   iconColor?: string;
   textColor?: string;
@@ -27,9 +27,15 @@ export const InfoItem = ({
     <div>
       <p className='text-sm font-medium text-muted-foreground'>{label}</p>
       <div className='flex items-center'>
-        <p className={`text-base font-medium ${textColor} ${darkTextColor}`}>
-          {value || 'No disponible'}
-        </p>
+        {typeof value === 'string' ||
+        typeof value === 'number' ||
+        value === null ? (
+          <p className={`text-base font-medium ${textColor} ${darkTextColor}`}>
+            {value || 'No disponible'}
+          </p>
+        ) : (
+          value
+        )}
         {actionIcon}
       </div>
     </div>

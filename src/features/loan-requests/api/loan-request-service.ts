@@ -1,6 +1,10 @@
 import { useQuery, UseQueryResult } from '@tanstack/react-query';
 import { AxiosInstance } from 'axios';
-import { LoanRequest, LoanRequestListingParams } from 'types/LoanRequests';
+import {
+  LoanRequest,
+  LoanRequestListingParams,
+  LoanRequestDetail
+} from 'types/LoanRequests';
 
 const LOAN_REQUESTS_KEY = 'loanRequests';
 
@@ -65,5 +69,25 @@ export const useLoanRequests = (
       return filteredData;
     },
     enabled: !!apiClient && enabled
+  });
+};
+
+export const useLoanRequestDetail = (
+  apiClient: AxiosInstance | undefined,
+  id: string,
+  enabled: boolean = true
+): UseQueryResult<LoanRequestDetail, Error> => {
+  return useQuery({
+    queryKey: [LOAN_REQUESTS_KEY, 'detail', id],
+    queryFn: async (): Promise<LoanRequestDetail> => {
+      if (!apiClient) throw new Error('API client not initialized');
+      if (!id) throw new Error('Loan request ID is required');
+
+      const response = await apiClient.get<LoanRequestDetail>(
+        `/loan-requests/${id}`
+      );
+      return response.data;
+    },
+    enabled: !!apiClient && !!id && enabled
   });
 };

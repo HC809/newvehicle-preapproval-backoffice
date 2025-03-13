@@ -1,18 +1,30 @@
 import { InfoItem } from '@/components/custom/info-item';
 import { formatHNL } from '@/utils/formatCurrency';
-import { LoanRequest } from 'types/LoanRequests';
-import { CreditCard, MapPin, Building, DollarSign, Copy } from 'lucide-react';
+import { LoanRequest, Client } from 'types/LoanRequests';
+import {
+  CreditCard,
+  MapPin,
+  Building,
+  DollarSign,
+  Copy,
+  User,
+  Star
+} from 'lucide-react';
 import { useState } from 'react';
 
 interface GeneralInfoTabProps {
   loanRequest: LoanRequest;
+  client?: Client;
 }
 
-export const GeneralInfoTab = ({ loanRequest }: GeneralInfoTabProps) => {
+export const GeneralInfoTab = ({
+  loanRequest,
+  client
+}: GeneralInfoTabProps) => {
   const [copied, setCopied] = useState(false);
 
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
+  const copyDNI = () => {
+    navigator.clipboard.writeText(loanRequest.dni);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -20,59 +32,104 @@ export const GeneralInfoTab = ({ loanRequest }: GeneralInfoTabProps) => {
   return (
     <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
       <InfoItem
-        label='DNI Cliente'
-        value={loanRequest.dni}
-        icon={<CreditCard size={18} />}
-        iconColor='text-violet-500'
-        actionIcon={
-          <button
-            onClick={() => copyToClipboard(loanRequest.dni)}
-            className='ml-3 rounded-md p-1 transition-colors hover:bg-gray-100 dark:hover:bg-gray-700'
-            title='Copiar al portapapeles'
-          >
-            <Copy
-              size={16}
-              className={copied ? 'text-green-500' : 'text-gray-500'}
-            />
-          </button>
+        icon={<CreditCard className='h-4 w-4 text-blue-500' />}
+        label='DNI'
+        value={
+          <div className='flex items-center gap-2'>
+            <span>{loanRequest.dni}</span>
+            <button
+              onClick={copyDNI}
+              className='rounded-full p-1 hover:bg-gray-100 dark:hover:bg-gray-800'
+              title='Copiar DNI'
+            >
+              <Copy className='h-3 w-3 text-gray-500' />
+            </button>
+            {copied && (
+              <span className='text-xs text-green-500'>¡Copiado!</span>
+            )}
+          </div>
         }
-        //iconColor='text-amber-500'
-        // textColor='text-amber-700'
-        // darkTextColor='dark:text-amber-300'
       />
+
+      {client && (
+        <InfoItem
+          icon={<User className='h-4 w-4 text-purple-500' />}
+          label='Nombre del Cliente'
+          value={client.name}
+        />
+      )}
+
       <InfoItem
+        icon={<MapPin className='h-4 w-4 text-red-500' />}
         label='Ciudad'
         value={loanRequest.city}
-        icon={<MapPin size={18} />}
-        iconColor='text-violet-500'
-        //iconColor='text-amber-500'
-        // textColor='text-amber-700'
-        // darkTextColor='dark:text-amber-300'
       />
+
       <InfoItem
+        icon={<Building className='h-4 w-4 text-indigo-500' />}
         label='Concesionaria'
         value={loanRequest.dealershipName}
-        icon={<Building size={18} />}
-        iconColor='text-blue-500'
-        textColor='text-blue-700'
-        darkTextColor='dark:text-blue-300'
       />
-      {/* <InfoItem
-                label='Gerente Asignado'
-                value={loanRequest.managerName}
-                icon={<UserCog size={18} />}
-                iconColor='text-purple-500'
-                textColor='text-purple-700'
-                darkTextColor='dark:text-purple-300'
-            /> */}
+
+      {loanRequest.monthlyIncome && (
+        <InfoItem
+          icon={<DollarSign className='h-4 w-4 text-green-500' />}
+          label='Ingreso Mensual'
+          value={formatHNL(loanRequest.monthlyIncome)}
+        />
+      )}
+
+      {client && client.lastRiskScore !== undefined && (
+        <InfoItem
+          icon={<Star className='h-4 w-4 text-yellow-500' />}
+          label='Puntaje de Riesgo'
+          value={
+            <span
+              className={`font-semibold ${getRiskScoreColor(client.lastRiskScore)}`}
+            >
+              {client.lastRiskScore}
+            </span>
+          }
+        />
+      )}
+
+      {client && client.email && (
+        <InfoItem
+          icon={<span className='text-blue-500'>@</span>}
+          label='Correo Electrónico'
+          value={client.email || 'No disponible'}
+        />
+      )}
+
+      {client && client.phone && (
+        <InfoItem
+          icon={<span className='text-green-500'>📞</span>}
+          label='Teléfono'
+          value={client.phone || 'No disponible'}
+        />
+      )}
+
+      {client && client.address && (
+        <InfoItem
+          icon={<MapPin className='h-4 w-4 text-orange-500' />}
+          label='Dirección'
+          value={client.address || 'No disponible'}
+        />
+      )}
+
       <InfoItem
-        label='Ingreso Mensual del Cliente'
-        value={formatHNL(loanRequest.monthlyIncome)}
-        icon={<DollarSign size={18} />}
-        iconColor='text-emerald-500'
-        textColor='text-emerald-700'
-        darkTextColor='dark:text-emerald-300'
+        icon={<span className='text-blue-500'>🔄</span>}
+        label='Cliente Existente'
+        value={loanRequest.isExistingClient ? 'Sí' : 'No'}
       />
     </div>
   );
 };
+
+// Función para determinar el color del puntaje de riesgo
+function getRiskScoreColor(score: number): string {
+  if (score >= 700) return 'text-green-600';
+  if (score >= 600) return 'text-yellow-600';
+  if (score >= 500) return 'text-orange-600';
+  return 'text-red-600';
+}
