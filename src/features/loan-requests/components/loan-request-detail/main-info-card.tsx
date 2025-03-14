@@ -11,10 +11,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { translateStatus } from '@/utils/getStatusColor';
 import { formatLoanRequestId } from '@/utils/formatId';
 import { User, FileText } from 'lucide-react';
-import { LoanRequest, Client } from 'types/LoanRequests';
+import { LoanRequest } from 'types/LoanRequests';
 import { GeneralInfoTab } from './general-info-tab';
 import { VehicleInfoTab } from './vehicle-info-tab';
 import { FinancialInfoTab } from './financial-info-tab';
+import { Client } from 'types/Client';
 
 interface MainInfoCardProps {
   loanRequest: LoanRequest;

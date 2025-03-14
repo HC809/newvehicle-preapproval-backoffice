@@ -1,3 +1,6 @@
+import { Client } from './Client';
+import { LoanDocument } from './LoanDocument';
+
 export interface LoanRequest {
   id: string;
   dealershipId: string;
@@ -23,24 +26,6 @@ export interface LoanRequest {
   createdAt: string;
   isExistingClient: boolean;
   managerId?: string;
-}
-
-export interface Client {
-  id: string;
-  name: string;
-  dni: string;
-  lastRiskScore: number;
-  email: string;
-  phone: string;
-  address: string;
-}
-
-export interface LoanDocument {
-  id: string;
-  fileName: string;
-  documentType: string;
-  uploadedAt: string;
-  contentType: string;
 }
 
 export interface LoanRequestDetail {

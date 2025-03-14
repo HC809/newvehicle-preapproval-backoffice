@@ -1,6 +1,6 @@
 import { InfoItem } from '@/components/custom/info-item';
 import { formatHNL } from '@/utils/formatCurrency';
-import { LoanRequest, Client } from 'types/LoanRequests';
+import { LoanRequest } from 'types/LoanRequests';
 import {
   CreditCard,
   MapPin,
@@ -11,6 +11,7 @@ import {
   Star
 } from 'lucide-react';
 import { useState } from 'react';
+import { Client } from 'types/Client';
 
 interface GeneralInfoTabProps {
   loanRequest: LoanRequest;

@@ -10,8 +10,6 @@ import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
-import { LoanRequest, LoanRequestDetail } from 'types/LoanRequests';
-import { useLoanRequestStore } from '@/stores/loan-request-store';
 import {
   MainInfoCard,
   RejectionAlert,
@@ -28,8 +26,10 @@ export default function LoanRequestDetailPage() {
   const router = useRouter();
   const { id } = useParams();
   const apiClient = useAxios();
-  const { selectedLoanRequest } = useLoanRequestStore();
   const [error, setError] = useState<string | null>(null);
+  const [loadingDocumentId, setLoadingDocumentId] = useState<string | null>(
+    null
+  );
 
   // Fetch loan request details from API
   const {
@@ -102,6 +102,73 @@ export default function LoanRequestDetailPage() {
       return <FileCode className='h-10 w-10 text-green-500' />;
     } else {
       return <File className='h-10 w-10 text-gray-500' />;
+    }
+  };
+
+  // Función para abrir el documento en una nueva pestaña
+  const handleViewDocument = async (documentId: string) => {
+    try {
+      setLoadingDocumentId(documentId);
+
+      // Verificar que el cliente API esté inicializado
+      if (!apiClient) {
+        throw new Error('Cliente API no inicializado');
+      }
+
+      // Obtener la URL base de la API
+      let apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+
+      if (!apiUrl) {
+        //console.warn('NEXT_PUBLIC_API_BASE_URL no está disponible, usando URL por defecto');
+        apiUrl = 'https://localhost:7298/api';
+      }
+
+      // Realizar la solicitud para obtener el documento
+      const response = await apiClient.get(
+        `/loan-documents/content/${documentId}`,
+        {
+          responseType: 'arraybuffer',
+          headers: {
+            Accept: 'application/pdf,image/*,application/xml,text/xml,*/*'
+          }
+        }
+      );
+
+      // Verificar que la respuesta contiene datos
+      if (!response.data) {
+        throw new Error('El documento está vacío');
+      }
+
+      // Obtener el tipo de contenido del header de la respuesta
+      const contentType =
+        response.headers['content-type'] || 'application/octet-stream';
+
+      // Crear un blob a partir de los datos
+      const blob = new Blob([response.data], { type: contentType });
+
+      // Crear una URL para el blob
+      const blobUrl = URL.createObjectURL(blob);
+
+      // Crear un enlace temporal para descargar el archivo
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+
+      // Simular clic en el enlace para abrir en una nueva pestaña
+      document.body.appendChild(link);
+      link.click();
+
+      // Eliminar el enlace temporal y liberar la URL del blob
+      setTimeout(() => {
+        document.body.removeChild(link);
+        URL.revokeObjectURL(blobUrl);
+      }, 100);
+    } catch (err: any) {
+      //console.error('Error al abrir el documento:', err);
+      alert(`Error al abrir el documento: ${err.message}`);
+    } finally {
+      setLoadingDocumentId(null);
     }
   };
 
@@ -212,8 +279,12 @@ export default function LoanRequestDetailPage() {
                             variant='outline'
                             size='sm'
                             className='mt-2 w-full'
+                            onClick={() => handleViewDocument(doc.id)}
+                            disabled={loadingDocumentId === doc.id}
                           >
-                            Ver
+                            {loadingDocumentId === doc.id
+                              ? 'Cargando...'
+                              : 'Ver'}
                           </Button>
                         </div>
                       ))}
