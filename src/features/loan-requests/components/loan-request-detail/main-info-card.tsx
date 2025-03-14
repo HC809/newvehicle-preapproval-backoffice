@@ -44,11 +44,10 @@ export const MainInfoCard = ({ loanRequest, client }: MainInfoCardProps) => {
       </CardHeader>
       <CardContent>
         <Tabs defaultValue='general' className='w-full'>
-          <TabsList className='grid w-full grid-cols-4'>
+          <TabsList className='grid w-full grid-cols-3'>
             <TabsTrigger value='general'>General</TabsTrigger>
             <TabsTrigger value='vehicle'>Vehículo</TabsTrigger>
             <TabsTrigger value='financial'>Financiero</TabsTrigger>
-            <TabsTrigger value='comment'>Comentario</TabsTrigger>
           </TabsList>
 
           <TabsContent
@@ -70,29 +69,6 @@ export const MainInfoCard = ({ loanRequest, client }: MainInfoCardProps) => {
             className='mt-4 space-y-4 focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0'
           >
             <FinancialInfoTab loanRequest={loanRequest} />
-          </TabsContent>
-
-          <TabsContent
-            value='comment'
-            className='mt-4 space-y-4 focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0'
-          >
-            {loanRequest.comment ? (
-              <div className='rounded-md border p-4'>
-                <div className='mb-2 flex items-center gap-2'>
-                  <FileText className='h-4 w-4 text-amber-500' />
-                  <span className='font-medium text-amber-700 dark:text-amber-400'>
-                    Comentario de la solicitud
-                  </span>
-                </div>
-                <p className='text-sm text-gray-700 dark:text-gray-300'>
-                  {loanRequest.comment}
-                </p>
-              </div>
-            ) : (
-              <p className='text-sm text-muted-foreground'>
-                No hay comentarios para esta solicitud.
-              </p>
-            )}
           </TabsContent>
         </Tabs>
       </CardContent>

@@ -33,7 +33,7 @@ export const GeneralInfoTab = ({
   return (
     <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
       <InfoItem
-        icon={<CreditCard className='h-4 w-4 text-blue-500' />}
+        icon={<CreditCard className='h-4 w-4 text-purple-500' />}
         label='DNI'
         value={
           <div className='flex items-center gap-2'>
@@ -61,13 +61,13 @@ export const GeneralInfoTab = ({
       )}
 
       <InfoItem
-        icon={<MapPin className='h-4 w-4 text-red-500' />}
+        icon={<MapPin className='h-4 w-4 text-purple-500' />}
         label='Ciudad'
         value={loanRequest.city}
       />
 
       <InfoItem
-        icon={<Building className='h-4 w-4 text-indigo-500' />}
+        icon={<Building className='h-4 w-4 text-blue-500' />}
         label='Concesionaria'
         value={loanRequest.dealershipName}
       />
@@ -83,7 +83,7 @@ export const GeneralInfoTab = ({
       {client && client.lastRiskScore !== undefined && (
         <InfoItem
           icon={<Star className='h-4 w-4 text-yellow-500' />}
-          label='Puntaje de Riesgo'
+          label='Scoring de Riesgo'
           value={
             <span
               className={`font-semibold ${getRiskScoreColor(client.lastRiskScore)}`}
@@ -118,11 +118,11 @@ export const GeneralInfoTab = ({
         />
       )}
 
-      <InfoItem
+      {/* <InfoItem
         icon={<span className='text-blue-500'>🔄</span>}
         label='Cliente Existente'
         value={loanRequest.isExistingClient ? 'Sí' : 'No'}
-      />
+      /> */}
     </div>
   );
 };

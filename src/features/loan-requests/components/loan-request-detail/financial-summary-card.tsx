@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { formatUSD } from '@/utils/formatCurrency';
+import { formatHNL } from '@/utils/formatCurrency';
 import { DollarSign } from 'lucide-react';
 import { LoanRequest } from 'types/LoanRequests';
 
@@ -31,7 +31,7 @@ export const FinancialSummaryCard = ({
             Monto solicitado
           </span>
           <span className='font-medium text-emerald-700 dark:text-emerald-300'>
-            {formatUSD(loanRequest.requestedAmount)}
+            {formatHNL(loanRequest.requestedAmount)}
           </span>
         </div>
         <div className='flex items-center justify-between'>
@@ -50,7 +50,7 @@ export const FinancialSummaryCard = ({
         <div className='flex items-center justify-between'>
           <span className='text-sm font-medium'>Cuota estimada</span>
           <span className='font-bold text-emerald-700 dark:text-emerald-300'>
-            {formatUSD(estimatedPayment)}
+            {formatHNL(estimatedPayment)}
           </span>
         </div>
       </CardContent>
