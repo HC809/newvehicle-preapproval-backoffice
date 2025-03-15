@@ -108,7 +108,7 @@ export const VerificationChecklistCard = ({
             </div>
           </div>
         ) : progress > 0 ? (
-          <div className='mt-2 rounded-md bg-primary/10 p-2 text-sm text-primary-foreground dark:bg-primary/20 dark:text-primary-foreground'>
+          <div className='mt-2 rounded-md bg-primary/10 p-2 text-sm text-foreground dark:bg-primary/20 dark:text-foreground'>
             <div className='flex items-center gap-2'>
               <AlertCircle className='h-4 w-4' />
               <span>Complete todas las verificaciones para continuar.</span>
