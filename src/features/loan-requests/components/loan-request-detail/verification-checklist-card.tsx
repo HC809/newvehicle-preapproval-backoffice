@@ -24,10 +24,10 @@ export const VerificationChecklistCard = ({
   const progress = Math.round((stepsCompleted / totalSteps) * 100);
 
   return (
-    <Card className='border-l-4 border-l-blue-500 dark:border-l-blue-400'>
+    <Card className='border-l-4 border-l-primary dark:border-l-primary'>
       <CardHeader className='pb-2'>
         <CardTitle className='flex items-center gap-2 text-lg'>
-          <ClipboardCheck className='h-5 w-5 text-blue-500 dark:text-blue-400' />
+          <ClipboardCheck className='h-5 w-5 text-primary dark:text-primary' />
           <span>Verificaciones</span>
         </CardTitle>
       </CardHeader>
@@ -40,7 +40,7 @@ export const VerificationChecklistCard = ({
           </div>
           <div className='h-2 w-full rounded-full bg-gray-200 dark:bg-gray-700'>
             <div
-              className='h-2 rounded-full bg-blue-500 transition-all duration-300 ease-in-out dark:bg-blue-400'
+              className='h-2 rounded-full bg-primary transition-all duration-300 ease-in-out dark:bg-primary'
               style={{ width: `${progress}%` }}
             ></div>
           </div>
@@ -72,7 +72,7 @@ export const VerificationChecklistCard = ({
               {loanRequest.bantotalChecked ? (
                 <CheckCircle2 className='h-5 w-5 text-green-500' />
               ) : loanRequest.equifaxChecked ? (
-                <Circle className='h-5 w-5 text-blue-500' />
+                <Circle className='h-5 w-5 text-primary' />
               ) : (
                 <Circle className='h-5 w-5 text-gray-300' />
               )}
@@ -84,7 +84,7 @@ export const VerificationChecklistCard = ({
                   ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
                   : !loanRequest.equifaxChecked
                     ? 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400'
-                    : 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400'
+                    : 'bg-primary/10 text-primary-foreground dark:bg-primary/20 dark:text-primary-foreground'
               }`}
             >
               {loanRequest.bantotalChecked
@@ -108,7 +108,7 @@ export const VerificationChecklistCard = ({
             </div>
           </div>
         ) : progress > 0 ? (
-          <div className='mt-2 rounded-md bg-blue-50 p-2 text-sm text-blue-800 dark:bg-blue-900/20 dark:text-blue-400'>
+          <div className='mt-2 rounded-md bg-primary/10 p-2 text-sm text-primary-foreground dark:bg-primary/20 dark:text-primary-foreground'>
             <div className='flex items-center gap-2'>
               <AlertCircle className='h-4 w-4' />
               <span>Complete todas las verificaciones para continuar.</span>

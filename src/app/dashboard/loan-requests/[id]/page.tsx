@@ -524,7 +524,12 @@ export default function LoanRequestDetailPage() {
       <div className='flex flex-1 flex-col space-y-6'>
         <div className='flex items-center justify-between'>
           <div className='flex items-center gap-4'>
-            <Button variant='outline' size='icon' onClick={handleBack}>
+            <Button
+              variant='outline'
+              size='icon'
+              onClick={handleBack}
+              className='border-primary/30 text-primary hover:bg-primary/10 hover:text-primary dark:border-primary/30 dark:hover:bg-primary/20'
+            >
               <ArrowLeft className='h-4 w-4' />
             </Button>
             <Heading
@@ -592,7 +597,7 @@ export default function LoanRequestDetailPage() {
                             <Button
                               variant='outline'
                               size='sm'
-                              className='flex flex-1 items-center justify-center gap-1'
+                              className='flex flex-1 items-center justify-center gap-1 text-primary hover:bg-primary/10 hover:text-primary dark:hover:bg-primary/20'
                               onClick={() => handleViewDocument(doc.id, false)}
                               disabled={loadingDocumentId === doc.id}
                               title='Ver documento en una nueva pestaña'
@@ -607,7 +612,7 @@ export default function LoanRequestDetailPage() {
                             <Button
                               variant='outline'
                               size='sm'
-                              className='flex flex-1 items-center justify-center gap-1'
+                              className='flex flex-1 items-center justify-center gap-1 text-primary hover:bg-primary/10 hover:text-primary dark:hover:bg-primary/20'
                               onClick={() => handleViewDocument(doc.id, true)}
                               disabled={loadingDocumentId === doc.id}
                               title='Descargar documento'
@@ -655,7 +660,7 @@ export default function LoanRequestDetailPage() {
                       markEquifaxCheckedMutation.isPending ||
                       loanRequestDetail.loanRequest.equifaxChecked
                     }
-                    className='gap-2'
+                    className='gap-2 border-primary/30 text-primary hover:bg-primary/10 hover:text-primary dark:border-primary/30 dark:hover:bg-primary/20'
                   >
                     <Search className='h-4 w-4' />
                     {equifaxMutation.isPending ||
@@ -674,7 +679,7 @@ export default function LoanRequestDetailPage() {
                       !loanRequestDetail.loanRequest.equifaxChecked ||
                       loanRequestDetail.loanRequest.bantotalChecked
                     }
-                    className='gap-2'
+                    className='gap-2 border-primary/30 text-primary hover:bg-primary/10 hover:text-primary dark:border-primary/30 dark:hover:bg-primary/20'
                   >
                     <Calculator className='h-4 w-4' />
                     {markBantotalCheckedMutation.isPending
@@ -697,7 +702,7 @@ export default function LoanRequestDetailPage() {
                       !loanRequestDetail.loanRequest.equifaxChecked ||
                       !loanRequestDetail.loanRequest.bantotalChecked
                     }
-                    className='gap-2 bg-green-600 hover:bg-green-700'
+                    className='gap-2 bg-green-600 hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-700'
                   >
                     <CheckCircle className='h-4 w-4' />
                     Aprobar Solicitud

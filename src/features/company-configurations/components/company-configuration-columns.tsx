@@ -15,7 +15,7 @@ export const CompanyConfigurationColumns: ColumnDef<CompanyConfiguration>[] = [
       const rowIndex = row.index;
 
       return rowIndex === 0 ? (
-        <Badge variant='default' className='bg-green-500 hover:bg-green-600'>
+        <Badge variant='default' className=''>
           Actual
         </Badge>
       ) : (
