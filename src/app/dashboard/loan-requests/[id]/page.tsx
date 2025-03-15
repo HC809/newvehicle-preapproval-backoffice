@@ -11,8 +11,13 @@ import {
   CheckCircle,
   XCircle,
   Calculator,
-  Search
+  Search,
+  Table,
+  Loader2,
+  Eye,
+  Download
 } from 'lucide-react';
+import { toast } from 'sonner';
 
 import PageContainer from '@/components/layout/page-container';
 import { Heading } from '@/components/ui/heading';
@@ -119,21 +124,29 @@ export default function LoanRequestDetailPage() {
     router.push('/dashboard/loan-requests');
   };
 
-  // Función para obtener el icono según el tipo de contenido
+  // Función para obtener el icono según el tipo de documento
   const getDocumentIcon = (contentType: string) => {
     if (contentType.includes('pdf')) {
       return <FileText className='h-10 w-10 text-red-500' />;
     } else if (contentType.includes('image')) {
       return <Image className='h-10 w-10 text-blue-500' />;
-    } else if (contentType.includes('xml')) {
+    } else if (contentType.includes('xml') || contentType.includes('text')) {
       return <FileCode className='h-10 w-10 text-green-500' />;
+    } else if (contentType.includes('word') || contentType.includes('doc')) {
+      return <FileText className='h-10 w-10 text-blue-700' />;
+    } else if (
+      contentType.includes('excel') ||
+      contentType.includes('sheet') ||
+      contentType.includes('csv')
+    ) {
+      return <Table className='h-10 w-10 text-green-700' />;
     } else {
       return <File className='h-10 w-10 text-gray-500' />;
     }
   };
 
-  // Función para abrir el documento en una nueva pestaña
-  const handleViewDocument = async (documentId: string) => {
+  // Función para ver o descargar un documento
+  const handleViewDocument = async (documentId: string, download = false) => {
     try {
       setLoadingDocumentId(documentId);
 
@@ -169,30 +182,110 @@ export default function LoanRequestDetailPage() {
       const contentType =
         response.headers['content-type'] || 'application/octet-stream';
 
+      // Obtener el nombre del documento si está disponible
+      const contentDisposition = response.headers['content-disposition'] || '';
+      let fileName = `documento_${documentId}`;
+
+      // Intentar extraer el nombre del archivo del header Content-Disposition
+      const fileNameMatch = contentDisposition.match(
+        /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/
+      );
+      if (fileNameMatch && fileNameMatch[1]) {
+        fileName = fileNameMatch[1].replace(/['"]/g, '');
+      } else {
+        // Si no hay nombre en el header, intentar obtenerlo de los documentos cargados
+        const doc = loanRequestDetail?.documents?.find(
+          (d) => d.id === documentId
+        );
+        if (doc?.fileName) {
+          fileName = doc.fileName;
+        } else {
+          // Asignar una extensión basada en el tipo de contenido
+          if (contentType.includes('pdf')) {
+            fileName += '.pdf';
+          } else if (contentType.includes('image/jpeg')) {
+            fileName += '.jpg';
+          } else if (contentType.includes('image/png')) {
+            fileName += '.png';
+          } else if (contentType.includes('xml')) {
+            fileName += '.xml';
+          }
+        }
+      }
+
       // Crear un blob a partir de los datos
       const blob = new Blob([response.data], { type: contentType });
 
-      // Crear una URL para el blob
-      const blobUrl = URL.createObjectURL(blob);
+      if (download) {
+        // Descargar el archivo
+        const blobUrl = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = blobUrl;
+        link.download = fileName;
 
-      // Crear un enlace temporal para descargar el archivo
-      const link = document.createElement('a');
-      link.href = blobUrl;
-      link.target = '_blank';
-      link.rel = 'noopener noreferrer';
+        // Simular clic en el enlace para descargar
+        document.body.appendChild(link);
+        link.click();
 
-      // Simular clic en el enlace para abrir en una nueva pestaña
-      document.body.appendChild(link);
-      link.click();
+        // Eliminar el enlace temporal y liberar la URL del blob
+        setTimeout(() => {
+          document.body.removeChild(link);
+          URL.revokeObjectURL(blobUrl);
+        }, 100);
 
-      // Eliminar el enlace temporal y liberar la URL del blob
-      setTimeout(() => {
-        document.body.removeChild(link);
-        URL.revokeObjectURL(blobUrl);
-      }, 100);
+        // Mostrar notificación de éxito
+        toast.success(`Documento "${fileName}" descargado correctamente`);
+      } else {
+        // Abrir en una nueva pestaña
+        const blobUrl = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = blobUrl;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+
+        // Simular clic en el enlace para abrir en una nueva pestaña
+        document.body.appendChild(link);
+        link.click();
+
+        // Eliminar el enlace temporal y liberar la URL del blob
+        setTimeout(() => {
+          document.body.removeChild(link);
+          URL.revokeObjectURL(blobUrl);
+        }, 100);
+
+        // Mostrar notificación de éxito
+        toast.success(`Documento "${fileName}" abierto en una nueva pestaña`);
+      }
     } catch (err: any) {
-      console.error('Error al abrir el documento:', err);
-      alert(`Error al abrir el documento: ${err.message}`);
+      console.error('Error al procesar el documento:', err);
+
+      // Determinar un mensaje de error más específico
+      let errorMessage = 'Error al procesar el documento';
+
+      if (err.response) {
+        // Error de respuesta del servidor
+        if (err.response.status === 404) {
+          errorMessage =
+            'El documento solicitado no existe o ha sido eliminado';
+        } else if (err.response.status === 403) {
+          errorMessage = 'No tiene permisos para acceder a este documento';
+        } else if (err.response.status >= 500) {
+          errorMessage = 'Error en el servidor al procesar el documento';
+        }
+      } else if (err.request) {
+        // Error de red
+        errorMessage = 'Error de conexión. Verifique su conexión a internet';
+      } else if (err.message) {
+        // Usar el mensaje de error específico
+        errorMessage = err.message;
+      }
+
+      // Mostrar notificación de error
+      toast.error(errorMessage, {
+        description:
+          'Intente nuevamente más tarde o contacte al soporte técnico',
+        duration: 5000
+      });
     } finally {
       setLoadingDocumentId(null);
     }
@@ -495,17 +588,38 @@ export default function LoanRequestDetailPage() {
                               locale: es
                             })}
                           </span>
-                          <Button
-                            variant='outline'
-                            size='sm'
-                            className='mt-2 w-full'
-                            onClick={() => handleViewDocument(doc.id)}
-                            disabled={loadingDocumentId === doc.id}
-                          >
-                            {loadingDocumentId === doc.id
-                              ? 'Cargando...'
-                              : 'Ver'}
-                          </Button>
+                          <div className='mt-2 flex w-full gap-2'>
+                            <Button
+                              variant='outline'
+                              size='sm'
+                              className='flex flex-1 items-center justify-center gap-1'
+                              onClick={() => handleViewDocument(doc.id, false)}
+                              disabled={loadingDocumentId === doc.id}
+                              title='Ver documento en una nueva pestaña'
+                            >
+                              {loadingDocumentId === doc.id ? (
+                                <Loader2 className='h-4 w-4 animate-spin' />
+                              ) : (
+                                <Eye className='h-4 w-4' />
+                              )}
+                              <span>Ver</span>
+                            </Button>
+                            <Button
+                              variant='outline'
+                              size='sm'
+                              className='flex flex-1 items-center justify-center gap-1'
+                              onClick={() => handleViewDocument(doc.id, true)}
+                              disabled={loadingDocumentId === doc.id}
+                              title='Descargar documento'
+                            >
+                              {loadingDocumentId === doc.id ? (
+                                <Loader2 className='h-4 w-4 animate-spin' />
+                              ) : (
+                                <Download className='h-4 w-4' />
+                              )}
+                              <span>Descargar</span>
+                            </Button>
+                          </div>
                         </div>
                       ))}
                     </div>
