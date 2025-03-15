@@ -310,36 +310,27 @@ export default function LoanRequestDetailPage() {
       { clientDni, loanRequestId },
       {
         onSuccess: () => {
-          // Actualizar el estado de la solicitud
-          markEquifaxCheckedMutation.mutate(id as string, {
-            onSuccess: async () => {
+          // Actualizar el estado de la solicitud - NO llamamos a markEquifaxCheckedMutation
+          // ya que parece que el endpoint de equifax ya marca la solicitud como verificada
+          try {
+            // Simplemente refrescamos los datos para obtener la información actualizada
+            setTimeout(async () => {
               try {
-                // Añadir un pequeño retraso antes de refrescar los datos
-                // para dar tiempo al backend a procesar completamente la solicitud
-                setTimeout(async () => {
-                  try {
-                    // Refrescar los datos para obtener la información actualizada
-                    // incluyendo el nuevo documento de Equifax
-                    await refetch();
-                    setShowFullPageLoader(false);
-                  } catch (error) {
-                    console.error('Error al recargar los datos:', error);
-                    setLoaderError(
-                      'Error al recargar los datos. Por favor, actualice la página manualmente.'
-                    );
-                  }
-                }, 1500); // Esperar 1.5 segundos antes de refrescar
+                await refetch(); // Esto debería llamar a /loan-requests/{id}
+                setShowFullPageLoader(false);
               } catch (error) {
                 console.error('Error al recargar los datos:', error);
                 setLoaderError(
                   'Error al recargar los datos. Por favor, actualice la página manualmente.'
                 );
               }
-            },
-            onError: (error) => {
-              setLoaderError(error);
-            }
-          });
+            }, 1000); // Un pequeño retraso para asegurar que el backend ha procesado todo
+          } catch (error) {
+            console.error('Error al recargar los datos:', error);
+            setLoaderError(
+              'Error al recargar los datos. Por favor, actualice la página manualmente.'
+            );
+          }
         },
         onError: (error) => {
           setLoaderError(error);
@@ -427,7 +418,6 @@ export default function LoanRequestDetailPage() {
     // Reiniciar las mutaciones para que puedan ser ejecutadas nuevamente
     if (equifaxMutation.isPending || equifaxMutation.isError) {
       equifaxMutation.reset();
-      markEquifaxCheckedMutation.reset();
 
       // Volver a ejecutar la consulta a Equifax
       if (loanRequestDetail) {
@@ -445,24 +435,18 @@ export default function LoanRequestDetailPage() {
           { clientDni, loanRequestId },
           {
             onSuccess: () => {
-              markEquifaxCheckedMutation.mutate(id as string, {
-                onSuccess: () => {
-                  // Añadir el mismo retraso aquí también
-                  setTimeout(async () => {
-                    try {
-                      await refetch();
-                      setShowFullPageLoader(false);
-                    } catch (error) {
-                      setLoaderError(
-                        'Error al recargar los datos. Por favor, actualice la página manualmente.'
-                      );
-                    }
-                  }, 1500);
-                },
-                onError: (error) => {
-                  setLoaderError(error);
+              // Simplemente refrescamos los datos para obtener la información actualizada
+              setTimeout(async () => {
+                try {
+                  await refetch(); // Esto debería llamar a /loan-requests/{id}
+                  setShowFullPageLoader(false);
+                } catch (error) {
+                  console.error('Error al recargar los datos:', error);
+                  setLoaderError(
+                    'Error al recargar los datos. Por favor, actualice la página manualmente.'
+                  );
                 }
-              });
+              }, 1000);
             },
             onError: (error) => {
               setLoaderError(error);
