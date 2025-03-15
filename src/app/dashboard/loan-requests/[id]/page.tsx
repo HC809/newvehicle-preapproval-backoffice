@@ -314,10 +314,21 @@ export default function LoanRequestDetailPage() {
           markEquifaxCheckedMutation.mutate(id as string, {
             onSuccess: async () => {
               try {
-                // Refrescar los datos para obtener la información actualizada
-                // incluyendo el nuevo documento de Equifax
-                await refetch();
-                setShowFullPageLoader(false);
+                // Añadir un pequeño retraso antes de refrescar los datos
+                // para dar tiempo al backend a procesar completamente la solicitud
+                setTimeout(async () => {
+                  try {
+                    // Refrescar los datos para obtener la información actualizada
+                    // incluyendo el nuevo documento de Equifax
+                    await refetch();
+                    setShowFullPageLoader(false);
+                  } catch (error) {
+                    console.error('Error al recargar los datos:', error);
+                    setLoaderError(
+                      'Error al recargar los datos. Por favor, actualice la página manualmente.'
+                    );
+                  }
+                }, 1500); // Esperar 1.5 segundos antes de refrescar
               } catch (error) {
                 console.error('Error al recargar los datos:', error);
                 setLoaderError(
@@ -436,8 +447,17 @@ export default function LoanRequestDetailPage() {
             onSuccess: () => {
               markEquifaxCheckedMutation.mutate(id as string, {
                 onSuccess: () => {
-                  refetch();
-                  setShowFullPageLoader(false);
+                  // Añadir el mismo retraso aquí también
+                  setTimeout(async () => {
+                    try {
+                      await refetch();
+                      setShowFullPageLoader(false);
+                    } catch (error) {
+                      setLoaderError(
+                        'Error al recargar los datos. Por favor, actualice la página manualmente.'
+                      );
+                    }
+                  }, 1500);
                 },
                 onError: (error) => {
                   setLoaderError(error);
