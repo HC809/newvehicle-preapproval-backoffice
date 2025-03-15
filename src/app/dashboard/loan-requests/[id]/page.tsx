@@ -2,22 +2,39 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { ArrowLeft, FileText, Image, File, FileCode } from 'lucide-react';
+import {
+  ArrowLeft,
+  FileText,
+  Image,
+  File,
+  FileCode,
+  CheckCircle,
+  XCircle,
+  Calculator,
+  Search
+} from 'lucide-react';
 
 import PageContainer from '@/components/layout/page-container';
 import { Heading } from '@/components/ui/heading';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { FullPageLoader } from '@/components/ui/full-page-loader';
 
 import {
   MainInfoCard,
   RejectionAlert,
   FinancialSummaryCard,
-  ResponsiblePersonsCard
+  //ResponsiblePersonsCard,
+  VerificationChecklistCard
 } from '@/features/loan-requests/components/loan-request-detail';
 import useAxios from '@/hooks/use-axios';
-import { useLoanRequestDetail } from '@/features/loan-requests/api/loan-request-service';
+import {
+  useLoanRequestDetail,
+  useCheckEquifax,
+  useMarkEquifaxChecked,
+  useMarkBantotalChecked
+} from '@/features/loan-requests/api/loan-request-service';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale/es';
@@ -30,14 +47,24 @@ export default function LoanRequestDetailPage() {
   const [loadingDocumentId, setLoadingDocumentId] = useState<string | null>(
     null
   );
+  const [showFullPageLoader, setShowFullPageLoader] = useState(false);
+  const [fullPageLoaderMessage, setFullPageLoaderMessage] = useState('');
+  const [fullPageLoaderSubMessage, setFullPageLoaderSubMessage] = useState('');
+  const [loaderError, setLoaderError] = useState<string | null>(null);
 
   // Fetch loan request details from API
   const {
     data: loanRequestDetail,
     isLoading,
     isError,
-    error: fetchError
+    error: fetchError,
+    refetch
   } = useLoanRequestDetail(apiClient, id as string);
+
+  // Mutaciones
+  const equifaxMutation = useCheckEquifax(apiClient);
+  const markEquifaxCheckedMutation = useMarkEquifaxChecked(apiClient);
+  const markBantotalCheckedMutation = useMarkBantotalChecked(apiClient);
 
   // Efecto para eliminar el resaltado en las tabs cuando se presiona una tecla
   useEffect(() => {
@@ -119,7 +146,6 @@ export default function LoanRequestDetailPage() {
       let apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
 
       if (!apiUrl) {
-        //console.warn('NEXT_PUBLIC_API_BASE_URL no está disponible, usando URL por defecto');
         apiUrl = 'https://localhost:7298/api';
       }
 
@@ -165,10 +191,195 @@ export default function LoanRequestDetailPage() {
         URL.revokeObjectURL(blobUrl);
       }, 100);
     } catch (err: any) {
-      //console.error('Error al abrir el documento:', err);
+      console.error('Error al abrir el documento:', err);
       alert(`Error al abrir el documento: ${err.message}`);
     } finally {
       setLoadingDocumentId(null);
+    }
+  };
+
+  // Función para consultar Equifax
+  const handleCheckEquifax = async () => {
+    if (!loanRequestDetail) return;
+
+    const clientDni = loanRequestDetail.loanRequest.dni;
+    const loanRequestId = loanRequestDetail.loanRequest.id;
+
+    setShowFullPageLoader(true);
+    setLoaderError(null);
+    setFullPageLoaderMessage('Consultando información crediticia en Equifax');
+    setFullPageLoaderSubMessage(
+      'Este proceso puede tardar hasta 10 segundos. Por favor, espere mientras consultamos la información crediticia del cliente.'
+    );
+
+    // Llamar al endpoint de Equifax
+    equifaxMutation.mutate(
+      { clientDni, loanRequestId },
+      {
+        onSuccess: () => {
+          // Actualizar el estado de la solicitud
+          markEquifaxCheckedMutation.mutate(id as string, {
+            onSuccess: async () => {
+              try {
+                // Refrescar los datos para obtener la información actualizada
+                // incluyendo el nuevo documento de Equifax
+                await refetch();
+                setShowFullPageLoader(false);
+              } catch (error) {
+                console.error('Error al recargar los datos:', error);
+                setLoaderError(
+                  'Error al recargar los datos. Por favor, actualice la página manualmente.'
+                );
+              }
+            },
+            onError: (error) => {
+              setLoaderError(error);
+            }
+          });
+        },
+        onError: (error) => {
+          setLoaderError(error);
+        }
+      }
+    );
+  };
+
+  // Función para realizar el cálculo del préstamo
+  const handleCalculateLoan = async () => {
+    if (!loanRequestDetail) return;
+
+    setShowFullPageLoader(true);
+    setLoaderError(null);
+    setFullPageLoaderMessage('Calculando cuota y detalles del préstamo');
+    setFullPageLoaderSubMessage(
+      'Estamos calculando los detalles del préstamo. Este proceso puede tardar unos segundos.'
+    );
+
+    // Simulación de cálculo de préstamo
+    setTimeout(() => {
+      // Actualizar el estado de la solicitud
+      markBantotalCheckedMutation.mutate(id as string, {
+        onSuccess: async () => {
+          try {
+            // Refrescar los datos para obtener la información actualizada
+            await refetch();
+            setShowFullPageLoader(false);
+          } catch (error) {
+            console.error('Error al recargar los datos:', error);
+            setLoaderError(
+              'Error al recargar los datos. Por favor, actualice la página manualmente.'
+            );
+          }
+        },
+        onError: (error) => {
+          setLoaderError(error);
+        }
+      });
+    }, 2000);
+  };
+
+  // Función para aprobar la solicitud
+  const handleApproveLoan = async () => {
+    setShowFullPageLoader(true);
+    setLoaderError(null);
+    setFullPageLoaderMessage('Procesando aprobación de la solicitud');
+    setFullPageLoaderSubMessage(
+      'Por favor espere mientras completamos el proceso.'
+    );
+
+    // Simulación de procesamiento
+    setTimeout(() => {
+      setShowFullPageLoader(false);
+      alert('Funcionalidad de aprobación pendiente de implementar');
+    }, 1500);
+  };
+
+  // Función para rechazar la solicitud
+  const handleRejectLoan = async () => {
+    setShowFullPageLoader(true);
+    setLoaderError(null);
+    setFullPageLoaderMessage('Procesando rechazo de la solicitud');
+    setFullPageLoaderSubMessage(
+      'Por favor espere mientras completamos el proceso.'
+    );
+
+    // Simulación de procesamiento
+    setTimeout(() => {
+      setShowFullPageLoader(false);
+      alert('Funcionalidad de rechazo pendiente de implementar');
+    }, 1500);
+  };
+
+  // Función para cerrar el loader con error
+  const handleCloseLoader = () => {
+    setShowFullPageLoader(false);
+    setLoaderError(null);
+  };
+
+  // Función para reintentar la operación
+  const handleRetry = () => {
+    setLoaderError(null);
+
+    // Reiniciar las mutaciones para que puedan ser ejecutadas nuevamente
+    if (equifaxMutation.isPending || equifaxMutation.isError) {
+      equifaxMutation.reset();
+      markEquifaxCheckedMutation.reset();
+
+      // Volver a ejecutar la consulta a Equifax
+      if (loanRequestDetail) {
+        const clientDni = loanRequestDetail.loanRequest.dni;
+        const loanRequestId = loanRequestDetail.loanRequest.id;
+
+        setFullPageLoaderMessage(
+          'Consultando información crediticia en Equifax'
+        );
+        setFullPageLoaderSubMessage(
+          'Este proceso puede tardar hasta 10 segundos. Por favor, espere mientras consultamos la información crediticia del cliente.'
+        );
+
+        equifaxMutation.mutate(
+          { clientDni, loanRequestId },
+          {
+            onSuccess: () => {
+              markEquifaxCheckedMutation.mutate(id as string, {
+                onSuccess: () => {
+                  refetch();
+                  setShowFullPageLoader(false);
+                },
+                onError: (error) => {
+                  setLoaderError(error);
+                }
+              });
+            },
+            onError: (error) => {
+              setLoaderError(error);
+            }
+          }
+        );
+      }
+    } else if (
+      markBantotalCheckedMutation.isPending ||
+      markBantotalCheckedMutation.isError
+    ) {
+      markBantotalCheckedMutation.reset();
+
+      // Volver a ejecutar el cálculo del préstamo
+      setFullPageLoaderMessage('Calculando cuota y detalles del préstamo');
+      setFullPageLoaderSubMessage(
+        'Estamos calculando los detalles del préstamo. Este proceso puede tardar unos segundos.'
+      );
+
+      setTimeout(() => {
+        markBantotalCheckedMutation.mutate(id as string, {
+          onSuccess: () => {
+            refetch();
+            setShowFullPageLoader(false);
+          },
+          onError: (error) => {
+            setLoaderError(error);
+          }
+        });
+      }, 2000);
     }
   };
 
@@ -208,6 +419,15 @@ export default function LoanRequestDetailPage() {
 
   return (
     <PageContainer>
+      {showFullPageLoader && (
+        <FullPageLoader
+          message={fullPageLoaderMessage}
+          subMessage={fullPageLoaderSubMessage}
+          error={loaderError}
+          onRetry={handleRetry}
+          onClose={handleCloseLoader}
+        />
+      )}
       <div className='flex flex-1 flex-col space-y-6'>
         <div className='flex items-center justify-between'>
           <div className='flex items-center gap-4'>
@@ -298,15 +518,90 @@ export default function LoanRequestDetailPage() {
               <FinancialSummaryCard
                 loanRequest={loanRequestDetail.loanRequest}
               />
-              <ResponsiblePersonsCard
+
+              {/* Comentamos ResponsiblePersonsCard para usuarios BusinessDevelopment_User */}
+              {/* <ResponsiblePersonsCard
+                loanRequest={loanRequestDetail.loanRequest}
+              /> */}
+
+              {/* Reemplazamos con el checklist de verificación */}
+              <VerificationChecklistCard
                 loanRequest={loanRequestDetail.loanRequest}
               />
 
-              <div className='flex flex-col space-y-2'>
-                <Button variant='default'>Editar Solicitud</Button>
-                <Button variant='outline' onClick={handleBack}>
-                  Volver a la lista
-                </Button>
+              {/* Acciones principales */}
+              <div className='space-y-4'>
+                {/* Verificaciones */}
+                <div className='flex flex-col space-y-2'>
+                  <Button
+                    variant='outline'
+                    onClick={handleCheckEquifax}
+                    disabled={
+                      equifaxMutation.isPending ||
+                      markEquifaxCheckedMutation.isPending ||
+                      loanRequestDetail.loanRequest.equifaxChecked
+                    }
+                    className='gap-2'
+                  >
+                    <Search className='h-4 w-4' />
+                    {equifaxMutation.isPending ||
+                    markEquifaxCheckedMutation.isPending
+                      ? 'Consultando...'
+                      : loanRequestDetail.loanRequest.equifaxChecked
+                        ? 'Equifax Consultado'
+                        : 'Consultar Equifax'}
+                  </Button>
+
+                  <Button
+                    variant='outline'
+                    onClick={handleCalculateLoan}
+                    disabled={
+                      markBantotalCheckedMutation.isPending ||
+                      !loanRequestDetail.loanRequest.equifaxChecked ||
+                      loanRequestDetail.loanRequest.bantotalChecked
+                    }
+                    className='gap-2'
+                  >
+                    <Calculator className='h-4 w-4' />
+                    {markBantotalCheckedMutation.isPending
+                      ? 'Calculando...'
+                      : loanRequestDetail.loanRequest.bantotalChecked
+                        ? 'Cálculo Realizado'
+                        : 'Calcular Préstamo'}
+                  </Button>
+                </div>
+
+                {/* Separador */}
+                <Separator />
+
+                {/* Acciones finales (aprobar/rechazar) */}
+                <div className='flex flex-col space-y-2'>
+                  <Button
+                    variant='default'
+                    onClick={handleApproveLoan}
+                    disabled={
+                      !loanRequestDetail.loanRequest.equifaxChecked ||
+                      !loanRequestDetail.loanRequest.bantotalChecked
+                    }
+                    className='gap-2 bg-green-600 hover:bg-green-700'
+                  >
+                    <CheckCircle className='h-4 w-4' />
+                    Aprobar Solicitud
+                  </Button>
+
+                  <Button
+                    variant='destructive'
+                    onClick={handleRejectLoan}
+                    disabled={
+                      !loanRequestDetail.loanRequest.equifaxChecked ||
+                      !loanRequestDetail.loanRequest.bantotalChecked
+                    }
+                    className='gap-2'
+                  >
+                    <XCircle className='h-4 w-4' />
+                    Rechazar Solicitud
+                  </Button>
+                </div>
               </div>
             </div>
           </div>

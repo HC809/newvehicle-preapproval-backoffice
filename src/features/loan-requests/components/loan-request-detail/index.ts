@@ -5,3 +5,4 @@ export * from './financial-info-tab';
 export * from './rejection-alert';
 export * from './financial-summary-card';
 export * from './responsible-persons-card';
+export * from './verification-checklist-card';

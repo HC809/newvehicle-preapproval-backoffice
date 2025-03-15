@@ -25,6 +25,8 @@ export interface LoanRequest {
   rejectionReason: string | null;
   createdAt: string;
   isExistingClient: boolean;
+  equifaxChecked: boolean;
+  bantotalChecked: boolean;
   managerId?: string;
 }
 
