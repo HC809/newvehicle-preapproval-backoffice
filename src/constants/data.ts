@@ -21,7 +21,7 @@ export const navItems: NavItem[] = [
   {
     title: 'Clientes',
     url: '/dashboard/clients',
-    icon: 'users',
+    icon: 'clients',
     shortcut: ['u', 'u'],
     isActive: false,
     items: []
@@ -31,10 +31,10 @@ export const navItems: NavItem[] = [
 export const adminNavItems: NavItem[] = [
   ...navItems,
   {
-    title: 'Configuración de Tasas',
+    title: 'Configuración Financiera',
     url: '/dashboard/company-configurations',
     icon: 'tasas',
-    shortcut: ['c', 't'],
+    shortcut: ['c', 'f'],
     isActive: false,
     items: []
   },

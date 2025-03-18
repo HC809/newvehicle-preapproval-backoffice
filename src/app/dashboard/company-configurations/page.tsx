@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { PlusIcon, ReloadIcon } from '@radix-ui/react-icons';
+import { ReloadIcon } from '@radix-ui/react-icons';
 import PageContainer from '@/components/layout/page-container';
 import { Heading } from '@/components/ui/heading';
 import { Separator } from '@/components/ui/separator';
@@ -13,6 +13,7 @@ import CompanyConfigurationListingPage from '@/features/company-configurations/c
 import CompanyConfigurationForm from '@/features/company-configurations/components/company-configuration-form';
 import { useCompanyConfigurations } from '@/features/company-configurations/api/company-configuration-service';
 import { CompanyConfiguration } from 'types/CompanyConfigurations';
+import { Edit } from 'lucide-react';
 
 export default function CompanyConfigurationsPage() {
   const apiClient = useAxios();
@@ -46,7 +47,7 @@ export default function CompanyConfigurationsPage() {
         <div className='flex items-start justify-between'>
           <Heading
             title='Configuración de la Empresa'
-            description='Administración de tasas de cambio y tasas de interés.'
+            description='Administración de Parámetros Financieros.'
           />
           <div className='flex gap-2'>
             <Button
@@ -60,8 +61,8 @@ export default function CompanyConfigurationsPage() {
               />
             </Button>
             <Button variant='default' onClick={() => setIsFormOpen(true)}>
-              <PlusIcon className='mr-2 h-4 w-4' />
-              Actualizar Tasas
+              <Edit className='mr-2 h-4 w-4' />
+              Actualizar
             </Button>
           </div>
         </div>

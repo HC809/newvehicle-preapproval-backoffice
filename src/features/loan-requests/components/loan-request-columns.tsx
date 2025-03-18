@@ -85,7 +85,7 @@ export const LoanRequestColumns = (
     },
     {
       accessorKey: 'requestedAmount',
-      header: () => <span className='font-bold'>Monto Solicitado</span>,
+      header: () => <span className='font-bold'>Valor del Vehículo</span>,
       cell: ({ row }) => <span>{formatUSD(row.original.requestedAmount)}</span>
     },
     // {

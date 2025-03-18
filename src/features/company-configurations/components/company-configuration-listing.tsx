@@ -8,6 +8,7 @@ import { DataTableSkeleton } from '@/components/ui/table/data-table-skeleton';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DollarSign, Percent, InfoIcon } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { formatHNL } from '@/utils/formatCurrency';
 
 interface CompanyConfigurationListingPageProps {
   configurations: CompanyConfiguration[];
@@ -27,11 +28,11 @@ export default function CompanyConfigurationListingPage({
   if (isLoading) {
     return (
       <div className='space-y-6'>
-        <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
+        <div className='grid grid-cols-1 gap-4 md:grid-cols-4'>
           <Card className='animate-pulse'>
             <CardHeader className='pb-2'>
               <CardTitle className='text-sm font-medium'>
-                Tasa de Cambio del Dólar
+                Tasa de Interés
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -41,7 +42,27 @@ export default function CompanyConfigurationListingPage({
           <Card className='animate-pulse'>
             <CardHeader className='pb-2'>
               <CardTitle className='text-sm font-medium'>
-                Tasa de Interés
+                Tarifa Mensual GPS
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className='h-6 w-24 rounded bg-muted'></div>
+            </CardContent>
+          </Card>
+          <Card className='animate-pulse'>
+            <CardHeader className='pb-2'>
+              <CardTitle className='text-sm font-medium'>
+                Gastos de Cierre
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className='h-6 w-24 rounded bg-muted'></div>
+            </CardContent>
+          </Card>
+          <Card className='animate-pulse'>
+            <CardHeader className='pb-2'>
+              <CardTitle className='text-sm font-medium'>
+                Tasa de Cambio del Dólar
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -60,20 +81,7 @@ export default function CompanyConfigurationListingPage({
 
   return (
     <>
-      <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
-        <Card>
-          <CardHeader className='pb-2'>
-            <CardTitle className='text-sm font-medium'>
-              Tasa de Cambio del Dólar
-            </CardTitle>
-          </CardHeader>
-          <CardContent className='flex items-center'>
-            <DollarSign className='mr-2 h-5 w-5 text-muted-foreground' />
-            <span className='text-2xl font-bold'>
-              {currentConfiguration?.dollarExchangeRate.toFixed(2)}
-            </span>
-          </CardContent>
-        </Card>
+      <div className='grid grid-cols-1 gap-4 md:grid-cols-4'>
         <Card>
           <CardHeader className='pb-2'>
             <CardTitle className='text-sm font-medium'>
@@ -84,6 +92,43 @@ export default function CompanyConfigurationListingPage({
             <Percent className='mr-2 h-5 w-5 text-muted-foreground' />
             <span className='text-2xl font-bold'>
               {currentConfiguration?.interestRate.toFixed(2)}%
+            </span>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className='pb-2'>
+            <CardTitle className='text-sm font-medium'>
+              Gastos de Cierre
+            </CardTitle>
+          </CardHeader>
+          <CardContent className='flex items-center'>
+            <span className='text-2xl font-bold'>
+              {formatHNL(currentConfiguration?.closingCosts || 0)}
+            </span>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className='pb-2'>
+            <CardTitle className='text-sm font-medium'>
+              Tarifa Mensual GPS
+            </CardTitle>
+          </CardHeader>
+          <CardContent className='flex items-center'>
+            <span className='text-2xl font-bold'>
+              {formatHNL(currentConfiguration?.monthlyGpsFee || 0)}
+            </span>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className='pb-2'>
+            <CardTitle className='text-sm font-medium'>
+              Tasa de Cambio del Dólar
+            </CardTitle>
+          </CardHeader>
+          <CardContent className='flex items-center'>
+            <DollarSign className='mr-2 h-5 w-5 text-muted-foreground' />
+            <span className='text-2xl font-bold'>
+              {currentConfiguration?.dollarExchangeRate.toFixed(2)}
             </span>
           </CardContent>
         </Card>

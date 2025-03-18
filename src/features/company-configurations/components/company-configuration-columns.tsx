@@ -5,6 +5,7 @@ import { CompanyConfiguration } from 'types/CompanyConfigurations';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { formatHNL } from '@/utils/formatCurrency';
 
 export const CompanyConfigurationColumns: ColumnDef<CompanyConfiguration>[] = [
   {
@@ -24,19 +25,35 @@ export const CompanyConfigurationColumns: ColumnDef<CompanyConfiguration>[] = [
     }
   },
   {
-    accessorKey: 'dollarExchangeRate',
-    header: () => <span className='font-bold'>Tasa de Cambio del Dólar</span>,
-    cell: ({ row }) => {
-      const dollarExchangeRate = row.getValue('dollarExchangeRate') as number;
-      return <div className='font-medium'>{dollarExchangeRate.toFixed(2)}</div>;
-    }
-  },
-  {
     accessorKey: 'interestRate',
     header: () => <span className='font-bold'>Tasa de Interés</span>,
     cell: ({ row }) => {
       const interestRate = row.getValue('interestRate') as number;
       return <div className='font-medium'>{interestRate.toFixed(2)}%</div>;
+    }
+  },
+  {
+    accessorKey: 'monthlyGpsFee',
+    header: () => <span className='font-bold'>Tarifa Mensual GPS</span>,
+    cell: ({ row }) => {
+      const monthlyGpsFee = row.getValue('monthlyGpsFee') as number;
+      return <div className='font-medium'>{formatHNL(monthlyGpsFee)}</div>;
+    }
+  },
+  {
+    accessorKey: 'closingCosts',
+    header: () => <span className='font-bold'>Gastos de Cierre</span>,
+    cell: ({ row }) => {
+      const closingCosts = row.getValue('closingCosts') as number;
+      return <div className='font-medium'>{formatHNL(closingCosts)}</div>;
+    }
+  },
+  {
+    accessorKey: 'dollarExchangeRate',
+    header: () => <span className='font-bold'>Tasa de Cambio del Dólar</span>,
+    cell: ({ row }) => {
+      const dollarExchangeRate = row.getValue('dollarExchangeRate') as number;
+      return <div className='font-medium'>{dollarExchangeRate.toFixed(2)}</div>;
     }
   },
   {

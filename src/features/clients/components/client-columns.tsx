@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useCallback, useMemo } from 'react';
-import { ColumnDef } from '@tanstack/react-table';
-import { Button } from '@/components/ui/button';
+import React from 'react';
+import { ColumnDef, Row } from '@tanstack/react-table';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,221 +12,127 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, User, Phone, Mail, MapPin } from 'lucide-react';
+import { MoreHorizontal, User, Phone, MapPin } from 'lucide-react';
 import { Client } from 'types/Client';
-import { useRouter } from 'next/navigation';
-import { useClientStore } from '@/stores/client-store';
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
 
-// Create a separate component for the cell content to avoid React hook issues
-function ClientNameCell({
-  client,
-  onClick
-}: {
-  client: Client;
-  onClick: (client: Client) => void;
-}) {
-  return (
-    <div
-      className='flex cursor-pointer items-center gap-2'
-      onClick={() => onClick(client)}
-    >
-      <User className='h-4 w-4 text-blue-500 dark:text-blue-400' />
-      <span className='font-medium'>{client.name}</span>
-    </div>
-  );
-}
+type ClientColumnsType = (
+  onRowClick: (row: Row<Client>) => void
+) => ColumnDef<Client>[];
 
-function ClientDniCell({
-  client,
-  onClick
-}: {
-  client: Client;
-  onClick: (client: Client) => void;
-}) {
-  return (
-    <div className='cursor-pointer' onClick={() => onClick(client)}>
-      {client.dni}
-    </div>
-  );
-}
-
-function ClientEmailCell({
-  client,
-  onClick
-}: {
-  client: Client;
-  onClick: (client: Client) => void;
-}) {
-  return (
-    <div
-      className='flex cursor-pointer items-center gap-2'
-      onClick={() => onClick(client)}
-    >
-      <Mail className='h-4 w-4 text-green-500 dark:text-green-400' />
-      <span>{client.email}</span>
-    </div>
-  );
-}
-
-function ClientPhoneCell({
-  client,
-  onClick
-}: {
-  client: Client;
-  onClick: (client: Client) => void;
-}) {
-  return (
-    <div
-      className='flex cursor-pointer items-center gap-2'
-      onClick={() => onClick(client)}
-    >
-      <Phone className='h-4 w-4 text-purple-500 dark:text-purple-400' />
-      <span>{client.phone}</span>
-    </div>
-  );
-}
-
-function ClientAddressCell({
-  client,
-  onClick
-}: {
-  client: Client;
-  onClick: (client: Client) => void;
-}) {
-  return (
-    <div
-      className='flex cursor-pointer items-center gap-2'
-      onClick={() => onClick(client)}
-    >
-      <MapPin className='h-4 w-4 text-orange-500 dark:text-orange-400' />
-      <span className='max-w-[200px] truncate'>{client.address}</span>
-    </div>
-  );
-}
-
-function ClientRiskScoreCell({
-  client,
-  onClick
-}: {
-  client: Client;
-  onClick: (client: Client) => void;
-}) {
-  const score = client.lastRiskScore;
-  let variant: 'default' | 'success' | 'destructive' | 'warning' = 'default';
-
-  if (score >= 700) {
-    variant = 'success';
-  } else if (score >= 500) {
-    variant = 'warning';
-  } else {
-    variant = 'destructive';
-  }
-
-  return (
-    <div className='cursor-pointer' onClick={() => onClick(client)}>
-      <Badge variant={variant}>{score}</Badge>
-    </div>
-  );
-}
-
-function ClientActionsCell({
-  client,
-  onClick
-}: {
-  client: Client;
-  onClick: (client: Client) => void;
-}) {
-  // Evitar que el clic en el menú de acciones propague al clic de la fila
-  const handleActionClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-  };
-
-  return (
-    <div onClick={handleActionClick}>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant='ghost' className='h-8 w-8 p-0'>
-            <span className='sr-only'>Open menu</span>
-            <MoreHorizontal className='h-4 w-4' />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align='end'>
-          <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => onClick(client)}>
-            Ver Detalle
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </div>
-  );
-}
-
-export function ClientColumns(): ColumnDef<Client>[] {
-  const router = useRouter();
-  const { setSelectedClient } = useClientStore();
-
-  // Use useCallback to memoize the handler function
-  const handleRowClick = useCallback(
-    (client: Client) => {
-      setSelectedClient(client);
-      router.push(`/dashboard/clients/${client.id}`);
+export const ClientColumns: ClientColumnsType = (onRowClick) => {
+  return [
+    {
+      accessorKey: 'name',
+      header: () => <span className='font-bold'>Nombre</span>,
+      cell: ({ row }) => (
+        <div className='flex items-center gap-2'>
+          <User className='h-4 w-4 text-blue-500 dark:text-blue-400' />
+          <span className='font-medium'>{row.original.name}</span>
+        </div>
+      )
     },
-    [router, setSelectedClient]
-  );
+    {
+      accessorKey: 'dni',
+      header: () => <span className='font-bold'>DNI</span>,
+      cell: ({ row }) => row.original.dni
+    },
+    {
+      accessorKey: 'lastRiskScore',
+      header: () => <span className='font-bold'>Scoring de Riesgo</span>,
+      cell: ({ row }) => {
+        const score = row.original.lastRiskScore;
+        let variant: 'default' | 'success' | 'destructive' | 'warning' =
+          'default';
 
-  return useMemo(
-    () => [
-      {
-        accessorKey: 'name',
-        header: () => <span className='font-bold'>Nombre</span>,
-        cell: ({ row }) => (
-          <ClientNameCell client={row.original} onClick={handleRowClick} />
-        )
-      },
-      {
-        accessorKey: 'dni',
-        header: () => <span className='font-bold'>DNI</span>,
-        cell: ({ row }) => (
-          <ClientDniCell client={row.original} onClick={handleRowClick} />
-        )
-      },
-      {
-        accessorKey: 'email',
-        header: () => <span className='font-bold'>Correo Electrónico</span>,
-        cell: ({ row }) => (
-          <ClientEmailCell client={row.original} onClick={handleRowClick} />
-        )
-      },
-      {
-        accessorKey: 'phone',
-        header: () => <span className='font-bold'>Teléfono</span>,
-        cell: ({ row }) => (
-          <ClientPhoneCell client={row.original} onClick={handleRowClick} />
-        )
-      },
-      {
-        accessorKey: 'address',
-        header: () => <span className='font-bold'>Dirección</span>,
-        cell: ({ row }) => (
-          <ClientAddressCell client={row.original} onClick={handleRowClick} />
-        )
-      },
-      {
-        accessorKey: 'lastRiskScore',
-        header: () => <span className='font-bold'>Puntuación de Riesgo</span>,
-        cell: ({ row }) => (
-          <ClientRiskScoreCell client={row.original} onClick={handleRowClick} />
-        )
-      },
-      {
-        id: 'actions',
-        header: () => <span className='font-bold'>Acciones</span>,
-        cell: ({ row }) => (
-          <ClientActionsCell client={row.original} onClick={handleRowClick} />
-        )
+        if (score >= 700) {
+          variant = 'success';
+        } else if (score >= 500) {
+          variant = 'warning';
+        } else {
+          variant = 'destructive';
+        }
+
+        return <Badge variant={variant}>{score}</Badge>;
       }
-    ],
-    [handleRowClick]
-  );
-}
+    },
+    {
+      accessorKey: 'phone',
+      header: () => <span className='font-bold'>Teléfono</span>,
+      cell: ({ row }) => (
+        <div className='flex items-center gap-2'>
+          <Phone className='h-4 w-4 text-purple-500 dark:text-purple-400' />
+          <span>{row.original.phone}</span>
+        </div>
+      )
+    },
+    {
+      accessorKey: 'city',
+      header: () => <span className='font-bold'>Ciudad</span>,
+      cell: ({ row }) => (
+        <div className='flex items-center gap-2'>
+          <MapPin className='h-4 w-4 text-orange-500 dark:text-orange-400' />
+          <span>{row.original.city}</span>
+        </div>
+      )
+    },
+    {
+      accessorKey: 'createdAt',
+      header: () => <span className='font-bold'>Fecha Creación</span>,
+      cell: ({ row }) => {
+        const createdAt = row.getValue('createdAt') as string;
+        const date = new Date(createdAt);
+
+        return (
+          <div className='font-medium'>
+            {format(date, 'PPpp', { locale: es })}
+          </div>
+        );
+      }
+    },
+    {
+      accessorKey: 'updatedAt',
+      header: () => <span className='font-bold'>Última Actualización</span>,
+      cell: ({ row }) => {
+        const updatedAt = row.getValue('updatedAt') as string;
+        const date = new Date(updatedAt);
+
+        return (
+          <div className='font-medium'>
+            {format(date, 'PPpp', { locale: es })}
+          </div>
+        );
+      }
+    },
+    {
+      id: 'actions',
+      header: () => <span className='font-bold'>Acciones</span>,
+      cell: ({ row }) => {
+        const handleActionClick = (e: React.MouseEvent) => {
+          e.stopPropagation();
+        };
+
+        return (
+          <div onClick={handleActionClick}>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant='ghost' className='h-8 w-8 p-0'>
+                  <span className='sr-only'>Open menu</span>
+                  <MoreHorizontal className='h-4 w-4' />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align='end'>
+                <DropdownMenuLabel>Acciones</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => onRowClick(row)}>
+                  Ver Detalle
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        );
+      }
+    }
+  ];
+};

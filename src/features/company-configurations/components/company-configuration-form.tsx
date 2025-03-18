@@ -41,7 +41,13 @@ const formSchema = z.object({
     })
     .max(100, {
       message: 'La tasa de interés no puede exceder 100%.'
-    })
+    }),
+  monthlyGpsFee: z.number().min(0, {
+    message: 'La tarifa mensual de GPS no puede ser negativa.'
+  }),
+  closingCosts: z.number().min(0, {
+    message: 'Los costos de cierre no pueden ser negativos.'
+  })
 }) satisfies z.ZodType<ICompanyConfigurationForm>;
 
 type CompanyConfigurationFormProps = {
@@ -63,7 +69,9 @@ export default function CompanyConfigurationForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
       dollarExchangeRate: currentConfiguration?.dollarExchangeRate || 1,
-      interestRate: currentConfiguration?.interestRate || 0.1
+      interestRate: currentConfiguration?.interestRate || 0.1,
+      monthlyGpsFee: currentConfiguration?.monthlyGpsFee || 0,
+      closingCosts: currentConfiguration?.closingCosts || 0
     },
     mode: 'onChange'
   });
@@ -71,7 +79,9 @@ export default function CompanyConfigurationForm({
   const resetForm = useCallback(() => {
     form.reset({
       dollarExchangeRate: currentConfiguration?.dollarExchangeRate || 1,
-      interestRate: currentConfiguration?.interestRate || 0.1
+      interestRate: currentConfiguration?.interestRate || 0.1,
+      monthlyGpsFee: currentConfiguration?.monthlyGpsFee || 0,
+      closingCosts: currentConfiguration?.closingCosts || 0
     });
   }, [form, currentConfiguration]);
 
@@ -115,7 +125,9 @@ export default function CompanyConfigurationForm({
       form.reset(
         {
           dollarExchangeRate: currentConfiguration.dollarExchangeRate,
-          interestRate: currentConfiguration.interestRate
+          interestRate: currentConfiguration.interestRate,
+          monthlyGpsFee: currentConfiguration.monthlyGpsFee,
+          closingCosts: currentConfiguration.closingCosts
         },
         {
           keepDefaultValues: true
@@ -163,38 +175,6 @@ export default function CompanyConfigurationForm({
             <div className='space-y-4'>
               <FormField
                 control={form.control}
-                name='dollarExchangeRate'
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Tasa de Cambio del Dólar</FormLabel>
-                    <FormControl>
-                      <NumberInput
-                        placeholder='Ingrese la tasa de cambio'
-                        min={1}
-                        step={0.01}
-                        decimalScale={2}
-                        fixedDecimalScale={true}
-                        value={field.value}
-                        onValueChange={(value: number | undefined) => {
-                          field.onChange(value === undefined ? 1 : value);
-                        }}
-                        autoFocus
-                      />
-                    </FormControl>
-                    <FormDescription>
-                      Tasa de cambio actual del dólar a moneda local.
-                    </FormDescription>
-                    {form.formState.errors.dollarExchangeRate && (
-                      <FormMessage>
-                        {form.formState.errors.dollarExchangeRate.message}
-                      </FormMessage>
-                    )}
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
                 name='interestRate'
                 render={({ field }) => (
                   <FormItem>
@@ -212,6 +192,7 @@ export default function CompanyConfigurationForm({
                         onValueChange={(value: number | undefined) => {
                           field.onChange(value === undefined ? 0.1 : value);
                         }}
+                        autoFocus
                       />
                     </FormControl>
                     <FormDescription>
@@ -221,6 +202,99 @@ export default function CompanyConfigurationForm({
                     {form.formState.errors.interestRate && (
                       <FormMessage>
                         {form.formState.errors.interestRate.message}
+                      </FormMessage>
+                    )}
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name='closingCosts'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Gastos de Cierre</FormLabel>
+                    <FormControl>
+                      <NumberInput
+                        placeholder='Ingrese los gastos de cierre'
+                        min={0}
+                        step={1}
+                        decimalScale={2}
+                        fixedDecimalScale={true}
+                        value={field.value}
+                        onValueChange={(value: number | undefined) => {
+                          field.onChange(value === undefined ? 0 : value);
+                        }}
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Costos de cierre en Lempiras.
+                    </FormDescription>
+                    {form.formState.errors.closingCosts && (
+                      <FormMessage>
+                        {form.formState.errors.closingCosts.message}
+                      </FormMessage>
+                    )}
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name='monthlyGpsFee'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Tarifa Mensual GPS</FormLabel>
+                    <FormControl>
+                      <NumberInput
+                        placeholder='Ingrese la tarifa mensual de GPS'
+                        min={0}
+                        step={1}
+                        decimalScale={2}
+                        fixedDecimalScale={true}
+                        value={field.value}
+                        onValueChange={(value: number | undefined) => {
+                          field.onChange(value === undefined ? 0 : value);
+                        }}
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Tarifa mensual del servicio GPS en Lempiras.
+                    </FormDescription>
+                    {form.formState.errors.monthlyGpsFee && (
+                      <FormMessage>
+                        {form.formState.errors.monthlyGpsFee.message}
+                      </FormMessage>
+                    )}
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name='dollarExchangeRate'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Tasa de Cambio del Dólar</FormLabel>
+                    <FormControl>
+                      <NumberInput
+                        placeholder='Ingrese la tasa de cambio'
+                        min={1}
+                        step={0.01}
+                        decimalScale={2}
+                        fixedDecimalScale={true}
+                        value={field.value}
+                        onValueChange={(value: number | undefined) => {
+                          field.onChange(value === undefined ? 1 : value);
+                        }}
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Tasa de cambio actual del dólar a moneda local.
+                    </FormDescription>
+                    {form.formState.errors.dollarExchangeRate && (
+                      <FormMessage>
+                        {form.formState.errors.dollarExchangeRate.message}
                       </FormMessage>
                     )}
                   </FormItem>

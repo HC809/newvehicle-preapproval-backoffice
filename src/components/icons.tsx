@@ -33,7 +33,8 @@ import {
   CarIcon,
   PercentIcon,
   X,
-  List
+  List,
+  Users
 } from 'lucide-react';
 
 export type Icon = LucideIcon;
@@ -71,6 +72,7 @@ export const Icons = {
   car: CarIcon,
   requests: List,
   tasas: PercentIcon,
+  clients: Users,
   gitHub: ({ ...props }: LucideProps) => (
     <svg
       aria-hidden='true'
