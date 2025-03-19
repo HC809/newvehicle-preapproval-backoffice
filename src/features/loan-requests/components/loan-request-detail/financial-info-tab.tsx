@@ -44,6 +44,12 @@ export const FinancialInfoTab = ({ loanRequest }: FinancialInfoTabProps) => {
         icon={<Percent size={18} />}
         iconColor='text-violet-500'
       />
+      <InfoItem
+        label='Tasa de Seguro Vehículo'
+        value={`${loanRequest.vehicleInsuranceRate}%`}
+        icon={<Percent size={18} />}
+        iconColor='text-violet-500'
+      />
     </div>
   );
 };

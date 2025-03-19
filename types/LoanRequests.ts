@@ -14,7 +14,7 @@ export interface LoanRequest {
   approvedLoanTermMonths: number;
   requestedAmount: number;
   appliedInterestRate: number;
-  dollarExchangeRate: number;
+  vehicleInsuranceRate: number;
   vehicleBrand: string;
   vehicleModel: string;
   vehicleYear: number;
