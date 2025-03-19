@@ -16,12 +16,12 @@ export const formatCurrency = (
   if (amount === null) return 'No disponible';
 
   const defaultOptions = {
-    maximumFractionDigits: 0,
-    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+    minimumFractionDigits: 2,
     ...options
   };
 
-  return new Intl.NumberFormat('es', {
+  return new Intl.NumberFormat('es-HN', {
     style: 'currency',
     currency: currencyType,
     maximumFractionDigits: defaultOptions.maximumFractionDigits,

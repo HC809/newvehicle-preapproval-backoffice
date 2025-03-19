@@ -6,7 +6,7 @@ import { CompanyConfigurationColumns } from './company-configuration-columns';
 import { CompanyConfiguration } from 'types/CompanyConfigurations';
 import { DataTableSkeleton } from '@/components/ui/table/data-table-skeleton';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { DollarSign, Percent, InfoIcon } from 'lucide-react';
+import { Percent, InfoIcon } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { formatHNL } from '@/utils/formatCurrency';
 
@@ -28,7 +28,7 @@ export default function CompanyConfigurationListingPage({
   if (isLoading) {
     return (
       <div className='space-y-6'>
-        <div className='grid grid-cols-1 gap-4 md:grid-cols-4'>
+        <div className='grid grid-cols-1 gap-6 md:grid-cols-6'>
           <Card className='animate-pulse'>
             <CardHeader className='pb-2'>
               <CardTitle className='text-sm font-medium'>
@@ -42,7 +42,7 @@ export default function CompanyConfigurationListingPage({
           <Card className='animate-pulse'>
             <CardHeader className='pb-2'>
               <CardTitle className='text-sm font-medium'>
-                Tarifa Mensual GPS
+                Prima Mínima
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -62,13 +62,43 @@ export default function CompanyConfigurationListingPage({
           <Card className='animate-pulse'>
             <CardHeader className='pb-2'>
               <CardTitle className='text-sm font-medium'>
-                Tasa de Cambio del Dólar
+                Seguro Vehículo ≤ 3.5T
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className='h-6 w-24 rounded bg-muted'></div>
             </CardContent>
           </Card>
+          <Card className='animate-pulse'>
+            <CardHeader className='pb-2'>
+              <CardTitle className='text-sm font-medium'>
+                Seguro Vehículo &gt; 3.5T
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className='h-6 w-24 rounded bg-muted'></div>
+            </CardContent>
+          </Card>
+          <Card className='animate-pulse'>
+            <CardHeader className='pb-2'>
+              <CardTitle className='text-sm font-medium'>
+                Tarifa Mensual GPS
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className='h-6 w-24 rounded bg-muted'></div>
+            </CardContent>
+          </Card>
+          {/* <Card className='animate-pulse'>
+            <CardHeader className='pb-2'>
+              <CardTitle className='text-sm font-medium'>
+                Tasa de Cambio del Dólar
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className='h-6 w-24 rounded bg-muted'></div>
+            </CardContent>
+          </Card> */}
         </div>
         <DataTableSkeleton columnCount={5} rowCount={10} />
       </div>
@@ -81,7 +111,7 @@ export default function CompanyConfigurationListingPage({
 
   return (
     <>
-      <div className='grid grid-cols-1 gap-4 md:grid-cols-4'>
+      <div className='grid grid-cols-1 gap-6 md:grid-cols-6'>
         <Card>
           <CardHeader className='pb-2'>
             <CardTitle className='text-sm font-medium'>
@@ -91,7 +121,22 @@ export default function CompanyConfigurationListingPage({
           <CardContent className='flex items-center'>
             <Percent className='mr-2 h-5 w-5 text-muted-foreground' />
             <span className='text-2xl font-bold'>
-              {currentConfiguration?.interestRate.toFixed(2)}%
+              {currentConfiguration?.interestRate != 0
+                ? `${currentConfiguration?.interestRate?.toFixed(2)}%`
+                : '0%'}
+            </span>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className='pb-2'>
+            <CardTitle className='text-sm font-medium'>Prima Mínima</CardTitle>
+          </CardHeader>
+          <CardContent className='flex items-center'>
+            <Percent className='mr-2 h-5 w-5 text-muted-foreground' />
+            <span className='text-2xl font-bold'>
+              {currentConfiguration?.minDownPaymentPercentage != 0
+                ? `${currentConfiguration?.minDownPaymentPercentage.toFixed(2)}%`
+                : '0%'}
             </span>
           </CardContent>
         </Card>
@@ -110,6 +155,36 @@ export default function CompanyConfigurationListingPage({
         <Card>
           <CardHeader className='pb-2'>
             <CardTitle className='text-sm font-medium'>
+              Seguro Vehículo ≤ 3.5T
+            </CardTitle>
+          </CardHeader>
+          <CardContent className='flex items-center'>
+            <Percent className='mr-2 h-5 w-5 text-muted-foreground' />
+            <span className='text-2xl font-bold'>
+              {currentConfiguration?.vehicleInsuranceRateUnder3_5T != 0
+                ? `${currentConfiguration?.vehicleInsuranceRateUnder3_5T?.toFixed(2)}%`
+                : '0%'}
+            </span>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className='pb-2'>
+            <CardTitle className='text-sm font-medium'>
+              Seguro Vehículo &gt; 3.5T
+            </CardTitle>
+          </CardHeader>
+          <CardContent className='flex items-center'>
+            <Percent className='mr-2 h-5 w-5 text-muted-foreground' />
+            <span className='text-2xl font-bold'>
+              {currentConfiguration?.vehicleInsuranceRateOver3_5T != 0
+                ? `${currentConfiguration?.vehicleInsuranceRateOver3_5T?.toFixed(2)}%`
+                : '0%'}
+            </span>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className='pb-2'>
+            <CardTitle className='text-sm font-medium'>
               Tarifa Mensual GPS
             </CardTitle>
           </CardHeader>
@@ -119,7 +194,7 @@ export default function CompanyConfigurationListingPage({
             </span>
           </CardContent>
         </Card>
-        <Card>
+        {/* <Card>
           <CardHeader className='pb-2'>
             <CardTitle className='text-sm font-medium'>
               Tasa de Cambio del Dólar
@@ -128,10 +203,10 @@ export default function CompanyConfigurationListingPage({
           <CardContent className='flex items-center'>
             <DollarSign className='mr-2 h-5 w-5 text-muted-foreground' />
             <span className='text-2xl font-bold'>
-              {currentConfiguration?.dollarExchangeRate.toFixed(2)}
+              {currentConfiguration?.dollarExchangeRate != 0 ? `${currentConfiguration?.dollarExchangeRate?.toFixed(2)}` : '0'}
             </span>
           </CardContent>
-        </Card>
+        </Card> */}
       </div>
 
       <Alert className='border-blue-200 bg-blue-50 text-foreground dark:border-primary/20 dark:bg-primary/10 dark:text-foreground'>

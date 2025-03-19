@@ -29,7 +29,51 @@ export const CompanyConfigurationColumns: ColumnDef<CompanyConfiguration>[] = [
     header: () => <span className='font-bold'>Tasa de Interés</span>,
     cell: ({ row }) => {
       const interestRate = row.getValue('interestRate') as number;
-      return <div className='font-medium'>{interestRate.toFixed(2)}%</div>;
+      return (
+        <div className='font-medium'>
+          {interestRate != 0 ? `${interestRate.toFixed(2)}%` : '0%'}
+        </div>
+      );
+    }
+  },
+  {
+    accessorKey: 'minDownPaymentPercentage',
+    header: () => <span className='font-bold'>Prima Mínima</span>,
+    cell: ({ row }) => {
+      const minDownPaymentPercentage = row.getValue(
+        'minDownPaymentPercentage'
+      ) as number;
+      return (
+        <div className='font-medium'>
+          {minDownPaymentPercentage != 0
+            ? `${minDownPaymentPercentage.toFixed(2)}%`
+            : '0%'}
+        </div>
+      );
+    }
+  },
+  {
+    accessorKey: 'vehicleInsuranceRateUnder3_5T',
+    header: () => <span className='font-bold'>Seguro ≤ 3.5T</span>,
+    cell: ({ row }) => {
+      const rate = row.getValue('vehicleInsuranceRateUnder3_5T') as number;
+      return (
+        <div className='font-medium'>
+          {rate != 0 ? `${rate.toFixed(2)}%` : '0%'}
+        </div>
+      );
+    }
+  },
+  {
+    accessorKey: 'vehicleInsuranceRateOver3_5T',
+    header: () => <span className='font-bold'>Seguro &gt; 3.5T</span>,
+    cell: ({ row }) => {
+      const rate = row.getValue('vehicleInsuranceRateOver3_5T') as number;
+      return (
+        <div className='font-medium'>
+          {rate != 0 ? `${rate.toFixed(2)}%` : '0%'}
+        </div>
+      );
     }
   },
   {
@@ -53,7 +97,11 @@ export const CompanyConfigurationColumns: ColumnDef<CompanyConfiguration>[] = [
     header: () => <span className='font-bold'>Tasa de Cambio del Dólar</span>,
     cell: ({ row }) => {
       const dollarExchangeRate = row.getValue('dollarExchangeRate') as number;
-      return <div className='font-medium'>{dollarExchangeRate.toFixed(2)}</div>;
+      return (
+        <div className='font-medium'>
+          {dollarExchangeRate != 0 ? `${dollarExchangeRate.toFixed(2)}` : '0'}
+        </div>
+      );
     }
   },
   {
