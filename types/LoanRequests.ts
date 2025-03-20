@@ -1,4 +1,5 @@
 import { Client } from './Client';
+import { LoanCalculation } from './LoanCalculation';
 import { LoanDocument } from './LoanDocument';
 
 export interface LoanRequest {
@@ -35,6 +36,7 @@ export interface LoanRequestDetail {
   loanRequest: LoanRequest;
   client?: Client;
   documents?: LoanDocument[];
+  loanCalculation?: LoanCalculation;
 }
 
 export interface LoanRequestListingParams {

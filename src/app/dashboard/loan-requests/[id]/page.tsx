@@ -377,6 +377,7 @@ export default function LoanRequestDetailPage() {
             <div className='space-y-6'>
               <FinancialSummaryCard
                 loanRequest={loanRequestDetail.loanRequest}
+                loanCalculation={loanRequestDetail.loanCalculation}
               />
 
               {/* Comentamos ResponsiblePersonsCard para usuarios BusinessDevelopment_User */}
