@@ -4,21 +4,12 @@ import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import {
   ArrowLeft,
-  FileText,
-  Image,
-  File,
-  FileCode,
   CheckCircle,
   XCircle,
   Calculator,
-  Search,
-  Table,
-  Loader2,
-  Eye,
-  Download
+  Search
 } from 'lucide-react';
 import { toast } from 'sonner';
-
 import PageContainer from '@/components/layout/page-container';
 import { Heading } from '@/components/ui/heading';
 import { Separator } from '@/components/ui/separator';
@@ -33,25 +24,19 @@ import {
   //ResponsiblePersonsCard,
   VerificationChecklistCard
 } from '@/features/loan-requests/components/loan-request-detail';
+import { DocumentViewer } from '@/features/loan-requests/components/document-viewer';
 import useAxios from '@/hooks/use-axios';
 import {
   useLoanRequestDetail,
-  useCheckEquifax,
-  useMarkEquifaxChecked,
-  useMarkBantotalChecked
+  useCheckEquifax
 } from '@/features/loan-requests/api/loan-request-service';
 import { Skeleton } from '@/components/ui/skeleton';
-import { format } from 'date-fns';
-import { es } from 'date-fns/locale/es';
 
 export default function LoanRequestDetailPage() {
   const router = useRouter();
   const { id } = useParams();
   const apiClient = useAxios();
   const [error, setError] = useState<string | null>(null);
-  const [loadingDocumentId, setLoadingDocumentId] = useState<string | null>(
-    null
-  );
   const [showFullPageLoader, setShowFullPageLoader] = useState(false);
   const [fullPageLoaderMessage, setFullPageLoaderMessage] = useState('');
   const [fullPageLoaderSubMessage, setFullPageLoaderSubMessage] = useState('');
@@ -68,8 +53,6 @@ export default function LoanRequestDetailPage() {
 
   // Mutaciones
   const equifaxMutation = useCheckEquifax(apiClient);
-  const markEquifaxCheckedMutation = useMarkEquifaxChecked(apiClient);
-  const markBantotalCheckedMutation = useMarkBantotalChecked(apiClient);
 
   // Efecto para eliminar el resaltado en las tabs cuando se presiona una tecla
   useEffect(() => {
@@ -124,173 +107,6 @@ export default function LoanRequestDetailPage() {
     router.push('/dashboard/loan-requests');
   };
 
-  // Función para obtener el icono según el tipo de documento
-  const getDocumentIcon = (contentType: string) => {
-    if (contentType.includes('pdf')) {
-      return <FileText className='h-10 w-10 text-red-500' />;
-    } else if (contentType.includes('image')) {
-      return <Image className='h-10 w-10 text-blue-500' />;
-    } else if (contentType.includes('xml') || contentType.includes('text')) {
-      return <FileCode className='h-10 w-10 text-green-500' />;
-    } else if (contentType.includes('word') || contentType.includes('doc')) {
-      return <FileText className='h-10 w-10 text-blue-700' />;
-    } else if (
-      contentType.includes('excel') ||
-      contentType.includes('sheet') ||
-      contentType.includes('csv')
-    ) {
-      return <Table className='h-10 w-10 text-green-700' />;
-    } else {
-      return <File className='h-10 w-10 text-gray-500' />;
-    }
-  };
-
-  // Función para ver o descargar un documento
-  const handleViewDocument = async (documentId: string, download = false) => {
-    try {
-      setLoadingDocumentId(documentId);
-
-      // Verificar que el cliente API esté inicializado
-      if (!apiClient) {
-        throw new Error('Cliente API no inicializado');
-      }
-
-      // Obtener la URL base de la API
-      let apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
-
-      if (!apiUrl) {
-        apiUrl = 'https://localhost:7298/api';
-      }
-
-      // Realizar la solicitud para obtener el documento
-      const response = await apiClient.get(
-        `/loan-documents/content/${documentId}`,
-        {
-          responseType: 'arraybuffer',
-          headers: {
-            Accept: 'application/pdf,image/*,application/xml,text/xml,*/*'
-          }
-        }
-      );
-
-      // Verificar que la respuesta contiene datos
-      if (!response.data) {
-        throw new Error('El documento está vacío');
-      }
-
-      // Obtener el tipo de contenido del header de la respuesta
-      const contentType =
-        response.headers['content-type'] || 'application/octet-stream';
-
-      // Obtener el nombre del documento si está disponible
-      const contentDisposition = response.headers['content-disposition'] || '';
-      let fileName = `documento_${documentId}`;
-
-      // Intentar extraer el nombre del archivo del header Content-Disposition
-      const fileNameMatch = contentDisposition.match(
-        /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/
-      );
-      if (fileNameMatch && fileNameMatch[1]) {
-        fileName = fileNameMatch[1].replace(/['"]/g, '');
-      } else {
-        // Si no hay nombre en el header, intentar obtenerlo de los documentos cargados
-        const doc = loanRequestDetail?.documents?.find(
-          (d) => d.id === documentId
-        );
-        if (doc?.fileName) {
-          fileName = doc.fileName;
-        } else {
-          // Asignar una extensión basada en el tipo de contenido
-          if (contentType.includes('pdf')) {
-            fileName += '.pdf';
-          } else if (contentType.includes('image/jpeg')) {
-            fileName += '.jpg';
-          } else if (contentType.includes('image/png')) {
-            fileName += '.png';
-          } else if (contentType.includes('xml')) {
-            fileName += '.xml';
-          }
-        }
-      }
-
-      // Crear un blob a partir de los datos
-      const blob = new Blob([response.data], { type: contentType });
-
-      if (download) {
-        // Descargar el archivo
-        const blobUrl = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = blobUrl;
-        link.download = fileName;
-
-        // Simular clic en el enlace para descargar
-        document.body.appendChild(link);
-        link.click();
-
-        // Eliminar el enlace temporal y liberar la URL del blob
-        setTimeout(() => {
-          document.body.removeChild(link);
-          URL.revokeObjectURL(blobUrl);
-        }, 100);
-
-        // Mostrar notificación de éxito
-        toast.success(`Documento "${fileName}" descargado correctamente`);
-      } else {
-        // Abrir en una nueva pestaña
-        const blobUrl = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = blobUrl;
-        link.target = '_blank';
-        link.rel = 'noopener noreferrer';
-
-        // Simular clic en el enlace para abrir en una nueva pestaña
-        document.body.appendChild(link);
-        link.click();
-
-        // Eliminar el enlace temporal y liberar la URL del blob
-        setTimeout(() => {
-          document.body.removeChild(link);
-          URL.revokeObjectURL(blobUrl);
-        }, 100);
-
-        // Mostrar notificación de éxito
-        toast.success(`Documento "${fileName}" abierto en una nueva pestaña`);
-      }
-    } catch (err: any) {
-      console.error('Error al procesar el documento:', err);
-
-      // Determinar un mensaje de error más específico
-      let errorMessage = 'Error al procesar el documento';
-
-      if (err.response) {
-        // Error de respuesta del servidor
-        if (err.response.status === 404) {
-          errorMessage =
-            'El documento solicitado no existe o ha sido eliminado';
-        } else if (err.response.status === 403) {
-          errorMessage = 'No tiene permisos para acceder a este documento';
-        } else if (err.response.status >= 500) {
-          errorMessage = 'Error en el servidor al procesar el documento';
-        }
-      } else if (err.request) {
-        // Error de red
-        errorMessage = 'Error de conexión. Verifique su conexión a internet';
-      } else if (err.message) {
-        // Usar el mensaje de error específico
-        errorMessage = err.message;
-      }
-
-      // Mostrar notificación de error
-      toast.error(errorMessage, {
-        description:
-          'Intente nuevamente más tarde o contacte al soporte técnico',
-        duration: 5000
-      });
-    } finally {
-      setLoadingDocumentId(null);
-    }
-  };
-
   // Función para consultar Equifax
   const handleCheckEquifax = async () => {
     if (!loanRequestDetail) return;
@@ -310,8 +126,6 @@ export default function LoanRequestDetailPage() {
       { clientDni, loanRequestId },
       {
         onSuccess: () => {
-          // Actualizar el estado de la solicitud - NO llamamos a markEquifaxCheckedMutation
-          // ya que parece que el endpoint de equifax ya marca la solicitud como verificada
           try {
             // Simplemente refrescamos los datos para obtener la información actualizada
             setTimeout(async () => {
@@ -319,14 +133,12 @@ export default function LoanRequestDetailPage() {
                 await refetch(); // Esto debería llamar a /loan-requests/{id}
                 setShowFullPageLoader(false);
               } catch (error) {
-                console.error('Error al recargar los datos:', error);
                 setLoaderError(
                   'Error al recargar los datos. Por favor, actualice la página manualmente.'
                 );
               }
             }, 1000); // Un pequeño retraso para asegurar que el backend ha procesado todo
           } catch (error) {
-            console.error('Error al recargar los datos:', error);
             setLoaderError(
               'Error al recargar los datos. Por favor, actualice la página manualmente.'
             );
@@ -352,24 +164,8 @@ export default function LoanRequestDetailPage() {
 
     // Simulación de cálculo de préstamo
     setTimeout(() => {
-      // Actualizar el estado de la solicitud
-      markBantotalCheckedMutation.mutate(id as string, {
-        onSuccess: async () => {
-          try {
-            // Refrescar los datos para obtener la información actualizada
-            await refetch();
-            setShowFullPageLoader(false);
-          } catch (error) {
-            console.error('Error al recargar los datos:', error);
-            setLoaderError(
-              'Error al recargar los datos. Por favor, actualice la página manualmente.'
-            );
-          }
-        },
-        onError: (error) => {
-          setLoaderError(error);
-        }
-      });
+      setShowFullPageLoader(false);
+      toast.success('Cálculo de préstamo completado');
     }, 2000);
   };
 
@@ -441,7 +237,6 @@ export default function LoanRequestDetailPage() {
                   await refetch(); // Esto debería llamar a /loan-requests/{id}
                   setShowFullPageLoader(false);
                 } catch (error) {
-                  console.error('Error al recargar los datos:', error);
                   setLoaderError(
                     'Error al recargar los datos. Por favor, actualice la página manualmente.'
                   );
@@ -454,29 +249,6 @@ export default function LoanRequestDetailPage() {
           }
         );
       }
-    } else if (
-      markBantotalCheckedMutation.isPending ||
-      markBantotalCheckedMutation.isError
-    ) {
-      markBantotalCheckedMutation.reset();
-
-      // Volver a ejecutar el cálculo del préstamo
-      setFullPageLoaderMessage('Calculando cuota y detalles del préstamo');
-      setFullPageLoaderSubMessage(
-        'Estamos calculando los detalles del préstamo. Este proceso puede tardar unos segundos.'
-      );
-
-      setTimeout(() => {
-        markBantotalCheckedMutation.mutate(id as string, {
-          onSuccess: () => {
-            refetch();
-            setShowFullPageLoader(false);
-          },
-          onError: (error) => {
-            setLoaderError(error);
-          }
-        });
-      }, 2000);
     }
   };
 
@@ -576,60 +348,7 @@ export default function LoanRequestDetailPage() {
                     <h3 className='mb-4 text-lg font-semibold'>Documentos</h3>
                     <div className='grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3'>
                       {loanRequestDetail.documents.map((doc) => (
-                        <div
-                          key={doc.id}
-                          className='flex flex-col items-center rounded-md border p-4 transition-colors hover:bg-gray-50 dark:hover:bg-gray-900'
-                        >
-                          <div className='mb-2 flex h-16 w-16 items-center justify-center rounded-md bg-gray-100 dark:bg-gray-800'>
-                            {getDocumentIcon(doc.contentType)}
-                          </div>
-                          <span
-                            className='mb-1 line-clamp-1 text-center font-medium'
-                            title={doc.fileName}
-                          >
-                            {doc.fileName}
-                          </span>
-                          <span className='text-xs text-muted-foreground'>
-                            {doc.documentType}
-                          </span>
-                          <span className='text-xs text-muted-foreground'>
-                            {format(new Date(doc.uploadedAt), 'PPP', {
-                              locale: es
-                            })}
-                          </span>
-                          <div className='mt-2 flex w-full gap-2'>
-                            <Button
-                              variant='outline'
-                              size='sm'
-                              className='flex flex-1 items-center justify-center gap-1 text-primary hover:bg-primary/10 hover:text-primary dark:hover:bg-primary/20'
-                              onClick={() => handleViewDocument(doc.id, false)}
-                              disabled={loadingDocumentId === doc.id}
-                              title='Ver documento en una nueva pestaña'
-                            >
-                              {loadingDocumentId === doc.id ? (
-                                <Loader2 className='h-4 w-4 animate-spin' />
-                              ) : (
-                                <Eye className='h-4 w-4' />
-                              )}
-                              <span>Ver</span>
-                            </Button>
-                            <Button
-                              variant='outline'
-                              size='sm'
-                              className='flex flex-1 items-center justify-center gap-1 text-primary hover:bg-primary/10 hover:text-primary dark:hover:bg-primary/20'
-                              onClick={() => handleViewDocument(doc.id, true)}
-                              disabled={loadingDocumentId === doc.id}
-                              title='Descargar documento'
-                            >
-                              {loadingDocumentId === doc.id ? (
-                                <Loader2 className='h-4 w-4 animate-spin' />
-                              ) : (
-                                <Download className='h-4 w-4' />
-                              )}
-                              <span>Descargar</span>
-                            </Button>
-                          </div>
-                        </div>
+                        <DocumentViewer key={doc.id} document={doc} />
                       ))}
                     </div>
                   </div>
@@ -661,14 +380,12 @@ export default function LoanRequestDetailPage() {
                     onClick={handleCheckEquifax}
                     disabled={
                       equifaxMutation.isPending ||
-                      markEquifaxCheckedMutation.isPending ||
                       loanRequestDetail.loanRequest.equifaxChecked
                     }
                     className='gap-2 border-primary/30 text-primary hover:bg-primary/10 hover:text-primary dark:border-primary/30 dark:hover:bg-primary/20'
                   >
                     <Search className='h-4 w-4' />
-                    {equifaxMutation.isPending ||
-                    markEquifaxCheckedMutation.isPending
+                    {equifaxMutation.isPending
                       ? 'Consultando...'
                       : loanRequestDetail.loanRequest.equifaxChecked
                         ? 'Equifax Consultado'
@@ -679,18 +396,15 @@ export default function LoanRequestDetailPage() {
                     variant='outline'
                     onClick={handleCalculateLoan}
                     disabled={
-                      markBantotalCheckedMutation.isPending ||
                       !loanRequestDetail.loanRequest.equifaxChecked ||
                       loanRequestDetail.loanRequest.bantotalChecked
                     }
                     className='gap-2 border-primary/30 text-primary hover:bg-primary/10 hover:text-primary dark:border-primary/30 dark:hover:bg-primary/20'
                   >
                     <Calculator className='h-4 w-4' />
-                    {markBantotalCheckedMutation.isPending
-                      ? 'Calculando...'
-                      : loanRequestDetail.loanRequest.bantotalChecked
-                        ? 'Cálculo Realizado'
-                        : 'Calcular Préstamo'}
+                    {loanRequestDetail.loanRequest.bantotalChecked
+                      ? 'Cálculo Realizado'
+                      : 'Calcular Préstamo'}
                   </Button>
                 </div>
 
