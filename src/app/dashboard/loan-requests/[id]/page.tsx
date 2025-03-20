@@ -16,6 +16,7 @@ import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { FullPageLoader } from '@/components/ui/full-page-loader';
+import { disableTabHighlight } from '@/utils/ui-utils';
 
 import {
   MainInfoCard,
@@ -56,37 +57,8 @@ export default function LoanRequestDetailPage() {
 
   // Efecto para eliminar el resaltado en las tabs cuando se presiona una tecla
   useEffect(() => {
-    const handleKeyDown = () => {
-      if (document.activeElement) {
-        (document.activeElement as HTMLElement).blur();
-      }
-    };
-
-    // Agregar el event listener al documento
-    document.addEventListener('keydown', handleKeyDown);
-
-    // Agregar estilos CSS para eliminar el resaltado
-    const style = document.createElement('style');
-    style.innerHTML = `
-      [data-state="active"] {
-        outline: none !important;
-        box-shadow: none !important;
-        border-color: transparent !important;
-      }
-      
-      *:focus, *:focus-visible {
-        outline: none !important;
-        box-shadow: none !important;
-        border-color: transparent !important;
-      }
-    `;
-    document.head.appendChild(style);
-
-    // Limpiar el event listener y los estilos cuando el componente se desmonte
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-      document.head.removeChild(style);
-    };
+    const { cleanup } = disableTabHighlight();
+    return cleanup;
   }, []);
 
   useEffect(() => {
