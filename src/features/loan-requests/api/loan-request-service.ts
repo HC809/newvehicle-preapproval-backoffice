@@ -49,7 +49,7 @@ export const useLoanRequestDetail = (
 };
 
 // Hook para usar la mutación de Equifax
-export const useCheckEquifax = (
+export const useRegisterEquifax = (
   apiClient: AxiosInstance | undefined
 ): UseMutationResult<
   boolean,
@@ -59,7 +59,7 @@ export const useCheckEquifax = (
   return useMutation({
     mutationFn: async ({ clientDni, loanRequestId }) => {
       if (!apiClient) throw new Error('API client not initialized');
-      return checkClientEquifax(apiClient, clientDni, loanRequestId);
+      return registerClientEquifax(apiClient, clientDni, loanRequestId);
     }
   });
 };
@@ -122,7 +122,7 @@ export const getDocumentContent = async (
 };
 
 // Función para consultar Equifax
-export const checkClientEquifax = async (
+export const registerClientEquifax = async (
   apiClient: AxiosInstance,
   clientDni: string,
   loanRequestId: string
@@ -131,7 +131,7 @@ export const checkClientEquifax = async (
   if (!clientDni) throw new Error('Client DNI is required');
   if (!loanRequestId) throw new Error('Loan request ID is required');
 
-  const response = await apiClient.post('/clients/equifax', {
+  const response = await apiClient.post('/loan-requests/registerequifax', {
     clientDni,
     loanRequestId
   });

@@ -28,7 +28,7 @@ import { DocumentViewer } from '@/features/loan-requests/components/document-vie
 import useAxios from '@/hooks/use-axios';
 import {
   useLoanRequestDetail,
-  useCheckEquifax
+  useRegisterEquifax
 } from '@/features/loan-requests/api/loan-request-service';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -52,7 +52,7 @@ export default function LoanRequestDetailPage() {
   } = useLoanRequestDetail(apiClient, id as string);
 
   // Mutaciones
-  const equifaxMutation = useCheckEquifax(apiClient);
+  const equifaxMutation = useRegisterEquifax(apiClient);
 
   // Efecto para eliminar el resaltado en las tabs cuando se presiona una tecla
   useEffect(() => {
