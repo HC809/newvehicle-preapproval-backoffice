@@ -11,4 +11,8 @@ export interface LoanCalculation {
   paymentToIncomeRounded: number;
   paymentToIncomePercentage: number;
   vehicleInsuranceTax: number;
+  interestRate: number;
+  monthlyGpsFee: number;
+  closingCosts: number;
+  downPaymentPercentage: number;
 }

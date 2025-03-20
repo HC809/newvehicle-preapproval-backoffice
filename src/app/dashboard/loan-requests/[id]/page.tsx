@@ -378,6 +378,7 @@ export default function LoanRequestDetailPage() {
               <FinancialSummaryCard
                 loanRequest={loanRequestDetail.loanRequest}
                 loanCalculation={loanRequestDetail.loanCalculation}
+                client={loanRequestDetail.client}
               />
 
               {/* Comentamos ResponsiblePersonsCard para usuarios BusinessDevelopment_User */}
