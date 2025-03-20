@@ -27,6 +27,7 @@ export interface LoanRequest {
   isExistingClient: boolean;
   equifaxChecked: boolean;
   bantotalChecked: boolean;
+  financingCalculated: boolean;
   managerId?: string;
 }
 

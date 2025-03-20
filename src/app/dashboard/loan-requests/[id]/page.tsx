@@ -29,8 +29,10 @@ import { DocumentViewer } from '@/features/loan-requests/components/document-vie
 import useAxios from '@/hooks/use-axios';
 import {
   useLoanRequestDetail,
-  useRegisterEquifax
+  useRegisterEquifax,
+  useCheckBantotal
 } from '@/features/loan-requests/api/loan-request-service';
+import { useCalculateLoan } from '@/features/loan-requests/api/loan-calculation-service';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default function LoanRequestDetailPage() {
@@ -50,10 +52,12 @@ export default function LoanRequestDetailPage() {
     isError,
     error: fetchError,
     refetch
-  } = useLoanRequestDetail(apiClient, id as string);
+  } = useLoanRequestDetail(apiClient!, id as string);
 
   // Mutaciones
-  const equifaxMutation = useRegisterEquifax(apiClient);
+  const equifaxMutation = useRegisterEquifax(apiClient!);
+  const bantotalMutation = useCheckBantotal(apiClient!);
+  const loanCalculationMutation = useCalculateLoan(apiClient!);
 
   // Efecto para eliminar el resaltado en las tabs cuando se presiona una tecla
   useEffect(() => {
@@ -69,6 +73,10 @@ export default function LoanRequestDetailPage() {
       setError(null);
     }
   }, [isError, fetchError]);
+
+  if (!apiClient) {
+    return null; // or some error UI
+  }
 
   const handleBack = () => {
     router.back();
@@ -123,9 +131,28 @@ export default function LoanRequestDetailPage() {
     );
   };
 
+  // Función para revisar en Bantotal
+  const handleCheckBantotal = async () => {
+    if (!loanRequestDetail) return;
+
+    const loanRequestId = loanRequestDetail.loanRequest.id;
+
+    bantotalMutation.mutate(loanRequestId, {
+      onSuccess: () => {
+        refetch();
+        toast.success('Revisión en Bantotal completada exitosamente');
+      },
+      onError: (error: Error) => {
+        toast.error(`Error al revisar en Bantotal: ${error.message}`);
+      }
+    });
+  };
+
   // Función para realizar el cálculo del préstamo
   const handleCalculateLoan = async () => {
     if (!loanRequestDetail) return;
+
+    const loanRequestId = loanRequestDetail.loanRequest.id;
 
     setShowFullPageLoader(true);
     setLoaderError(null);
@@ -134,11 +161,30 @@ export default function LoanRequestDetailPage() {
       'Estamos calculando los detalles del préstamo. Este proceso puede tardar unos segundos.'
     );
 
-    // Simulación de cálculo de préstamo
-    setTimeout(() => {
-      setShowFullPageLoader(false);
-      toast.success('Cálculo de préstamo completado');
-    }, 2000);
+    loanCalculationMutation.mutate(loanRequestId, {
+      onSuccess: () => {
+        try {
+          setTimeout(async () => {
+            try {
+              await refetch();
+              setShowFullPageLoader(false);
+              toast.success('Cálculo de préstamo completado exitosamente');
+            } catch (error) {
+              setLoaderError(
+                'Error al recargar los datos. Por favor, actualice la página manualmente.'
+              );
+            }
+          }, 1000);
+        } catch (error) {
+          setLoaderError(
+            'Error al recargar los datos. Por favor, actualice la página manualmente.'
+          );
+        }
+      },
+      onError: (error: Error) => {
+        setLoaderError(error.message);
+      }
+    });
   };
 
   // Función para aprobar la solicitud
@@ -366,17 +412,38 @@ export default function LoanRequestDetailPage() {
 
                   <Button
                     variant='outline'
-                    onClick={handleCalculateLoan}
+                    onClick={handleCheckBantotal}
                     disabled={
+                      bantotalMutation.isPending ||
                       !loanRequestDetail.loanRequest.equifaxChecked ||
                       loanRequestDetail.loanRequest.bantotalChecked
                     }
                     className='gap-2 border-primary/30 text-primary hover:bg-primary/10 hover:text-primary dark:border-primary/30 dark:hover:bg-primary/20'
                   >
+                    <Search className='h-4 w-4' />
+                    {bantotalMutation.isPending
+                      ? 'Revisando...'
+                      : loanRequestDetail.loanRequest.bantotalChecked
+                        ? 'Bantotal Revisado'
+                        : 'Revisión en Bantotal'}
+                  </Button>
+
+                  <Button
+                    variant='outline'
+                    onClick={handleCalculateLoan}
+                    disabled={
+                      loanCalculationMutation.isPending ||
+                      !loanRequestDetail.loanRequest.bantotalChecked ||
+                      loanRequestDetail.loanRequest.financingCalculated
+                    }
+                    className='gap-2 border-primary/30 text-primary hover:bg-primary/10 hover:text-primary dark:border-primary/30 dark:hover:bg-primary/20'
+                  >
                     <Calculator className='h-4 w-4' />
-                    {loanRequestDetail.loanRequest.bantotalChecked
-                      ? 'Cálculo Realizado'
-                      : 'Calcular Préstamo'}
+                    {loanCalculationMutation.isPending
+                      ? 'Calculando...'
+                      : loanRequestDetail.loanRequest.financingCalculated
+                        ? 'Cálculo Realizado'
+                        : 'Calcular Préstamo'}
                   </Button>
                 </div>
 
@@ -389,8 +456,7 @@ export default function LoanRequestDetailPage() {
                     variant='default'
                     onClick={handleApproveLoan}
                     disabled={
-                      !loanRequestDetail.loanRequest.equifaxChecked ||
-                      !loanRequestDetail.loanRequest.bantotalChecked
+                      !loanRequestDetail.loanRequest.financingCalculated
                     }
                     className='gap-2 bg-green-600 hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-700'
                   >
@@ -402,8 +468,7 @@ export default function LoanRequestDetailPage() {
                     variant='destructive'
                     onClick={handleRejectLoan}
                     disabled={
-                      !loanRequestDetail.loanRequest.equifaxChecked ||
-                      !loanRequestDetail.loanRequest.bantotalChecked
+                      !loanRequestDetail.loanRequest.financingCalculated
                     }
                     className='gap-2'
                   >

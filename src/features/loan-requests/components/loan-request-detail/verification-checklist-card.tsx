@@ -17,10 +17,11 @@ export const VerificationChecklistCard = ({
   // Calcular el progreso del proceso
   const stepsCompleted = [
     loanRequest.equifaxChecked,
-    loanRequest.bantotalChecked
+    loanRequest.bantotalChecked,
+    loanRequest.financingCalculated
   ].filter(Boolean).length;
 
-  const totalSteps = 2;
+  const totalSteps = 3;
   const progress = Math.round((stepsCompleted / totalSteps) * 100);
 
   return (
@@ -47,6 +48,7 @@ export const VerificationChecklistCard = ({
         </div>
 
         <div className='space-y-3'>
+          {/* Equifax Check */}
           <div className='flex items-center justify-between'>
             <div className='flex items-center gap-2'>
               {loanRequest.equifaxChecked ? (
@@ -67,16 +69,17 @@ export const VerificationChecklistCard = ({
             </span>
           </div>
 
+          {/* Bantotal Check */}
           <div className='flex items-center justify-between'>
             <div className='flex items-center gap-2'>
               {loanRequest.bantotalChecked ? (
                 <CheckCircle2 className='h-5 w-5 text-green-500' />
-              ) : loanRequest.equifaxChecked ? (
-                <Circle className='h-5 w-5 text-primary' />
-              ) : (
+              ) : !loanRequest.equifaxChecked ? (
                 <Circle className='h-5 w-5 text-gray-300' />
+              ) : (
+                <Circle className='h-5 w-5 text-primary' />
               )}
-              <span className='text-sm font-medium'>Cálculo de préstamo</span>
+              <span className='text-sm font-medium'>Revisión en Bantotal</span>
             </div>
             <span
               className={`rounded-full px-2 py-1 text-xs ${
@@ -90,6 +93,35 @@ export const VerificationChecklistCard = ({
               {loanRequest.bantotalChecked
                 ? 'Completado'
                 : !loanRequest.equifaxChecked
+                  ? 'Bloqueado'
+                  : 'Disponible'}
+            </span>
+          </div>
+
+          {/* Loan Calculation */}
+          <div className='flex items-center justify-between'>
+            <div className='flex items-center gap-2'>
+              {loanRequest.financingCalculated ? (
+                <CheckCircle2 className='h-5 w-5 text-green-500' />
+              ) : !loanRequest.bantotalChecked ? (
+                <Circle className='h-5 w-5 text-gray-300' />
+              ) : (
+                <Circle className='h-5 w-5 text-primary' />
+              )}
+              <span className='text-sm font-medium'>Cálculo de préstamo</span>
+            </div>
+            <span
+              className={`rounded-full px-2 py-1 text-xs ${
+                loanRequest.financingCalculated
+                  ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+                  : !loanRequest.bantotalChecked
+                    ? 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400'
+                    : 'bg-primary/10 text-primary-foreground dark:bg-primary/20 dark:text-primary-foreground'
+              }`}
+            >
+              {loanRequest.financingCalculated
+                ? 'Completado'
+                : !loanRequest.bantotalChecked
                   ? 'Bloqueado'
                   : 'Disponible'}
             </span>

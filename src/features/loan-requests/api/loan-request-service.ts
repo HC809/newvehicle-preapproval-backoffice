@@ -138,3 +138,14 @@ export const registerClientEquifax = async (
 
   return response.status === 200;
 };
+
+export const useCheckBantotal = (apiClient: AxiosInstance) => {
+  return useMutation({
+    mutationFn: async (loanRequestId: string) => {
+      const response = await apiClient.post(
+        `/loan-requests/checkbantotal/${loanRequestId}`
+      );
+      return response.data;
+    }
+  });
+};
