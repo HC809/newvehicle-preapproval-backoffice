@@ -107,16 +107,16 @@ export const FinancialSummaryCard = ({
                 </DialogClose>
               </DialogHeader>
               <ScrollArea className='h-full max-h-[calc(90vh-80px)] pr-4'>
-                <div className='relative grid gap-8 py-4 sm:grid-cols-2 lg:grid-cols-3'>
+                <div className='relative grid gap-12 py-6 sm:grid-cols-2 lg:grid-cols-3'>
                   {/* Columna 1 - Información del Préstamo */}
-                  <div className='relative space-y-4'>
-                    <h3 className='flex items-center gap-2 font-semibold'>
-                      <div className='flex h-6 w-6 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30'>
+                  <div className='relative space-y-8'>
+                    <h3 className='flex items-center gap-2 text-lg font-semibold'>
+                      <div className='flex h-7 w-7 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30'>
                         1
                       </div>
                       <span>Información del Préstamo</span>
                     </h3>
-                    <div className='space-y-3'>
+                    <div className='space-y-4'>
                       <FinancialItem
                         label='Valor de la garantía'
                         value={formatHNL(loanCalculation.totalVehicleValue)}
@@ -148,14 +148,14 @@ export const FinancialSummaryCard = ({
                   </div>
 
                   {/* Columna 2 - Pagos Mensuales */}
-                  <div className='relative space-y-4'>
-                    <h3 className='flex items-center gap-2 font-semibold'>
-                      <div className='flex h-6 w-6 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30'>
+                  <div className='relative space-y-8'>
+                    <h3 className='flex items-center gap-2 text-lg font-semibold'>
+                      <div className='flex h-7 w-7 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30'>
                         2
                       </div>
                       <span>Pagos Mensuales</span>
                     </h3>
-                    <div className='space-y-3'>
+                    <div className='space-y-4'>
                       <FinancialItem
                         label='Cuota mensual (capital + intereses)'
                         value={formatHNL(loanCalculation.monthlyPayment)}
@@ -187,14 +187,14 @@ export const FinancialSummaryCard = ({
                   </div>
 
                   {/* Columna 3 - Información Adicional */}
-                  <div className='space-y-4'>
-                    <h3 className='flex items-center gap-2 font-semibold'>
-                      <div className='flex h-6 w-6 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30'>
+                  <div className='space-y-8tt'>
+                    <h3 className='flex items-center gap-2 text-lg font-semibold'>
+                      <div className='flex h-7 w-7 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30'>
                         3
                       </div>
                       <span>Información Adicional</span>
                     </h3>
-                    <div className='space-y-3'>
+                    <div className='space-y-4'>
                       <FinancialItem
                         label='Relación crédito/garantía'
                         value={`${(loanCalculation.loanToValueRatio * 100).toFixed(2)}%`}
@@ -239,29 +239,27 @@ const FinancialItem = ({ label, value, highlight }: FinancialItemProps) => {
   const getHighlightClasses = () => {
     switch (highlight) {
       case 'emerald':
-        return 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300';
+        return 'text-emerald-700 dark:text-emerald-300';
       case 'amber':
-        return 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300';
+        return 'text-amber-700 dark:text-amber-300';
       case 'red':
-        return 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300';
+        return 'text-red-700 dark:text-red-300';
       case 'blue':
-        return 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300';
+        return 'text-blue-700 dark:text-blue-300';
       default:
         return '';
     }
   };
 
   return (
-    <div
-      className={`flex flex-col space-y-1 rounded-md ${
-        highlight ? getHighlightClasses() + ' p-3' : ''
-      }`}
-    >
-      <span className={`text-sm ${highlight ? '' : 'text-muted-foreground'}`}>
+    <div className='flex flex-col space-y-2 py-1'>
+      <span
+        className={`text-sm ${highlight ? getHighlightClasses() : 'text-muted-foreground'}`}
+      >
         {label}
       </span>
       <span
-        className={`text-right font-medium tabular-nums ${highlight ? 'font-semibold' : ''}`}
+        className={`text-right text-base font-medium tabular-nums ${highlight ? getHighlightClasses() + ' font-semibold' : ''}`}
       >
         {value}
       </span>

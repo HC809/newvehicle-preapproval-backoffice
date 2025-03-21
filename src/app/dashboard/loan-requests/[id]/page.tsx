@@ -17,7 +17,8 @@ import {
   RejectionAlert,
   FinancialSummaryCard,
   //ResponsiblePersonsCard,
-  VerificationChecklistCard
+  VerificationChecklistCard,
+  ResponsiblePersonsCard
 } from '@/features/loan-requests/components/loan-request-detail';
 import { DocumentViewer } from '@/features/loan-requests/components/document-viewer';
 import useAxios from '@/hooks/use-axios';
@@ -28,11 +29,17 @@ import {
 } from '@/features/loan-requests/api/loan-request-service';
 import { useCalculateLoan } from '@/features/loan-requests/api/loan-calculation-service';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useSession } from 'next-auth/react';
 
 export default function LoanRequestDetailPage() {
   const router = useRouter();
   const { id } = useParams();
+
+  const { data: session } = useSession();
+  const isAdmin = !!session?.isSystemAdmin;
+
   const apiClient = useAxios();
+
   const [error, setError] = useState<string | null>(null);
   const [showFullPageLoader, setShowFullPageLoader] = useState(false);
   const [fullPageLoaderMessage, setFullPageLoaderMessage] = useState('');
@@ -325,7 +332,7 @@ export default function LoanRequestDetailPage() {
               description='Información completa sobre la solicitud'
             />
           </div>
-          {/* Movemos los botones de aprobar/rechazar aquí */}
+
           {loanRequestDetail && (
             <div className='flex gap-2'>
               <Button
@@ -393,7 +400,6 @@ export default function LoanRequestDetailPage() {
                 )}
             </div>
 
-            {/* Columna derecha - Información adicional y acciones */}
             <div className='space-y-6'>
               <FinancialSummaryCard
                 loanRequest={loanRequestDetail.loanRequest}
@@ -401,15 +407,21 @@ export default function LoanRequestDetailPage() {
                 client={loanRequestDetail.client}
               />
 
-              <VerificationChecklistCard
-                loanRequest={loanRequestDetail.loanRequest}
-                onCheckEquifax={handleCheckEquifax}
-                onCheckBantotal={handleCheckBantotal}
-                onCalculateLoan={handleCalculateLoan}
-                isCheckingEquifax={equifaxMutation.isPending}
-                isCheckingBantotal={bantotalMutation.isPending}
-                isCalculatingLoan={loanCalculationMutation.isPending}
-              />
+              {!isAdmin ? (
+                <VerificationChecklistCard
+                  loanRequest={loanRequestDetail.loanRequest}
+                  onCheckEquifax={handleCheckEquifax}
+                  onCheckBantotal={handleCheckBantotal}
+                  onCalculateLoan={handleCalculateLoan}
+                  isCheckingEquifax={equifaxMutation.isPending}
+                  isCheckingBantotal={bantotalMutation.isPending}
+                  isCalculatingLoan={loanCalculationMutation.isPending}
+                />
+              ) : (
+                <ResponsiblePersonsCard
+                  loanRequest={loanRequestDetail.loanRequest}
+                />
+              )}
             </div>
           </div>
         ) : (

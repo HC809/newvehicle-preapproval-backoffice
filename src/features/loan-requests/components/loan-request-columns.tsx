@@ -3,27 +3,99 @@
 import React from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger
-} from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, Building, User, UserCog } from 'lucide-react';
-import { LoanRequest } from 'types/LoanRequests';
+import { Building, User, UserCog, Check, X } from 'lucide-react';
+import { LoanRequest, LoanRequestStatus } from 'types/LoanRequests';
 import { Badge } from '@/components/ui/badge';
 import { formatUSD } from '@/utils/formatCurrency';
 import { formatLoanRequestId } from '@/utils/formatId';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale/es';
+import { UserRole } from 'types/User';
 
 export const LoanRequestColumns = (
   viewMode: 'assigned' | 'all' = 'assigned',
-  isAdmin: boolean = false
+  isAdmin: boolean = false,
+  userRole?: UserRole
 ): ColumnDef<LoanRequest>[] => {
   const showManagerColumn = isAdmin || viewMode === 'all';
+
+  const getStatusVariant = (status: LoanRequestStatus) => {
+    switch (status) {
+      case LoanRequestStatus.ApprovedByAgent:
+        return 'success';
+      case LoanRequestStatus.ApprovedByManager:
+        return 'success';
+      case LoanRequestStatus.RejectedByAgent:
+        return 'destructive';
+      case LoanRequestStatus.RejectedByManager:
+        return 'destructive';
+      case LoanRequestStatus.AcceptedByCustomer:
+        return 'default';
+      case LoanRequestStatus.DeclinedByCustomer:
+        return 'secondary';
+      case LoanRequestStatus.Pending:
+        return 'warning';
+      case LoanRequestStatus.Cancelled:
+        return 'default';
+      default:
+        return 'default';
+    }
+  };
+
+  const getStatusText = (status: LoanRequestStatus) => {
+    switch (status) {
+      case LoanRequestStatus.Pending:
+        return 'Pendiente';
+      case LoanRequestStatus.ApprovedByAgent:
+        return 'Apr. Oficial Neg.';
+      case LoanRequestStatus.RejectedByAgent:
+        return 'Rech. Oficial Neg.';
+      case LoanRequestStatus.ApprovedByManager:
+        return 'Apr. Gerente Neg.';
+      case LoanRequestStatus.RejectedByManager:
+        return 'Rech. Gerente Neg.';
+      case LoanRequestStatus.AcceptedByCustomer:
+        return 'Aceptado por Cliente';
+      case LoanRequestStatus.DeclinedByCustomer:
+        return 'Desistió';
+      case LoanRequestStatus.Cancelled:
+        return 'Cancelado';
+      default:
+        return status;
+    }
+  };
+
+  const getStatusClassName = (status: LoanRequestStatus) => {
+    switch (status) {
+      case LoanRequestStatus.ApprovedByManager:
+        return 'bg-green-700 text-white hover:bg-green-800 dark:bg-green-800 dark:hover:bg-green-900';
+      case LoanRequestStatus.RejectedByManager:
+        return 'bg-red-700 text-white hover:bg-red-800 dark:bg-red-800 dark:hover:bg-red-900';
+      case LoanRequestStatus.AcceptedByCustomer:
+        return 'bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800';
+      case LoanRequestStatus.DeclinedByCustomer:
+        return 'bg-gray-500 text-white hover:bg-gray-600 dark:bg-gray-600 dark:hover:bg-gray-700';
+      default:
+        return '';
+    }
+  };
+
+  const canApproveReject = (request: LoanRequest) => {
+    if (!userRole) return false;
+
+    const isBusinessDevUser = userRole === UserRole.BusinessDevelopment_User;
+    const isBusinessDevAdmin = userRole === UserRole.BusinessDevelopment_Admin;
+
+    if (isBusinessDevUser) {
+      return request.status === LoanRequestStatus.Pending;
+    }
+
+    if (isBusinessDevAdmin) {
+      return request.status === LoanRequestStatus.ApprovedByAgent;
+    }
+
+    return false;
+  };
 
   const baseColumns: ColumnDef<LoanRequest>[] = [
     {
@@ -102,31 +174,14 @@ export const LoanRequestColumns = (
       header: () => <span className='font-bold'>Estado</span>,
       cell: ({ row }) => {
         const status = row.original.status;
-        let variant: 'default' | 'success' | 'destructive' | 'warning' =
-          'default';
-
-        switch (status) {
-          case 'Approved':
-            variant = 'success';
-            break;
-          case 'Rejected':
-            variant = 'destructive';
-            break;
-          case 'Pending':
-            variant = 'warning';
-            break;
-          default:
-            variant = 'default';
-        }
-
-        const statusText =
-          {
-            Approved: 'Aprobado',
-            Rejected: 'Rechazado',
-            Pending: 'Pendiente'
-          }[status] || status;
-
-        return <Badge variant={variant}>{statusText}</Badge>;
+        return (
+          <Badge
+            variant={getStatusVariant(status)}
+            className={getStatusClassName(status)}
+          >
+            {getStatusText(status)}
+          </Badge>
+        );
       }
     },
     {
@@ -166,26 +221,37 @@ export const LoanRequestColumns = (
       return <span className='font-bold'>Acciones</span>;
     },
     cell: function LoanRequestActionsCell({ row }) {
-      // Evitar que el clic en el menú de acciones propague al clic de la fila
+      const request = row.original;
       const handleActionClick = (e: React.MouseEvent) => {
         e.stopPropagation();
       };
 
+      if (!canApproveReject(request)) {
+        return null;
+      }
+
       return (
-        <div onClick={handleActionClick}>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant='ghost' className='h-8 w-8 p-0'>
-                <span className='sr-only'>Open menu</span>
-                <MoreHorizontal className='h-4 w-4' />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align='end'>
-              <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>Otras acciones</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+        <div onClick={handleActionClick} className='flex gap-2'>
+          <Button
+            variant='outline'
+            size='sm'
+            className='h-8 px-2'
+            onClick={() => {
+              // TODO: Implement approve action
+            }}
+          >
+            <Check className='h-4 w-4 text-green-500' />
+          </Button>
+          <Button
+            variant='outline'
+            size='sm'
+            className='h-8 px-2'
+            onClick={() => {
+              // TODO: Implement reject action
+            }}
+          >
+            <X className='h-4 w-4 text-red-500' />
+          </Button>
         </div>
       );
     }

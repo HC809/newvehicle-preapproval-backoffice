@@ -2,6 +2,17 @@ import { Client } from './Client';
 import { LoanCalculation } from './LoanCalculation';
 import { LoanDocument } from './LoanDocument';
 
+export enum LoanRequestStatus {
+  Pending = 'Pending',
+  ApprovedByAgent = 'ApprovedByAgent',
+  RejectedByAgent = 'RejectedByAgent',
+  ApprovedByManager = 'ApprovedByManager',
+  RejectedByManager = 'RejectedByManager',
+  AcceptedByCustomer = 'AcceptedByCustomer',
+  DeclinedByCustomer = 'DeclinedByCustomer',
+  Cancelled = 'Cancelled'
+}
+
 export interface LoanRequest {
   id: string;
   dealershipId: string;
@@ -22,7 +33,7 @@ export interface LoanRequest {
   monthlyIncome: number | null;
   city: string;
   comment: string;
-  status: string;
+  status: LoanRequestStatus;
   rejectionReason: string | null;
   createdAt: string;
   isExistingClient: boolean;
