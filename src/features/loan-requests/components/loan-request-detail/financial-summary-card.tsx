@@ -6,10 +6,12 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger
+  DialogTrigger,
+  DialogClose
 } from '@/components/ui/dialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { formatHNL } from '@/utils/formatCurrency';
-import { DollarSign, Edit, Calculator } from 'lucide-react';
+import { DollarSign, Edit, Calculator, X } from 'lucide-react';
 import { LoanRequest } from 'types/LoanRequests';
 import { LoanCalculation } from 'types/LoanCalculation';
 import { Client } from 'types/Client';
@@ -40,39 +42,47 @@ export const FinancialSummaryCard = ({
             disabled={!loanRequest.equifaxChecked}
           >
             <Edit className='h-3.5 w-3.5' />
-            <span>Editar Plazo</span>
+            <span>Editar</span>
           </Button>
         )}
       </CardHeader>
-      <CardContent className='space-y-4'>
-        <div className='flex items-center justify-between'>
-          <span className='text-sm text-muted-foreground'>
-            Monto solicitado
-          </span>
-          <span className='font-medium text-emerald-700 dark:text-emerald-300'>
-            {formatHNL(loanRequest.requestedAmount)}
-          </span>
+      <CardContent className='space-y-6'>
+        <div className='grid gap-4'>
+          <div className='flex items-center justify-between rounded-lg bg-muted/30 p-3'>
+            <span className='text-sm text-muted-foreground'>
+              Monto solicitado
+            </span>
+            <span className='font-medium text-emerald-700 dark:text-emerald-300'>
+              {formatHNL(loanRequest.requestedAmount)}
+            </span>
+          </div>
+          <div className='flex items-center justify-between rounded-lg p-3'>
+            <span className='text-sm text-muted-foreground'>Plazo Máximo</span>
+            <span className='font-medium'>
+              {loanRequest.requestedLoanTermMonths} meses
+            </span>
+          </div>
+          <div className='flex items-center justify-between rounded-lg bg-muted/30 p-3'>
+            <span className='text-sm text-muted-foreground'>
+              Tasa de interés
+            </span>
+            <span className='font-medium'>
+              {loanRequest.appliedInterestRate}%
+            </span>
+          </div>
         </div>
-        <div className='flex items-center justify-between'>
-          <span className='text-sm text-muted-foreground'>Plazo Máximo</span>
-          <span className='font-medium'>
-            {loanRequest.requestedLoanTermMonths} meses
-          </span>
-        </div>
-        <div className='flex items-center justify-between'>
-          <span className='text-sm text-muted-foreground'>Tasa de interés</span>
-          <span className='font-medium'>
-            {loanRequest.appliedInterestRate}%
-          </span>
-        </div>
+
         <Separator />
-        <div className='flex items-center justify-between'>
-          <span className='text-sm font-medium'>Cuota mensual total</span>
-          <span className='font-bold text-emerald-700 dark:text-emerald-300'>
-            {loanCalculation
-              ? formatHNL(loanCalculation.totalMonthlyPayment)
-              : 'Pendiente de cálculo'}
-          </span>
+
+        <div className='rounded-lg bg-emerald-50 p-4 dark:bg-emerald-900/20'>
+          <div className='flex items-center justify-between'>
+            <span className='text-sm font-medium'>Cuota mensual total</span>
+            <span className='font-bold text-emerald-700 dark:text-emerald-300'>
+              {loanCalculation
+                ? formatHNL(loanCalculation.totalMonthlyPayment)
+                : 'Pendiente de cálculo'}
+            </span>
+          </div>
         </div>
 
         {loanCalculation && (
@@ -87,166 +97,174 @@ export const FinancialSummaryCard = ({
                 Ver Desglose Completo
               </Button>
             </DialogTrigger>
-            <DialogContent className='sm:max-w-[900px]'>
-              <DialogHeader>
-                <DialogTitle>Desglose del Cálculo Financiero</DialogTitle>
+            <DialogContent className='max-h-[90vh] sm:max-w-[900px]'>
+              <DialogHeader className='relative pb-2'>
+                <DialogTitle className='text-xl'>
+                  Desglose del Cálculo Financiero
+                </DialogTitle>
+                <DialogClose className='absolute right-0 top-0 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground'>
+                  <span className='sr-only'>Cerrar</span>
+                </DialogClose>
               </DialogHeader>
-              <div className='grid grid-cols-3 gap-8 pt-4'>
-                {/* Columna 1 */}
-                <div className='space-y-3'>
-                  <div className='flex flex-col space-y-1'>
-                    <span className='text-sm text-muted-foreground'>
-                      Valor de la garantía
-                    </span>
-                    <span className='text-right font-medium tabular-nums'>
-                      {formatHNL(loanCalculation.totalVehicleValue)}
-                    </span>
+              <ScrollArea className='h-full max-h-[calc(90vh-80px)] pr-4'>
+                <div className='relative grid gap-8 py-4 sm:grid-cols-2 lg:grid-cols-3'>
+                  {/* Columna 1 - Información del Préstamo */}
+                  <div className='relative space-y-4'>
+                    <h3 className='flex items-center gap-2 font-semibold'>
+                      <div className='flex h-6 w-6 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30'>
+                        1
+                      </div>
+                      <span>Información del Préstamo</span>
+                    </h3>
+                    <div className='space-y-3'>
+                      <FinancialItem
+                        label='Valor de la garantía'
+                        value={formatHNL(loanCalculation.totalVehicleValue)}
+                      />
+                      <FinancialItem
+                        label='Crédito solicitado'
+                        value={formatHNL(loanCalculation.requestedLoanAmount)}
+                        highlight='amber'
+                      />
+                      <FinancialItem
+                        label='Valor de la prima'
+                        value={formatHNL(loanCalculation.downPaymentValue)}
+                      />
+                      <FinancialItem
+                        label='Porcentaje de prima'
+                        value={`${loanCalculation.downPaymentPercentage.toFixed(2)}%`}
+                      />
+                      <FinancialItem
+                        label='Capacidad máxima de pago'
+                        value={formatHNL(
+                          loanCalculation.maximumPaymentCapacity
+                        )}
+                      />
+                    </div>
+                    {/* Separador Vertical 1 */}
+                    <div className='absolute -right-4 top-0 hidden h-full sm:block lg:block'>
+                      <Separator orientation='vertical' className='h-full' />
+                    </div>
                   </div>
-                  <div className='flex flex-col space-y-1 rounded-md bg-amber-50 p-2 dark:bg-amber-900/20'>
-                    <span className='text-sm text-amber-700 dark:text-amber-300'>
-                      Crédito solicitado
-                    </span>
-                    <span className='text-right font-medium tabular-nums text-amber-700 dark:text-amber-300'>
-                      {formatHNL(loanCalculation.requestedLoanAmount)}
-                    </span>
-                  </div>
-                  <div className='flex flex-col space-y-1'>
-                    <span className='text-sm text-muted-foreground'>
-                      Valor de la prima
-                    </span>
-                    <span className='text-right font-medium tabular-nums'>
-                      {formatHNL(loanCalculation.downPaymentValue)}
-                    </span>
-                  </div>
-                  <div className='flex flex-col space-y-1'>
-                    <span className='text-sm text-muted-foreground'>
-                      Porcentaje de prima
-                    </span>
-                    <span className='text-right font-medium tabular-nums'>
-                      {loanCalculation.downPaymentPercentage.toFixed(2)}%
-                    </span>
-                  </div>
-                  <div className='flex flex-col space-y-1'>
-                    <span className='text-sm text-muted-foreground'>
-                      Capacidad máxima de pago
-                    </span>
-                    <span className='text-right font-medium tabular-nums'>
-                      {formatHNL(loanCalculation.maximumPaymentCapacity)}
-                    </span>
-                  </div>
-                  <div className='flex flex-col space-y-1'>
-                    <span className='text-sm text-muted-foreground'>
-                      Relación crédito/garantía
-                    </span>
-                    <span className='text-right font-medium tabular-nums'>
-                      {(loanCalculation.loanToValueRatio * 100).toFixed(2)}%
-                    </span>
-                  </div>
-                  <div className='flex flex-col space-y-1'>
-                    <span className='text-sm text-muted-foreground'>
-                      Ingresos estimados mensuales
-                    </span>
-                    <span className='text-right font-medium tabular-nums'>
-                      {formatHNL(loanRequest.monthlyIncome || 0)}
-                    </span>
-                  </div>
-                  <div className='flex flex-col space-y-1 rounded-md bg-blue-50 p-2 dark:bg-blue-900/20'>
-                    <span className='text-sm text-blue-700 dark:text-blue-300'>
-                      Scoring de Riesgo
-                    </span>
-                    <span className='text-right font-medium tabular-nums text-blue-700 dark:text-blue-300'>
-                      {client?.lastRiskScore || 'No disponible'}
-                    </span>
-                  </div>
-                </div>
 
-                {/* Columna 2 */}
-                <div className='space-y-3'>
-                  <div className='flex flex-col space-y-1'>
-                    <span className='text-sm text-muted-foreground'>
-                      Plazo en meses
-                    </span>
-                    <span className='text-right font-medium tabular-nums'>
-                      {loanRequest.requestedLoanTermMonths}
-                    </span>
+                  {/* Columna 2 - Pagos Mensuales */}
+                  <div className='relative space-y-4'>
+                    <h3 className='flex items-center gap-2 font-semibold'>
+                      <div className='flex h-6 w-6 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30'>
+                        2
+                      </div>
+                      <span>Pagos Mensuales</span>
+                    </h3>
+                    <div className='space-y-3'>
+                      <FinancialItem
+                        label='Cuota mensual (capital + intereses)'
+                        value={formatHNL(loanCalculation.monthlyPayment)}
+                      />
+                      <FinancialItem
+                        label='Seguro de vida y accidentes'
+                        value={formatHNL(
+                          loanCalculation.lifeAndAccidentInsurance
+                        )}
+                      />
+                      <FinancialItem
+                        label='Seguro del vehículo'
+                        value={formatHNL(loanCalculation.vehicleInsurance)}
+                      />
+                      <FinancialItem
+                        label='Valor de GPS'
+                        value={formatHNL(loanCalculation.monthlyGpsFee)}
+                      />
+                      <FinancialItem
+                        label='Cuota mensual total'
+                        value={formatHNL(loanCalculation.totalMonthlyPayment)}
+                        highlight='emerald'
+                      />
+                    </div>
+                    {/* Separador Vertical 2 */}
+                    <div className='absolute -right-4 top-0 hidden h-full lg:block'>
+                      <Separator orientation='vertical' className='h-full' />
+                    </div>
                   </div>
-                  <div className='flex flex-col space-y-1'>
-                    <span className='text-sm text-muted-foreground'>
-                      Tasa de interés anual
-                    </span>
-                    <span className='text-right font-medium tabular-nums'>
-                      {loanCalculation.interestRate.toFixed(2)}%
-                    </span>
-                  </div>
-                  <div className='flex flex-col space-y-1'>
-                    <span className='text-sm text-muted-foreground'>
-                      Cuota mensual (capital + intereses)
-                    </span>
-                    <span className='text-right font-medium tabular-nums'>
-                      {formatHNL(loanCalculation.monthlyPayment)}
-                    </span>
-                  </div>
-                  <div className='flex flex-col space-y-1'>
-                    <span className='text-sm text-muted-foreground'>
-                      Seguro de vida y accidentes personales
-                    </span>
-                    <span className='text-right font-medium tabular-nums'>
-                      {formatHNL(loanCalculation.lifeAndAccidentInsurance)}
-                    </span>
-                  </div>
-                  <div className='flex flex-col space-y-1'>
-                    <span className='text-sm text-muted-foreground'>
-                      Seguro del vehículo
-                    </span>
-                    <span className='text-right font-medium tabular-nums'>
-                      {formatHNL(loanCalculation.vehicleInsurance)}
-                    </span>
-                  </div>
-                  <div className='flex flex-col space-y-1 rounded-md bg-emerald-50 p-2 dark:bg-emerald-900/20'>
-                    <span className='text-sm font-medium text-emerald-700 dark:text-emerald-300'>
-                      Cuota mensual total
-                    </span>
-                    <span className='text-right font-bold tabular-nums text-emerald-700 dark:text-emerald-300'>
-                      {formatHNL(loanCalculation.totalMonthlyPayment)}
-                    </span>
-                  </div>
-                </div>
 
-                {/* Columna 3 */}
-                <div className='space-y-3'>
-                  <div className='flex flex-col space-y-1 rounded-md bg-red-50 p-2 dark:bg-red-900/20'>
-                    <span className='text-sm text-red-700 dark:text-red-300'>
-                      Ratio cuota/ingreso
-                    </span>
-                    <span className='text-right font-medium tabular-nums text-red-700 dark:text-red-300'>
-                      {(
-                        loanCalculation.paymentToIncomePercentage * 100
-                      ).toFixed(2)}
-                      %
-                    </span>
-                  </div>
-                  <div className='flex flex-col space-y-1'>
-                    <span className='text-sm text-muted-foreground'>
-                      Gastos de cierre
-                    </span>
-                    <span className='text-right font-medium tabular-nums'>
-                      {formatHNL(loanCalculation.closingCosts)}
-                    </span>
-                  </div>
-                  <div className='flex flex-col space-y-1'>
-                    <span className='text-sm text-muted-foreground'>
-                      Impuesto seguro vehículo
-                    </span>
-                    <span className='text-right font-medium tabular-nums'>
-                      {formatHNL(loanCalculation.vehicleInsuranceTax)}
-                    </span>
+                  {/* Columna 3 - Información Adicional */}
+                  <div className='space-y-4'>
+                    <h3 className='flex items-center gap-2 font-semibold'>
+                      <div className='flex h-6 w-6 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30'>
+                        3
+                      </div>
+                      <span>Información Adicional</span>
+                    </h3>
+                    <div className='space-y-3'>
+                      <FinancialItem
+                        label='Relación crédito/garantía'
+                        value={`${(loanCalculation.loanToValueRatio * 100).toFixed(2)}%`}
+                      />
+                      <FinancialItem
+                        label='Ingresos estimados mensuales'
+                        value={formatHNL(loanRequest.monthlyIncome || 0)}
+                      />
+                      <FinancialItem
+                        label='Scoring de Riesgo'
+                        value={String(client?.lastRiskScore || 'No disponible')}
+                        highlight='blue'
+                      />
+                      <FinancialItem
+                        label='Relación cuota/ingreso'
+                        value={`${(loanCalculation.paymentToIncomePercentage * 100).toFixed(2)}%`}
+                        highlight='red'
+                      />
+                      <FinancialItem
+                        label='Gastos de cierre'
+                        value={formatHNL(loanCalculation.closingCosts)}
+                      />
+                    </div>
                   </div>
                 </div>
-              </div>
+              </ScrollArea>
             </DialogContent>
           </Dialog>
         )}
       </CardContent>
     </Card>
+  );
+};
+
+interface FinancialItemProps {
+  label: string;
+  value: string | number;
+  highlight?: 'emerald' | 'amber' | 'red' | 'blue';
+}
+
+const FinancialItem = ({ label, value, highlight }: FinancialItemProps) => {
+  const getHighlightClasses = () => {
+    switch (highlight) {
+      case 'emerald':
+        return 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300';
+      case 'amber':
+        return 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300';
+      case 'red':
+        return 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300';
+      case 'blue':
+        return 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300';
+      default:
+        return '';
+    }
+  };
+
+  return (
+    <div
+      className={`flex flex-col space-y-1 rounded-md ${
+        highlight ? getHighlightClasses() + ' p-3' : ''
+      }`}
+    >
+      <span className={`text-sm ${highlight ? '' : 'text-muted-foreground'}`}>
+        {label}
+      </span>
+      <span
+        className={`text-right font-medium tabular-nums ${highlight ? 'font-semibold' : ''}`}
+      >
+        {value}
+      </span>
+    </div>
   );
 };
