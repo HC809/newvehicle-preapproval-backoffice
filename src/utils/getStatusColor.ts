@@ -56,19 +56,19 @@ export const getStatusClassName = (status: LoanRequestStatus): string => {
 export const translateStatus = (status: LoanRequestStatus): string => {
   switch (status) {
     case LoanRequestStatus.Pending:
-      return 'Pendiente';
+      return 'Pendiente de Revisión';
     case LoanRequestStatus.ApprovedByAgent:
-      return 'Aprobado por Oficial de Negocios';
+      return 'Aprobado Oficial Neg.';
     case LoanRequestStatus.RejectedByAgent:
-      return 'Rechazado por Oficial de Negocios';
+      return 'Rechazado Oficial Neg.';
     case LoanRequestStatus.ApprovedByManager:
-      return 'Aprobado por Gerente de Negocios';
+      return 'Aprobado Gerente Neg.';
     case LoanRequestStatus.RejectedByManager:
-      return 'Rechazado por Gerente de Negocios';
+      return 'Rechazado Gerente Neg.';
     case LoanRequestStatus.AcceptedByCustomer:
       return 'Aceptado por Cliente';
     case LoanRequestStatus.DeclinedByCustomer:
-      return 'Desistió';
+      return 'Cliente Desistió';
     case LoanRequestStatus.Cancelled:
       return 'Cancelado';
     default:

@@ -2,11 +2,10 @@
 
 import React from 'react';
 import { ColumnDef } from '@tanstack/react-table';
-import { Button } from '@/components/ui/button';
-import { Building, User, UserCog, Check, X } from 'lucide-react';
+import { Building, User, UserCog } from 'lucide-react';
 import { LoanRequest, LoanRequestStatus } from 'types/LoanRequests';
 import { Badge } from '@/components/ui/badge';
-import { formatUSD } from '@/utils/formatCurrency';
+import { formatHNL } from '@/utils/formatCurrency';
 import { formatLoanRequestId } from '@/utils/formatId';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale/es';
@@ -26,23 +25,6 @@ export const LoanRequestColumns = (
 
   const getStatusText = (status: LoanRequestStatus) => {
     return translateStatus(status);
-  };
-
-  const canApproveReject = (request: LoanRequest) => {
-    if (!userRole) return false;
-
-    const isBusinessDevUser = userRole === UserRole.BusinessDevelopment_User;
-    const isBusinessDevAdmin = userRole === UserRole.BusinessDevelopment_Admin;
-
-    if (isBusinessDevUser) {
-      return request.status === LoanRequestStatus.Pending;
-    }
-
-    if (isBusinessDevAdmin) {
-      return request.status === LoanRequestStatus.ApprovedByAgent;
-    }
-
-    return false;
   };
 
   const baseColumns: ColumnDef<LoanRequest>[] = [
@@ -106,31 +88,7 @@ export const LoanRequestColumns = (
     {
       accessorKey: 'requestedAmount',
       header: () => <span className='font-bold'>Valor del Vehículo</span>,
-      cell: ({ row }) => <span>{formatUSD(row.original.requestedAmount)}</span>
-    },
-    // {
-    //   accessorKey: 'monthlyIncome',
-    //   header: () => <span className='font-bold'>Ingreso Mensual</span>,
-    //   cell: ({ row }) => (
-    //     <span>
-    //       {formatHNL(row.original.monthlyIncome)}
-    //     </span>
-    //   )
-    // },
-    {
-      accessorKey: 'status',
-      header: () => <span className='font-bold'>Estado</span>,
-      cell: ({ row }) => {
-        const status = row.original.status;
-        return (
-          <Badge
-            variant={getStatusVariant(status)}
-            className={getStatusClassName(status)}
-          >
-            {getStatusText(status)}
-          </Badge>
-        );
-      }
+      cell: ({ row }) => <span>{formatHNL(row.original.requestedAmount)}</span>
     },
     {
       accessorKey: 'createdAt',
@@ -143,6 +101,21 @@ export const LoanRequestColumns = (
           <div className='font-medium'>
             {format(date, 'PPpp', { locale: es })}
           </div>
+        );
+      }
+    },
+    {
+      accessorKey: 'status',
+      header: () => <span className='font-bold'>Estado</span>,
+      cell: ({ row }) => {
+        const status = row.original.status;
+        return (
+          <Badge
+            variant={getStatusVariant(status)}
+            className={`min-w-[180px] justify-center ${getStatusClassName(status)}`}
+          >
+            {getStatusText(status)}
+          </Badge>
         );
       }
     }
@@ -163,47 +136,47 @@ export const LoanRequestColumns = (
   };
 
   // Columna de acciones que siempre se mostrará al final
-  const actionsColumn: ColumnDef<LoanRequest> = {
-    id: 'actions',
-    header: function LoanRequestActionsHeader() {
-      return <span className='font-bold'>Acciones</span>;
-    },
-    cell: function LoanRequestActionsCell({ row }) {
-      const request = row.original;
-      const handleActionClick = (e: React.MouseEvent) => {
-        e.stopPropagation();
-      };
+  // const actionsColumn: ColumnDef<LoanRequest> = {
+  //   id: 'actions',
+  //   header: function LoanRequestActionsHeader() {
+  //     return <span className='font-bold'>Acciones</span>;
+  //   },
+  //   cell: function LoanRequestActionsCell({ row }) {
+  //     const request = row.original;
+  //     const handleActionClick = (e: React.MouseEvent) => {
+  //       e.stopPropagation();
+  //     };
 
-      if (!canApproveReject(request)) {
-        return null;
-      }
+  //     if (!canApproveReject(request)) {
+  //       return null;
+  //     }
 
-      return (
-        <div onClick={handleActionClick} className='flex gap-2'>
-          <Button
-            variant='outline'
-            size='sm'
-            className='h-8 px-2'
-            onClick={() => {
-              // TODO: Implement approve action
-            }}
-          >
-            <Check className='h-4 w-4 text-green-500' />
-          </Button>
-          <Button
-            variant='outline'
-            size='sm'
-            className='h-8 px-2'
-            onClick={() => {
-              // TODO: Implement reject action
-            }}
-          >
-            <X className='h-4 w-4 text-red-500' />
-          </Button>
-        </div>
-      );
-    }
-  };
+  //     return (
+  //       <div onClick={handleActionClick} className='flex gap-2'>
+  //         <Button
+  //           variant='outline'
+  //           size='sm'
+  //           className='h-8 px-2'
+  //           onClick={() => {
+  //             // TODO: Implement approve action
+  //           }}
+  //         >
+  //           <Check className='h-4 w-4 text-green-500' />
+  //         </Button>
+  //         <Button
+  //           variant='outline'
+  //           size='sm'
+  //           className='h-8 px-2'
+  //           onClick={() => {
+  //             // TODO: Implement reject action
+  //           }}
+  //         >
+  //           <X className='h-4 w-4 text-red-500' />
+  //         </Button>
+  //       </div>
+  //     );
+  //   }
+  // };
 
   // Construir el array final de columnas
   const finalColumns = [...baseColumns];
@@ -214,7 +187,7 @@ export const LoanRequestColumns = (
   }
 
   // Agregar la columna de acciones al final
-  finalColumns.push(actionsColumn);
+  //finalColumns.push(actionsColumn);
 
   return finalColumns;
 };
