@@ -2,13 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import {
-  ArrowLeft,
-  CheckCircle,
-  XCircle,
-  Calculator,
-  Search
-} from 'lucide-react';
+import { ArrowLeft, CheckCircle, XCircle, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 import PageContainer from '@/components/layout/page-container';
 import { Heading } from '@/components/ui/heading';
@@ -331,6 +325,29 @@ export default function LoanRequestDetailPage() {
               description='Información completa sobre la solicitud'
             />
           </div>
+          {/* Movemos los botones de aprobar/rechazar aquí */}
+          {loanRequestDetail && (
+            <div className='flex gap-2'>
+              <Button
+                variant='default'
+                onClick={handleApproveLoan}
+                disabled={!loanRequestDetail.loanRequest.financingCalculated}
+                className='gap-2 bg-green-600 hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-700'
+              >
+                <CheckCircle className='h-4 w-4' />
+                Aprobar
+              </Button>
+              <Button
+                variant='destructive'
+                onClick={handleRejectLoan}
+                disabled={!loanRequestDetail.loanRequest.financingCalculated}
+                className='gap-2'
+              >
+                <XCircle className='h-4 w-4' />
+                Rechazar
+              </Button>
+            </div>
+          )}
         </div>
 
         <Separator />
@@ -362,9 +379,12 @@ export default function LoanRequestDetailPage() {
               {/* Mostrar documentos si existen */}
               {loanRequestDetail.documents &&
                 loanRequestDetail.documents.length > 0 && (
-                  <div className='rounded-lg border p-4 shadow-sm'>
-                    <h3 className='mb-4 text-lg font-semibold'>Documentos</h3>
-                    <div className='grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3'>
+                  <div className='flex h-[300px] flex-col rounded-lg border border-l-4 border-l-primary p-4 shadow-sm'>
+                    <h3 className='mb-4 flex items-center gap-2 text-lg font-semibold'>
+                      <FileText className='h-5 w-5 text-primary dark:text-primary' />
+                      <span>Documentos</span>
+                    </h3>
+                    <div className='grid flex-1 grid-cols-1 gap-4 overflow-y-auto sm:grid-cols-2 md:grid-cols-3'>
                       {loanRequestDetail.documents.map((doc) => (
                         <DocumentViewer key={doc.id} document={doc} />
                       ))}
@@ -381,104 +401,15 @@ export default function LoanRequestDetailPage() {
                 client={loanRequestDetail.client}
               />
 
-              {/* Comentamos ResponsiblePersonsCard para usuarios BusinessDevelopment_User */}
-              {/* <ResponsiblePersonsCard
-                loanRequest={loanRequestDetail.loanRequest}
-              /> */}
-
-              {/* Reemplazamos con el checklist de verificación */}
               <VerificationChecklistCard
                 loanRequest={loanRequestDetail.loanRequest}
+                onCheckEquifax={handleCheckEquifax}
+                onCheckBantotal={handleCheckBantotal}
+                onCalculateLoan={handleCalculateLoan}
+                isCheckingEquifax={equifaxMutation.isPending}
+                isCheckingBantotal={bantotalMutation.isPending}
+                isCalculatingLoan={loanCalculationMutation.isPending}
               />
-
-              {/* Acciones principales */}
-              <div className='space-y-4'>
-                {/* Verificaciones */}
-                <div className='flex flex-col space-y-2'>
-                  <Button
-                    variant='outline'
-                    onClick={handleCheckEquifax}
-                    disabled={
-                      equifaxMutation.isPending ||
-                      loanRequestDetail.loanRequest.equifaxChecked
-                    }
-                    className='gap-2 border-primary/30 text-primary hover:bg-primary/10 hover:text-primary dark:border-primary/30 dark:hover:bg-primary/20'
-                  >
-                    <Search className='h-4 w-4' />
-                    {equifaxMutation.isPending
-                      ? 'Consultando...'
-                      : loanRequestDetail.loanRequest.equifaxChecked
-                        ? 'Equifax Consultado'
-                        : 'Consultar Equifax'}
-                  </Button>
-
-                  <Button
-                    variant='outline'
-                    onClick={handleCheckBantotal}
-                    disabled={
-                      bantotalMutation.isPending ||
-                      !loanRequestDetail.loanRequest.equifaxChecked ||
-                      loanRequestDetail.loanRequest.bantotalChecked
-                    }
-                    className='gap-2 border-primary/30 text-primary hover:bg-primary/10 hover:text-primary dark:border-primary/30 dark:hover:bg-primary/20'
-                  >
-                    <Search className='h-4 w-4' />
-                    {bantotalMutation.isPending
-                      ? 'Revisando...'
-                      : loanRequestDetail.loanRequest.bantotalChecked
-                        ? 'Bantotal Revisado'
-                        : 'Revisión en Bantotal'}
-                  </Button>
-
-                  <Button
-                    variant='outline'
-                    onClick={handleCalculateLoan}
-                    disabled={
-                      loanCalculationMutation.isPending ||
-                      !loanRequestDetail.loanRequest.bantotalChecked ||
-                      loanRequestDetail.loanRequest.financingCalculated
-                    }
-                    className='gap-2 border-primary/30 text-primary hover:bg-primary/10 hover:text-primary dark:border-primary/30 dark:hover:bg-primary/20'
-                  >
-                    <Calculator className='h-4 w-4' />
-                    {loanCalculationMutation.isPending
-                      ? 'Calculando...'
-                      : loanRequestDetail.loanRequest.financingCalculated
-                        ? 'Cálculo Realizado'
-                        : 'Calcular Préstamo'}
-                  </Button>
-                </div>
-
-                {/* Separador */}
-                <Separator />
-
-                {/* Acciones finales (aprobar/rechazar) */}
-                <div className='flex flex-col space-y-2'>
-                  <Button
-                    variant='default'
-                    onClick={handleApproveLoan}
-                    disabled={
-                      !loanRequestDetail.loanRequest.financingCalculated
-                    }
-                    className='gap-2 bg-green-600 hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-700'
-                  >
-                    <CheckCircle className='h-4 w-4' />
-                    Aprobar Solicitud
-                  </Button>
-
-                  <Button
-                    variant='destructive'
-                    onClick={handleRejectLoan}
-                    disabled={
-                      !loanRequestDetail.loanRequest.financingCalculated
-                    }
-                    className='gap-2'
-                  >
-                    <XCircle className='h-4 w-4' />
-                    Rechazar Solicitud
-                  </Button>
-                </div>
-              </div>
             </div>
           </div>
         ) : (

@@ -1,18 +1,33 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import {
   CheckCircle2,
   Circle,
   ClipboardCheck,
-  AlertCircle
+  AlertCircle,
+  Search,
+  Calculator
 } from 'lucide-react';
 import { LoanRequest } from 'types/LoanRequests';
 
 interface VerificationChecklistCardProps {
   loanRequest: LoanRequest;
+  onCheckEquifax: () => void;
+  onCheckBantotal: () => void;
+  onCalculateLoan: () => void;
+  isCheckingEquifax?: boolean;
+  isCheckingBantotal?: boolean;
+  isCalculatingLoan?: boolean;
 }
 
 export const VerificationChecklistCard = ({
-  loanRequest
+  loanRequest,
+  onCheckEquifax,
+  onCheckBantotal,
+  onCalculateLoan,
+  isCheckingEquifax,
+  isCheckingBantotal,
+  isCalculatingLoan
 }: VerificationChecklistCardProps) => {
   // Calcular el progreso del proceso
   const stepsCompleted = [
@@ -58,15 +73,28 @@ export const VerificationChecklistCard = ({
               )}
               <span className='text-sm font-medium'>Consulta de Equifax</span>
             </div>
-            <span
-              className={`rounded-full px-2 py-1 text-xs ${
-                loanRequest.equifaxChecked
-                  ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
-                  : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400'
-              }`}
-            >
-              {loanRequest.equifaxChecked ? 'Completado' : 'Pendiente'}
-            </span>
+            {loanRequest.equifaxChecked ? (
+              <span className='rounded-full bg-green-100 px-2 py-1 text-xs text-green-800 dark:bg-green-900/30 dark:text-green-400'>
+                Completado
+              </span>
+            ) : (
+              <Button
+                variant='outline'
+                size='sm'
+                onClick={onCheckEquifax}
+                disabled={isCheckingEquifax}
+                className='gap-2 border-primary/30 text-primary hover:bg-primary/10 hover:text-primary dark:border-primary/30 dark:hover:bg-primary/20'
+              >
+                {isCheckingEquifax ? (
+                  'Consultando...'
+                ) : (
+                  <>
+                    <Search className='h-4 w-4' />
+                    Consultar
+                  </>
+                )}
+              </Button>
+            )}
           </div>
 
           {/* Bantotal Check */}
@@ -81,21 +109,32 @@ export const VerificationChecklistCard = ({
               )}
               <span className='text-sm font-medium'>Revisión en Bantotal</span>
             </div>
-            <span
-              className={`rounded-full px-2 py-1 text-xs ${
-                loanRequest.bantotalChecked
-                  ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
-                  : !loanRequest.equifaxChecked
-                    ? 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400'
-                    : 'bg-primary/10 text-primary-foreground dark:bg-primary/20 dark:text-primary-foreground'
-              }`}
-            >
-              {loanRequest.bantotalChecked
-                ? 'Completado'
-                : !loanRequest.equifaxChecked
-                  ? 'Bloqueado'
-                  : 'Disponible'}
-            </span>
+            {loanRequest.bantotalChecked ? (
+              <span className='rounded-full bg-green-100 px-2 py-1 text-xs text-green-800 dark:bg-green-900/30 dark:text-green-400'>
+                Completado
+              </span>
+            ) : !loanRequest.equifaxChecked ? (
+              <span className='rounded-full bg-gray-100 px-2 py-1 text-xs text-gray-800 dark:bg-gray-800 dark:text-gray-400'>
+                Bloqueado
+              </span>
+            ) : (
+              <Button
+                variant='outline'
+                size='sm'
+                onClick={onCheckBantotal}
+                disabled={isCheckingBantotal}
+                className='gap-2 border-primary/30 text-primary hover:bg-primary/10 hover:text-primary dark:border-primary/30 dark:hover:bg-primary/20'
+              >
+                {isCheckingBantotal ? (
+                  'Revisando...'
+                ) : (
+                  <>
+                    <Search className='h-4 w-4' />
+                    Revisar
+                  </>
+                )}
+              </Button>
+            )}
           </div>
 
           {/* Loan Calculation */}
@@ -110,21 +149,32 @@ export const VerificationChecklistCard = ({
               )}
               <span className='text-sm font-medium'>Cálculo de préstamo</span>
             </div>
-            <span
-              className={`rounded-full px-2 py-1 text-xs ${
-                loanRequest.financingCalculated
-                  ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
-                  : !loanRequest.bantotalChecked
-                    ? 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400'
-                    : 'bg-primary/10 text-primary-foreground dark:bg-primary/20 dark:text-primary-foreground'
-              }`}
-            >
-              {loanRequest.financingCalculated
-                ? 'Completado'
-                : !loanRequest.bantotalChecked
-                  ? 'Bloqueado'
-                  : 'Disponible'}
-            </span>
+            {loanRequest.financingCalculated ? (
+              <span className='rounded-full bg-green-100 px-2 py-1 text-xs text-green-800 dark:bg-green-900/30 dark:text-green-400'>
+                Completado
+              </span>
+            ) : !loanRequest.bantotalChecked ? (
+              <span className='rounded-full bg-gray-100 px-2 py-1 text-xs text-gray-800 dark:bg-gray-800 dark:text-gray-400'>
+                Bloqueado
+              </span>
+            ) : (
+              <Button
+                variant='outline'
+                size='sm'
+                onClick={onCalculateLoan}
+                disabled={isCalculatingLoan}
+                className='gap-2 border-primary/30 text-primary hover:bg-primary/10 hover:text-primary dark:border-primary/30 dark:hover:bg-primary/20'
+              >
+                {isCalculatingLoan ? (
+                  'Calculando...'
+                ) : (
+                  <>
+                    <Calculator className='h-4 w-4' />
+                    Calcular
+                  </>
+                )}
+              </Button>
+            )}
           </div>
         </div>
 

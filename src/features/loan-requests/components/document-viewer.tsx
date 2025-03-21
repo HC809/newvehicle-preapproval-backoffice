@@ -78,7 +78,7 @@ export const DocumentViewer = ({ document: doc }: DocumentViewerProps) => {
         {getDocumentIcon(doc.contentType)}
       </div>
       <span
-        className='mb-1 line-clamp-1 text-center font-medium'
+        className='mb-1 line-clamp-1 max-w-full text-wrap break-words text-center font-medium'
         title={doc.fileName}
       >
         {doc.fileName}

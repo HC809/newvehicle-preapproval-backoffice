@@ -27,7 +27,7 @@ export const MainInfoCard = ({ loanRequest, client }: MainInfoCardProps) => {
   const translatedStatus = translateStatus(loanRequest.status);
 
   return (
-    <Card className='border-t-4 border-t-blue-500 dark:border-t-blue-400'>
+    <Card className='border-l-4 border-l-blue-500 dark:border-l-blue-400'>
       <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
         <div>
           <CardTitle className='text-xl'>

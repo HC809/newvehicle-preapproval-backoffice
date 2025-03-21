@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { formatHNL } from '@/utils/formatCurrency';
-import { DollarSign, Edit, Calculator, X } from 'lucide-react';
+import { DollarSign, Edit, Calculator } from 'lucide-react';
 import { LoanRequest } from 'types/LoanRequests';
 import { LoanCalculation } from 'types/LoanCalculation';
 import { Client } from 'types/Client';
@@ -28,7 +28,7 @@ export const FinancialSummaryCard = ({
   client
 }: FinancialSummaryCardProps) => {
   return (
-    <Card className='border-t-4 border-t-emerald-500 dark:border-t-emerald-400'>
+    <Card className='border-l-4 border-l-emerald-500 dark:border-l-emerald-400'>
       <CardHeader className='flex flex-row items-center justify-between pb-2'>
         <CardTitle className='flex items-center gap-2 text-lg'>
           <DollarSign className='h-5 w-5 text-emerald-500 dark:text-emerald-400' />
@@ -46,8 +46,8 @@ export const FinancialSummaryCard = ({
           </Button>
         )}
       </CardHeader>
-      <CardContent className='space-y-6'>
-        <div className='grid gap-4'>
+      <CardContent className='space-y-4'>
+        <div className='grid gap-2 pt-4'>
           <div className='flex items-center justify-between rounded-lg bg-muted/30 p-3'>
             <span className='text-sm text-muted-foreground'>
               Monto solicitado
