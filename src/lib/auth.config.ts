@@ -69,6 +69,7 @@ const authOptions = {
 
       session.accessToken = String(token.accessToken);
       session.user = token.data as any;
+      session.role = session.user.role;
       session.isSystemAdmin =
         session.user.role === 'IT_Admin' ||
         session.user.role === 'BusinessDevelopment_Admin';

@@ -16,6 +16,7 @@ declare module 'next-auth' {
     accessToken: String;
     expiresIn: number;
     expires: Date;
+    role: string;
   }
 }
 

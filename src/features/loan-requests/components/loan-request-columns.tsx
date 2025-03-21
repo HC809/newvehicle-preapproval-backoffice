@@ -11,6 +11,11 @@ import { formatLoanRequestId } from '@/utils/formatId';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale/es';
 import { UserRole } from 'types/User';
+import {
+  translateStatus,
+  getStatusVariant,
+  getStatusClassName
+} from '@/utils/getStatusColor';
 
 export const LoanRequestColumns = (
   viewMode: 'assigned' | 'all' = 'assigned',
@@ -19,65 +24,8 @@ export const LoanRequestColumns = (
 ): ColumnDef<LoanRequest>[] => {
   const showManagerColumn = isAdmin || viewMode === 'all';
 
-  const getStatusVariant = (status: LoanRequestStatus) => {
-    switch (status) {
-      case LoanRequestStatus.ApprovedByAgent:
-        return 'success';
-      case LoanRequestStatus.ApprovedByManager:
-        return 'success';
-      case LoanRequestStatus.RejectedByAgent:
-        return 'destructive';
-      case LoanRequestStatus.RejectedByManager:
-        return 'destructive';
-      case LoanRequestStatus.AcceptedByCustomer:
-        return 'default';
-      case LoanRequestStatus.DeclinedByCustomer:
-        return 'secondary';
-      case LoanRequestStatus.Pending:
-        return 'warning';
-      case LoanRequestStatus.Cancelled:
-        return 'default';
-      default:
-        return 'default';
-    }
-  };
-
   const getStatusText = (status: LoanRequestStatus) => {
-    switch (status) {
-      case LoanRequestStatus.Pending:
-        return 'Pendiente';
-      case LoanRequestStatus.ApprovedByAgent:
-        return 'Apr. Oficial Neg.';
-      case LoanRequestStatus.RejectedByAgent:
-        return 'Rech. Oficial Neg.';
-      case LoanRequestStatus.ApprovedByManager:
-        return 'Apr. Gerente Neg.';
-      case LoanRequestStatus.RejectedByManager:
-        return 'Rech. Gerente Neg.';
-      case LoanRequestStatus.AcceptedByCustomer:
-        return 'Aceptado por Cliente';
-      case LoanRequestStatus.DeclinedByCustomer:
-        return 'Desistió';
-      case LoanRequestStatus.Cancelled:
-        return 'Cancelado';
-      default:
-        return status;
-    }
-  };
-
-  const getStatusClassName = (status: LoanRequestStatus) => {
-    switch (status) {
-      case LoanRequestStatus.ApprovedByManager:
-        return 'bg-green-700 text-white hover:bg-green-800 dark:bg-green-800 dark:hover:bg-green-900';
-      case LoanRequestStatus.RejectedByManager:
-        return 'bg-red-700 text-white hover:bg-red-800 dark:bg-red-800 dark:hover:bg-red-900';
-      case LoanRequestStatus.AcceptedByCustomer:
-        return 'bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800';
-      case LoanRequestStatus.DeclinedByCustomer:
-        return 'bg-gray-500 text-white hover:bg-gray-600 dark:bg-gray-600 dark:hover:bg-gray-700';
-      default:
-        return '';
-    }
+    return translateStatus(status);
   };
 
   const canApproveReject = (request: LoanRequest) => {

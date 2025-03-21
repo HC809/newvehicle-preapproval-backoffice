@@ -30,6 +30,8 @@ import {
 import { useCalculateLoan } from '@/features/loan-requests/api/loan-calculation-service';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useSession } from 'next-auth/react';
+import { LoanRequestStatus } from 'types/LoanRequests';
+import { UserRole } from 'types/User';
 
 export default function LoanRequestDetailPage() {
   const router = useRouter();
@@ -37,6 +39,7 @@ export default function LoanRequestDetailPage() {
 
   const { data: session } = useSession();
   const isAdmin = !!session?.isSystemAdmin;
+  const userRole = session?.role;
 
   const apiClient = useAxios();
 
@@ -271,6 +274,23 @@ export default function LoanRequestDetailPage() {
     }
   };
 
+  const canApproveReject = (status: LoanRequestStatus) => {
+    if (!userRole) return false;
+
+    const isBusinessDevUser = userRole === UserRole.BusinessDevelopment_User;
+    const isBusinessDevAdmin = userRole === UserRole.BusinessDevelopment_Admin;
+
+    if (isBusinessDevUser) {
+      return status === LoanRequestStatus.Pending;
+    }
+
+    if (isBusinessDevAdmin) {
+      return status === LoanRequestStatus.ApprovedByAgent;
+    }
+
+    return false;
+  };
+
   // Loading state
   if (isLoading) {
     return (
@@ -335,24 +355,32 @@ export default function LoanRequestDetailPage() {
 
           {loanRequestDetail && (
             <div className='flex gap-2'>
-              <Button
-                variant='default'
-                onClick={handleApproveLoan}
-                disabled={!loanRequestDetail.loanRequest.financingCalculated}
-                className='gap-2 bg-green-600 hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-700'
-              >
-                <CheckCircle className='h-4 w-4' />
-                Aprobar
-              </Button>
-              <Button
-                variant='destructive'
-                onClick={handleRejectLoan}
-                disabled={!loanRequestDetail.loanRequest.financingCalculated}
-                className='gap-2'
-              >
-                <XCircle className='h-4 w-4' />
-                Rechazar
-              </Button>
+              {canApproveReject(loanRequestDetail.loanRequest.status) && (
+                <>
+                  <Button
+                    variant='default'
+                    onClick={handleApproveLoan}
+                    disabled={
+                      !loanRequestDetail.loanRequest.financingCalculated
+                    }
+                    className='gap-2 bg-green-600 hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-700'
+                  >
+                    <CheckCircle className='h-4 w-4' />
+                    Aprobar
+                  </Button>
+                  <Button
+                    variant='destructive'
+                    onClick={handleRejectLoan}
+                    disabled={
+                      !loanRequestDetail.loanRequest.financingCalculated
+                    }
+                    className='gap-2'
+                  >
+                    <XCircle className='h-4 w-4' />
+                    Rechazar
+                  </Button>
+                </>
+              )}
             </div>
           )}
         </div>

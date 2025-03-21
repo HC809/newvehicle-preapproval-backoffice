@@ -1,44 +1,77 @@
+import { LoanRequestStatus } from 'types/LoanRequests';
+
 /**
- * Obtiene la clase CSS para el color del badge según el estado de la solicitud
- * @param status - Estado de la solicitud (aprobado, rechazado, pendiente, etc.)
- * @returns Clase CSS para el color del badge
+ * Obtiene la variante del badge según el estado de la solicitud
+ * @param status - Estado de la solicitud
+ * @returns Variante del badge (success, destructive, warning, default, secondary)
  */
-export const getStatusColor = (status: string): string => {
-  switch (status.toLowerCase()) {
-    case 'aprobado':
-    case 'approved':
-      return 'bg-green-100 text-green-800 hover:bg-green-100';
-    case 'rechazado':
-    case 'rejected':
-      return 'bg-red-100 text-red-800 hover:bg-red-100';
-    case 'pendiente':
-    case 'pending':
-      return 'bg-yellow-100 text-yellow-800 hover:bg-yellow-100';
-    case 'en revisión':
-    case 'in review':
-      return 'bg-blue-100 text-blue-800 hover:bg-blue-100';
+export const getStatusVariant = (
+  status: LoanRequestStatus
+): 'success' | 'destructive' | 'warning' | 'default' | 'secondary' => {
+  switch (status) {
+    case LoanRequestStatus.ApprovedByAgent:
+    case LoanRequestStatus.ApprovedByManager:
+      return 'success';
+    case LoanRequestStatus.RejectedByAgent:
+    case LoanRequestStatus.RejectedByManager:
+      return 'destructive';
+    case LoanRequestStatus.AcceptedByCustomer:
+      return 'default';
+    case LoanRequestStatus.DeclinedByCustomer:
+      return 'secondary';
+    case LoanRequestStatus.Pending:
+      return 'warning';
+    case LoanRequestStatus.Cancelled:
+      return 'default';
     default:
-      return 'bg-gray-100 text-gray-800 hover:bg-gray-100';
+      return 'default';
+  }
+};
+
+/**
+ * Obtiene las clases CSS para el color del badge según el estado de la solicitud
+ * @param status - Estado de la solicitud
+ * @returns Clases CSS para el color del badge
+ */
+export const getStatusClassName = (status: LoanRequestStatus): string => {
+  switch (status) {
+    case LoanRequestStatus.ApprovedByManager:
+      return 'bg-green-700 text-white hover:bg-green-800 dark:bg-green-800 dark:hover:bg-green-900';
+    case LoanRequestStatus.RejectedByManager:
+      return 'bg-red-700 text-white hover:bg-red-800 dark:bg-red-800 dark:hover:bg-red-900';
+    case LoanRequestStatus.AcceptedByCustomer:
+      return 'bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800';
+    case LoanRequestStatus.DeclinedByCustomer:
+      return 'bg-gray-500 text-white hover:bg-gray-600 dark:bg-gray-600 dark:hover:bg-gray-700';
+    default:
+      return '';
   }
 };
 
 /**
  * Traduce el estado de la solicitud al español
- * @param status - Estado de la solicitud en inglés o español
+ * @param status - Estado de la solicitud
  * @returns Estado traducido al español
  */
-export const translateStatus = (status: string): string => {
-  switch (status.toLowerCase()) {
-    case 'approved':
-      return 'Aprobado';
-    case 'rejected':
-      return 'Rechazado';
-    case 'pending':
+export const translateStatus = (status: LoanRequestStatus): string => {
+  switch (status) {
+    case LoanRequestStatus.Pending:
       return 'Pendiente';
-    case 'in review':
-      return 'En Revisión';
+    case LoanRequestStatus.ApprovedByAgent:
+      return 'Aprobado por Oficial de Negocios';
+    case LoanRequestStatus.RejectedByAgent:
+      return 'Rechazado por Oficial de Negocios';
+    case LoanRequestStatus.ApprovedByManager:
+      return 'Aprobado por Gerente de Negocios';
+    case LoanRequestStatus.RejectedByManager:
+      return 'Rechazado por Gerente de Negocios';
+    case LoanRequestStatus.AcceptedByCustomer:
+      return 'Aceptado por Cliente';
+    case LoanRequestStatus.DeclinedByCustomer:
+      return 'Desistió';
+    case LoanRequestStatus.Cancelled:
+      return 'Cancelado';
     default:
-      // Si ya está en español o es un estado desconocido, devolver el mismo valor
-      return status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
+      return status;
   }
 };

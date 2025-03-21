@@ -8,7 +8,11 @@ import {
   CardFooter
 } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { translateStatus } from '@/utils/getStatusColor';
+import {
+  translateStatus,
+  getStatusVariant,
+  getStatusClassName
+} from '@/utils/getStatusColor';
 import { formatLoanRequestId } from '@/utils/formatId';
 import { User, FileText } from 'lucide-react';
 import { LoanRequest } from 'types/LoanRequests';
@@ -23,9 +27,6 @@ interface MainInfoCardProps {
 }
 
 export const MainInfoCard = ({ loanRequest, client }: MainInfoCardProps) => {
-  // Traducir el estado al español
-  const translatedStatus = translateStatus(loanRequest.status);
-
   return (
     <Card className='border-l-4 border-l-blue-500 dark:border-l-blue-400'>
       <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
@@ -40,7 +41,12 @@ export const MainInfoCard = ({ loanRequest, client }: MainInfoCardProps) => {
             </span>
           </CardDescription>
         </div>
-        <Badge variant={'warning'}>{translatedStatus}</Badge>
+        <Badge
+          variant={getStatusVariant(loanRequest.status)}
+          className={getStatusClassName(loanRequest.status)}
+        >
+          {translateStatus(loanRequest.status)}
+        </Badge>
       </CardHeader>
       <CardContent>
         <Tabs defaultValue='general' className='w-full'>
