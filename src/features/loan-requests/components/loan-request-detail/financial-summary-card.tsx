@@ -187,7 +187,7 @@ export const FinancialSummaryCard = ({
                   </div>
 
                   {/* Columna 3 - Información Adicional */}
-                  <div className='space-y-8tt'>
+                  <div className='space-y-8'>
                     <h3 className='flex items-center gap-2 text-lg font-semibold'>
                       <div className='flex h-7 w-7 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30'>
                         3

@@ -17,7 +17,6 @@ import { useSession } from 'next-auth/react';
 import LoanRequestTableAction from '@/features/loan-requests/components/loan-request-table-action';
 import { DataTableSkeleton } from '@/components/ui/table/data-table-skeleton';
 import { useSearchParams } from 'next/navigation';
-import { LoanRequest } from 'types/LoanRequests';
 
 function LoanRequestContent() {
   const apiClient = useAxios();
