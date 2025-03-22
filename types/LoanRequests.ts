@@ -1,6 +1,7 @@
 import { Client } from './Client';
 import { LoanCalculation } from './LoanCalculation';
 import { LoanDocument } from './LoanDocument';
+import { LoanRequestEvent } from './LoanRequestEvent';
 
 export enum LoanRequestStatus {
   Pending = 'Pending',
@@ -48,6 +49,7 @@ export interface LoanRequestDetail {
   client?: Client;
   documents?: LoanDocument[];
   loanCalculation?: LoanCalculation;
+  events?: LoanRequestEvent[];
 }
 
 export interface LoanRequestListingParams {

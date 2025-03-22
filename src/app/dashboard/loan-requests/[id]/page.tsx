@@ -2,7 +2,13 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { ArrowLeft, CheckCircle, XCircle, FileText } from 'lucide-react';
+import {
+  ArrowLeft,
+  CheckCircle,
+  XCircle,
+  FileText,
+  History
+} from 'lucide-react';
 import { toast } from 'sonner';
 import PageContainer from '@/components/layout/page-container';
 import { Heading } from '@/components/ui/heading';
@@ -32,6 +38,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useSession } from 'next-auth/react';
 import { LoanRequestStatus } from 'types/LoanRequests';
 import { UserRole } from 'types/User';
+import { LoanRequestTimeline } from '@/features/loan-requests/components/loan-request-timeline';
 
 export default function LoanRequestDetailPage() {
   const router = useRouter();
@@ -48,6 +55,7 @@ export default function LoanRequestDetailPage() {
   const [fullPageLoaderMessage, setFullPageLoaderMessage] = useState('');
   const [fullPageLoaderSubMessage, setFullPageLoaderSubMessage] = useState('');
   const [loaderError, setLoaderError] = useState<string | null>(null);
+  const [showTimeline, setShowTimeline] = useState(false);
 
   // Fetch loan request details from API
   const {
@@ -274,17 +282,24 @@ export default function LoanRequestDetailPage() {
     }
   };
 
-  const canApproveReject = (status: LoanRequestStatus) => {
+  const canApproveReject = (status: LoanRequestStatus, request: any) => {
     if (!userRole) return false;
 
     const isBusinessDevUser = userRole === UserRole.BusinessDevelopment_User;
     const isBusinessDevAdmin = userRole === UserRole.BusinessDevelopment_Admin;
 
     if (isBusinessDevUser) {
-      return status === LoanRequestStatus.Pending;
+      // Para BusinessDevelopment_User, solo mostrar botones si está en Pending y tiene todas las verificaciones
+      return (
+        status === LoanRequestStatus.Pending &&
+        request.equifaxChecked &&
+        request.bantotalChecked &&
+        request.financingCalculated
+      );
     }
 
     if (isBusinessDevAdmin) {
+      // Para BusinessDevelopment_Admin, solo mostrar botones si está en ApprovedByAgent
       return status === LoanRequestStatus.ApprovedByAgent;
     }
 
@@ -355,14 +370,22 @@ export default function LoanRequestDetailPage() {
 
           {loanRequestDetail && (
             <div className='flex gap-2'>
-              {canApproveReject(loanRequestDetail.loanRequest.status) && (
+              <Button
+                variant='outline'
+                onClick={() => setShowTimeline(true)}
+                className='gap-2'
+              >
+                <History className='h-4 w-4' />
+                Ver Historial
+              </Button>
+              {canApproveReject(
+                loanRequestDetail.loanRequest.status,
+                loanRequestDetail.loanRequest
+              ) && (
                 <>
                   <Button
                     variant='default'
                     onClick={handleApproveLoan}
-                    disabled={
-                      !loanRequestDetail.loanRequest.financingCalculated
-                    }
                     className='gap-2 bg-green-600 hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-700'
                   >
                     <CheckCircle className='h-4 w-4' />
@@ -371,9 +394,6 @@ export default function LoanRequestDetailPage() {
                   <Button
                     variant='destructive'
                     onClick={handleRejectLoan}
-                    disabled={
-                      !loanRequestDetail.loanRequest.financingCalculated
-                    }
                     className='gap-2'
                   >
                     <XCircle className='h-4 w-4' />
@@ -460,6 +480,14 @@ export default function LoanRequestDetailPage() {
               especificado.
             </AlertDescription>
           </Alert>
+        )}
+
+        {loanRequestDetail && (
+          <LoanRequestTimeline
+            isOpen={showTimeline}
+            onClose={() => setShowTimeline(false)}
+            events={loanRequestDetail.events || []}
+          />
         )}
       </div>
     </PageContainer>

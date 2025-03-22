@@ -135,49 +135,6 @@ export const LoanRequestColumns = (
     )
   };
 
-  // Columna de acciones que siempre se mostrará al final
-  // const actionsColumn: ColumnDef<LoanRequest> = {
-  //   id: 'actions',
-  //   header: function LoanRequestActionsHeader() {
-  //     return <span className='font-bold'>Acciones</span>;
-  //   },
-  //   cell: function LoanRequestActionsCell({ row }) {
-  //     const request = row.original;
-  //     const handleActionClick = (e: React.MouseEvent) => {
-  //       e.stopPropagation();
-  //     };
-
-  //     if (!canApproveReject(request)) {
-  //       return null;
-  //     }
-
-  //     return (
-  //       <div onClick={handleActionClick} className='flex gap-2'>
-  //         <Button
-  //           variant='outline'
-  //           size='sm'
-  //           className='h-8 px-2'
-  //           onClick={() => {
-  //             // TODO: Implement approve action
-  //           }}
-  //         >
-  //           <Check className='h-4 w-4 text-green-500' />
-  //         </Button>
-  //         <Button
-  //           variant='outline'
-  //           size='sm'
-  //           className='h-8 px-2'
-  //           onClick={() => {
-  //             // TODO: Implement reject action
-  //           }}
-  //         >
-  //           <X className='h-4 w-4 text-red-500' />
-  //         </Button>
-  //       </div>
-  //     );
-  //   }
-  // };
-
   // Construir el array final de columnas
   const finalColumns = [...baseColumns];
 
@@ -185,9 +142,6 @@ export const LoanRequestColumns = (
   if (showManagerColumn) {
     finalColumns.push(managerColumn);
   }
-
-  // Agregar la columna de acciones al final
-  //finalColumns.push(actionsColumn);
 
   return finalColumns;
 };
