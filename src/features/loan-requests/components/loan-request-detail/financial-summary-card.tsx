@@ -194,7 +194,7 @@ export const FinancialSummaryCard = ({
                       </div>
                       <span>Información Adicional</span>
                     </h3>
-                    <div className='space-y-4'>
+                    <div className='space-y-8'>
                       <FinancialItem
                         label='Relación crédito/garantía'
                         value={`${(loanCalculation.loanToValueRatio * 100).toFixed(2)}%`}

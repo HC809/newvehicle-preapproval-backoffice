@@ -57,4 +57,5 @@ export interface LoanRequestListingParams {
   dni?: string;
   dealership?: string;
   manager?: string;
+  status?: string;
 }

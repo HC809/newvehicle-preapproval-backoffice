@@ -31,7 +31,11 @@ import useAxios from '@/hooks/use-axios';
 import {
   useLoanRequestDetail,
   useRegisterEquifax,
-  useCheckBantotal
+  useCheckBantotal,
+  useApproveByAgent,
+  useRejectByAgent,
+  useApproveByManager,
+  useRejectByManager
 } from '@/features/loan-requests/api/loan-request-service';
 import { useCalculateLoan } from '@/features/loan-requests/api/loan-calculation-service';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -39,6 +43,7 @@ import { useSession } from 'next-auth/react';
 import { LoanRequestStatus } from 'types/LoanRequests';
 import { UserRole } from 'types/User';
 import { LoanRequestTimeline } from '@/features/loan-requests/components/loan-request-timeline';
+import { RejectionModal } from '@/features/loan-requests/components/rejection-modal';
 
 export default function LoanRequestDetailPage() {
   const router = useRouter();
@@ -56,6 +61,8 @@ export default function LoanRequestDetailPage() {
   const [fullPageLoaderSubMessage, setFullPageLoaderSubMessage] = useState('');
   const [loaderError, setLoaderError] = useState<string | null>(null);
   const [showTimeline, setShowTimeline] = useState(false);
+  const [showRejectionModal, setShowRejectionModal] = useState(false);
+  const [isManagerRejection, setIsManagerRejection] = useState(false);
 
   // Fetch loan request details from API
   const {
@@ -70,6 +77,10 @@ export default function LoanRequestDetailPage() {
   const equifaxMutation = useRegisterEquifax(apiClient!);
   const bantotalMutation = useCheckBantotal(apiClient!);
   const loanCalculationMutation = useCalculateLoan(apiClient!);
+  const approveByAgentMutation = useApproveByAgent(apiClient!);
+  const rejectByAgentMutation = useRejectByAgent(apiClient!);
+  const approveByManagerMutation = useApproveByManager(apiClient!);
+  const rejectByManagerMutation = useRejectByManager(apiClient!);
 
   // Efecto para eliminar el resaltado en las tabs cuando se presiona una tecla
   useEffect(() => {
@@ -201,6 +212,8 @@ export default function LoanRequestDetailPage() {
 
   // Función para aprobar la solicitud
   const handleApproveLoan = async () => {
+    if (!loanRequestDetail) return;
+
     setShowFullPageLoader(true);
     setLoaderError(null);
     setFullPageLoaderMessage('Procesando aprobación de la solicitud');
@@ -208,15 +221,38 @@ export default function LoanRequestDetailPage() {
       'Por favor espere mientras completamos el proceso.'
     );
 
-    // Simulación de procesamiento
-    setTimeout(() => {
+    try {
+      if (userRole === UserRole.BusinessDevelopment_User) {
+        await approveByAgentMutation.mutateAsync(
+          loanRequestDetail.loanRequest.id
+        );
+      } else if (userRole === UserRole.BusinessDevelopment_Admin) {
+        await approveByManagerMutation.mutateAsync(
+          loanRequestDetail.loanRequest.id
+        );
+      }
+
+      await refetch();
+      toast.success('Solicitud aprobada exitosamente');
+    } catch (error) {
+      toast.error('Error al aprobar la solicitud');
+    } finally {
       setShowFullPageLoader(false);
-      alert('Funcionalidad de aprobación pendiente de implementar');
-    }, 1500);
+    }
   };
 
   // Función para rechazar la solicitud
   const handleRejectLoan = async () => {
+    if (!loanRequestDetail) return;
+
+    setIsManagerRejection(userRole === UserRole.BusinessDevelopment_Admin);
+    setShowRejectionModal(true);
+  };
+
+  // Función para manejar el envío del formulario de rechazo
+  const handleRejectionSubmit = async (rejectionReason: string) => {
+    if (!loanRequestDetail) return;
+
     setShowFullPageLoader(true);
     setLoaderError(null);
     setFullPageLoaderMessage('Procesando rechazo de la solicitud');
@@ -224,11 +260,27 @@ export default function LoanRequestDetailPage() {
       'Por favor espere mientras completamos el proceso.'
     );
 
-    // Simulación de procesamiento
-    setTimeout(() => {
+    try {
+      if (isManagerRejection) {
+        await rejectByManagerMutation.mutateAsync({
+          loanRequestId: loanRequestDetail.loanRequest.id,
+          rejectionReason
+        });
+      } else {
+        await rejectByAgentMutation.mutateAsync({
+          loanRequestId: loanRequestDetail.loanRequest.id,
+          rejectionReason
+        });
+      }
+
+      await refetch();
+      toast.success('Solicitud rechazada exitosamente');
+      setShowRejectionModal(false);
+    } catch (error: any) {
+      toast.error(error.message || 'Error al rechazar la solicitud');
+    } finally {
       setShowFullPageLoader(false);
-      alert('Funcionalidad de rechazo pendiente de implementar');
-    }, 1500);
+    }
   };
 
   // Función para cerrar el loader con error
@@ -483,11 +535,40 @@ export default function LoanRequestDetailPage() {
         )}
 
         {loanRequestDetail && (
-          <LoanRequestTimeline
-            isOpen={showTimeline}
-            onClose={() => setShowTimeline(false)}
-            events={loanRequestDetail.events || []}
-          />
+          <>
+            <LoanRequestTimeline
+              isOpen={showTimeline}
+              onClose={() => setShowTimeline(false)}
+              events={loanRequestDetail.events || []}
+            />
+
+            <RejectionModal
+              isOpen={showRejectionModal}
+              onClose={() => {
+                if (
+                  !rejectByAgentMutation.isPending &&
+                  !rejectByManagerMutation.isPending
+                ) {
+                  setShowRejectionModal(false);
+                }
+              }}
+              onSubmit={handleRejectionSubmit}
+              title={
+                isManagerRejection
+                  ? 'Rechazar Solicitud (Gerente de Oficial de Negocios)'
+                  : 'Rechazar Solicitud (Oficial de Negocios)'
+              }
+              description={
+                isManagerRejection
+                  ? 'Por favor, ingrese la razón del rechazo de la solicitud como Gerente de Oficial de Negocios.'
+                  : 'Por favor, ingrese la razón del rechazo de la solicitud como Oficial de Negocios.'
+              }
+              isSubmitting={
+                rejectByAgentMutation.isPending ||
+                rejectByManagerMutation.isPending
+              }
+            />
+          </>
         )}
       </div>
     </PageContainer>

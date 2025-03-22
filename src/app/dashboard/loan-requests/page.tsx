@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, Suspense, useEffect } from 'react';
+import { useState, Suspense, useEffect, useMemo } from 'react';
 import { ReloadIcon } from '@radix-ui/react-icons';
 import PageContainer from '@/components/layout/page-container';
 import { Heading } from '@/components/ui/heading';
@@ -17,6 +17,7 @@ import { useSession } from 'next-auth/react';
 import LoanRequestTableAction from '@/features/loan-requests/components/loan-request-table-action';
 import { DataTableSkeleton } from '@/components/ui/table/data-table-skeleton';
 import { useSearchParams } from 'next/navigation';
+import { LoanRequest } from 'types/LoanRequests';
 
 function LoanRequestContent() {
   const apiClient = useAxios();
@@ -29,51 +30,80 @@ function LoanRequestContent() {
   const dniFilter = searchParams.get('dni') || '';
   const dealershipFilter = searchParams.get('dealership') || '';
   const managerFilter = searchParams.get('manager') || '';
-
-  // Logs para depuración
-  //console.log('searchParams:', searchParams.toString());
-  //console.log('Filtros aplicados:', { dniFilter, dealershipFilter, managerFilter });
+  const statusFilter = searchParams.get('status') || '';
 
   const {
     isLoading,
     isFetching,
-    data: loanRequests,
+    data: allLoanRequests,
     error,
     refetch
   } = useLoanRequests(
     apiClient,
     {
       viewAll: viewMode === 'all',
-      dni: dniFilter,
-      dealership: dealershipFilter,
-      manager: managerFilter
+      dni: dniFilter || undefined,
+      dealership: dealershipFilter || undefined,
+      manager: managerFilter || undefined,
+      status: statusFilter || undefined
     },
     true
   );
 
-  // Logs para depuración
-  //console.log('Datos recibidos:', loanRequests?.length || 0);
+  // Procesar los múltiples valores de estado (si existen)
+  const statusValues = useMemo(() => {
+    if (!statusFilter) return [];
+    return statusFilter.split('.');
+  }, [statusFilter]);
 
-  // Refetch cuando cambien los filtros o el modo de vista
+  // Aplicar filtros localmente
+  const filteredLoanRequests = useMemo(() => {
+    if (!allLoanRequests) return [];
+
+    return allLoanRequests.filter((request) => {
+      // No necesitamos filtrar por viewMode aquí ya que eso se maneja en la API
+
+      // Filtro por DNI (solo si no se envía al API)
+      if (dniFilter && !request.dni.includes(dniFilter)) {
+        return false;
+      }
+
+      // Filtro por concesionaria (solo si no se envía al API)
+      if (dealershipFilter && request.dealershipId !== dealershipFilter) {
+        return false;
+      }
+
+      // Filtro por responsable (solo si no se envía al API)
+      if (managerFilter && request.managerName !== managerFilter) {
+        return false;
+      }
+
+      // Filtro por estado (múltiples valores posibles)
+      if (statusValues.length > 0 && !statusValues.includes(request.status)) {
+        return false;
+      }
+
+      return true;
+    });
+  }, [
+    allLoanRequests,
+    dniFilter,
+    dealershipFilter,
+    managerFilter,
+    statusValues
+  ]);
+
+  // Refetch cuando cambie el modo de vista o alguno de los filtros
   useEffect(() => {
-    //console.log('Filtros o modo de vista cambiaron, refetching...');
     refetch();
-  }, [dniFilter, dealershipFilter, managerFilter, viewMode, refetch]);
-
-  // Forzar refetch cuando se monte el componente
-  useEffect(() => {
-    //console.log('Componente montado, refetching...');
-    refetch();
-  }, [refetch]);
-
-  // Actualizar dniFilter cuando cambie el valor en el campo de búsqueda
-  //   useEffect(() => {
-  //     const dniValue = searchParams.get('dni');
-  //     if (dniValue !== dniFilter) {
-  //       //console.log('Actualizando dniFilter a:', dniValue);
-  //       refetch();
-  //     }
-  //   }, [searchParams]);
+  }, [
+    viewMode,
+    dniFilter,
+    dealershipFilter,
+    managerFilter,
+    statusFilter,
+    refetch
+  ]);
 
   const kbarActions = {};
 
@@ -128,9 +158,9 @@ function LoanRequestContent() {
                 fallback={<DataTableSkeleton columnCount={10} rowCount={10} />}
               >
                 <LoanRequestListingPage
-                  loanRequests={loanRequests || []}
-                  totalItems={loanRequests?.length || 0}
-                  isLoading={isLoading || !loanRequests}
+                  loanRequests={filteredLoanRequests || []}
+                  totalItems={filteredLoanRequests?.length || 0}
+                  isLoading={isLoading || !allLoanRequests}
                   viewMode={viewMode}
                   isAdmin={isAdmin}
                 />

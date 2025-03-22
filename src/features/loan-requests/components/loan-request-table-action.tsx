@@ -11,6 +11,19 @@ import useAxios from '@/hooks/use-axios';
 import { useUsers } from '@/features/users/api/user-service';
 import { useDealerships } from '@/features/dealerships/api/dealership-service';
 import { UserRole } from 'types/User';
+import { LoanRequestStatus } from 'types/LoanRequests';
+import { Badge } from '@/components/ui/badge';
+import { translateStatus, getStatusVariant } from '@/utils/getStatusColor';
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select';
+import { FilterIcon } from 'lucide-react';
 
 export function useLoanRequestTableFilters() {
   const router = useRouter();
@@ -24,6 +37,9 @@ export function useLoanRequestTableFilters() {
   );
   const [managerFilter, setManagerFilter] = useState(
     searchParams.get('manager') || ''
+  );
+  const [statusFilter, setStatusFilter] = useState(
+    searchParams.get('status') || ''
   );
 
   const createQueryString = useCallback(
@@ -118,15 +134,38 @@ export function useLoanRequestTableFilters() {
     [managerFilter, createQueryString, pathname, router]
   );
 
+  const setStatusFilterValue = useCallback(
+    (
+      value: string | ((old: string) => string | null) | null,
+      options?: Options
+    ) => {
+      let newValue: string | null = null;
+      if (typeof value === 'function') {
+        newValue = value(statusFilter);
+      } else {
+        newValue = value;
+      }
+      setStatusFilter(newValue || '');
+      const queryString = createQueryString('status', newValue);
+      router.push(`${pathname}?${queryString}`);
+      return Promise.resolve(new URLSearchParams(queryString));
+    },
+    [statusFilter, createQueryString, pathname, router]
+  );
+
   const resetFilters = useCallback(() => {
     setSearchQuery('');
     setDealershipFilter('');
     setManagerFilter('');
+    setStatusFilter('');
     router.push(pathname);
   }, [pathname, router]);
 
   const isAnyFilterActive =
-    searchQuery !== '' || dealershipFilter !== '' || managerFilter !== '';
+    searchQuery !== '' ||
+    dealershipFilter !== '' ||
+    managerFilter !== '' ||
+    statusFilter !== '';
 
   return {
     page,
@@ -137,6 +176,8 @@ export function useLoanRequestTableFilters() {
     setDealershipFilterValue,
     managerFilter,
     setManagerFilterValue,
+    statusFilter,
+    setStatusFilterValue,
     resetFilters,
     isAnyFilterActive
   };
@@ -160,10 +201,12 @@ export default function LoanRequestTableAction() {
     searchQuery,
     dealershipFilter,
     managerFilter,
+    statusFilter,
     setPageValue,
     setSearchQueryValue,
     setDealershipFilterValue,
     setManagerFilterValue,
+    setStatusFilterValue,
     resetFilters,
     isAnyFilterActive
   } = useLoanRequestTableFilters();
@@ -178,6 +221,30 @@ export default function LoanRequestTableAction() {
   const MANAGER_OPTIONS = activeManagers.map((manager) => ({
     value: manager.name,
     label: manager.name
+  }));
+
+  // Estado para las opciones de status
+  const STATUS_OPTIONS = Object.values(LoanRequestStatus).map((status) => ({
+    value: status,
+    label: translateStatus(status),
+    variant: getStatusVariant(status),
+    icon: ({ className }: { className?: string }) => (
+      <div className='flex items-center'>
+        <div
+          className={`mr-2 h-3 w-3 rounded-sm ${
+            getStatusVariant(status) === 'success'
+              ? 'bg-green-500'
+              : getStatusVariant(status) === 'destructive'
+                ? 'bg-red-500'
+                : getStatusVariant(status) === 'warning'
+                  ? 'bg-yellow-500'
+                  : getStatusVariant(status) === 'secondary'
+                    ? 'bg-gray-500'
+                    : 'bg-blue-500'
+          }`}
+        />
+      </div>
+    )
   }));
 
   return (
@@ -210,6 +277,17 @@ export default function LoanRequestTableAction() {
           translatedClear='Limpiar filtros'
         />
       )}
+
+      <DataTableFilterBox
+        filterKey='status'
+        title='Estado'
+        options={STATUS_OPTIONS}
+        setFilterValue={setStatusFilterValue}
+        filterValue={statusFilter}
+        translatedSelected='seleccionados'
+        translatedClear='Limpiar filtros'
+      />
+
       <DataTableResetFilter
         isFilterActive={isAnyFilterActive}
         onReset={resetFilters}

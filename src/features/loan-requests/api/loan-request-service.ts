@@ -22,7 +22,26 @@ export const useLoanRequests = (
     queryKey: [LOAN_REQUESTS_KEY, params],
     queryFn: async (): Promise<LoanRequest[]> => {
       if (!apiClient) throw new Error('API client not initialized');
-      const response = await apiClient.get<LoanRequest[]>('/loan-requests');
+
+      // Construir los parámetros de consulta
+      const queryParams = new URLSearchParams();
+
+      if (params) {
+        // Añadir viewAll como parámetro booleano
+        if (params.viewAll !== undefined) {
+          queryParams.append('viewAll', params.viewAll.toString());
+        }
+        // Añadir otros parámetros si son necesarios en el futuro
+        // if (params.dni) queryParams.append('dni', params.dni);
+        // if (params.dealership) queryParams.append('dealership', params.dealership);
+        // if (params.manager) queryParams.append('manager', params.manager);
+        // if (params.status) queryParams.append('status', params.status);
+      }
+
+      const queryString = queryParams.toString();
+      const url = `/loan-requests${queryString ? `?${queryString}` : ''}`;
+
+      const response = await apiClient.get<LoanRequest[]>(url);
       return response.data;
     },
     enabled: !!apiClient && enabled
@@ -144,6 +163,65 @@ export const useCheckBantotal = (apiClient: AxiosInstance) => {
     mutationFn: async (loanRequestId: string) => {
       const response = await apiClient.post(
         `/loan-requests/checkbantotal/${loanRequestId}`
+      );
+      return response.data;
+    }
+  });
+};
+
+// Mutations for approving/rejecting loan requests
+export const useApproveByAgent = (apiClient: AxiosInstance) => {
+  return useMutation({
+    mutationFn: async (loanRequestId: string) => {
+      const response = await apiClient.post(
+        `/loan-requests/approve-by-agent/${loanRequestId}`
+      );
+      return response.data;
+    }
+  });
+};
+
+export const useRejectByAgent = (apiClient: AxiosInstance) => {
+  return useMutation({
+    mutationFn: async ({
+      loanRequestId,
+      rejectionReason
+    }: {
+      loanRequestId: string;
+      rejectionReason: string;
+    }) => {
+      const response = await apiClient.post(
+        `/loan-requests/reject-by-agent/${loanRequestId}`,
+        { rejectionReason }
+      );
+      return response.data;
+    }
+  });
+};
+
+export const useApproveByManager = (apiClient: AxiosInstance) => {
+  return useMutation({
+    mutationFn: async (loanRequestId: string) => {
+      const response = await apiClient.post(
+        `/loan-requests/approve-by-manager/${loanRequestId}`
+      );
+      return response.data;
+    }
+  });
+};
+
+export const useRejectByManager = (apiClient: AxiosInstance) => {
+  return useMutation({
+    mutationFn: async ({
+      loanRequestId,
+      rejectionReason
+    }: {
+      loanRequestId: string;
+      rejectionReason: string;
+    }) => {
+      const response = await apiClient.post(
+        `/loan-requests/reject-by-manager/${loanRequestId}`,
+        { rejectionReason }
       );
       return response.data;
     }
