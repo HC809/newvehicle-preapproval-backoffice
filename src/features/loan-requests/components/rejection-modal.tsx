@@ -1,4 +1,7 @@
-import { useEffect, useState } from 'react';
+import React from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import {
   Dialog,
   DialogContent,
@@ -9,7 +12,20 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { ReloadIcon } from '@radix-ui/react-icons';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage
+} from '@/components/ui/form';
+
+const FormSchema = z.object({
+  rejectionReason: z.string().min(1, {
+    message: 'Por favor, ingrese una razón para el rechazo.'
+  })
+});
 
 interface RejectionModalProps {
   isOpen: boolean;
@@ -24,35 +40,19 @@ export function RejectionModal({
   isOpen,
   onClose,
   onSubmit,
-  title = 'Rechazar Solicitud',
-  description = 'Por favor, ingrese la razón del rechazo de la solicitud.',
-  isSubmitting = false
+  title,
+  description,
+  isSubmitting
 }: RejectionModalProps) {
-  const [rejectionReason, setRejectionReason] = useState('');
-  const [error, setError] = useState('');
-
-  // Reset input when modal is opened/closed
-  useEffect(() => {
-    if (isOpen) {
-      setRejectionReason('');
-      setError('');
+  const form = useForm<z.infer<typeof FormSchema>>({
+    resolver: zodResolver(FormSchema),
+    defaultValues: {
+      rejectionReason: ''
     }
-  }, [isOpen]);
+  });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    // Simple validation
-    if (!rejectionReason.trim()) {
-      setError('Por favor, ingrese una razón para el rechazo.');
-      return;
-    }
-
-    try {
-      await onSubmit(rejectionReason);
-    } catch (error) {
-      //console.error('Error al enviar el formulario:', error);
-    }
+  const handleSubmit = async (data: z.infer<typeof FormSchema>) => {
+    await onSubmit(data.rejectionReason);
   };
 
   const handleClose = () => {
@@ -86,53 +86,52 @@ export function RejectionModal({
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className='space-y-4'>
-          <div className='space-y-2'>
-            <label htmlFor='rejectionReason' className='text-sm font-medium'>
-              Razón del Rechazo
-            </label>
-            <Textarea
-              id='rejectionReason'
-              value={rejectionReason}
-              onChange={(e) => {
-                setRejectionReason(e.target.value);
-                if (e.target.value.trim()) setError('');
-              }}
-              placeholder='Ingrese la razón del rechazo...'
-              className='min-h-[120px] resize-none'
-              disabled={isSubmitting}
-            />
-            {error && (
-              <p className='text-sm font-medium text-destructive'>{error}</p>
-            )}
-          </div>
-
-          <DialogFooter>
-            <Button
-              type='button'
-              variant='outline'
-              onClick={handleClose}
-              disabled={isSubmitting}
-            >
-              Cancelar
-            </Button>
-            <Button
-              type='submit'
-              variant='destructive'
-              disabled={isSubmitting || !rejectionReason.trim()}
-            >
-              {isSubmitting ? (
-                <>
-                  <ReloadIcon className='mr-2 h-4 w-4 animate-spin' />
-                  Rechazando...
-                </>
-              ) : (
-                'Rechazar'
+        <Form {...form}>
+          <form
+            onSubmit={form.handleSubmit(handleSubmit)}
+            className='space-y-4'
+          >
+            <FormField
+              control={form.control}
+              name='rejectionReason'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Razón del Rechazo</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      {...field}
+                      placeholder='Ingrese la razón del rechazo...'
+                      //onKeyDown={(e) => e.stopPropagation()}
+                      disabled={isSubmitting}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
               )}
-            </Button>
-          </DialogFooter>
-        </form>
+            />
+
+            <DialogFooter>
+              <Button
+                type='button'
+                variant='outline'
+                onClick={handleClose}
+                disabled={isSubmitting}
+              >
+                Cancelar
+              </Button>
+              <Button
+                type='submit'
+                variant='destructive'
+                disabled={!form.formState.isValid || isSubmitting}
+              >
+                Rechazar
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );
 }
+
+export default RejectionModal;

@@ -16,7 +16,7 @@ import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { FullPageLoader } from '@/components/ui/full-page-loader';
-import { disableTabHighlight } from '@/utils/ui-utils';
+//import { disableTabHighlight } from '@/utils/ui-utils';
 
 import {
   MainInfoCard,
@@ -83,10 +83,10 @@ export default function LoanRequestDetailPage() {
   const rejectByManagerMutation = useRejectByManager(apiClient!);
 
   // Efecto para eliminar el resaltado en las tabs cuando se presiona una tecla
-  useEffect(() => {
-    const { cleanup } = disableTabHighlight();
-    return cleanup;
-  }, []);
+  // useEffect(() => {
+  //   const { cleanup } = disableTabHighlight();
+  //   return cleanup;
+  // }, []);
 
   useEffect(() => {
     // Set error if there's a fetch error
