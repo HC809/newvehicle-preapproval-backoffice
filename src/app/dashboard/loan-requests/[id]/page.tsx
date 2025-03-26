@@ -253,13 +253,6 @@ export default function LoanRequestDetailPage() {
   const handleRejectionSubmit = async (rejectionReason: string) => {
     if (!loanRequestDetail) return;
 
-    setShowFullPageLoader(true);
-    setLoaderError(null);
-    setFullPageLoaderMessage('Procesando rechazo de la solicitud');
-    setFullPageLoaderSubMessage(
-      'Por favor espere mientras completamos el proceso.'
-    );
-
     try {
       if (isManagerRejection) {
         await rejectByManagerMutation.mutateAsync({
@@ -278,8 +271,6 @@ export default function LoanRequestDetailPage() {
       setShowRejectionModal(false);
     } catch (error: any) {
       toast.error(error.message || 'Error al rechazar la solicitud');
-    } finally {
-      setShowFullPageLoader(false);
     }
   };
 

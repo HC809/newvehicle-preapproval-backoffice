@@ -20,6 +20,7 @@ import {
   FormLabel,
   FormMessage
 } from '@/components/ui/form';
+import { Loader2 } from 'lucide-react';
 
 const FormSchema = z.object({
   rejectionReason: z.string().min(1, {
@@ -123,7 +124,9 @@ export function RejectionModal({
                 type='submit'
                 variant='destructive'
                 disabled={!form.formState.isValid || isSubmitting}
+                className='gap-2'
               >
+                {isSubmitting && <Loader2 className='h-4 w-4 animate-spin' />}
                 Rechazar
               </Button>
             </DialogFooter>
