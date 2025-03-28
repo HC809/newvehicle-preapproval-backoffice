@@ -5,8 +5,8 @@ export interface Client {
   lastRiskScore: number;
   city: string;
   email: string;
-  phone: string;
-  address: string;
+  phoneNumber: string;
+  residentialAddress: string;
   createdAt: string;
   updatedAt: string;
 }

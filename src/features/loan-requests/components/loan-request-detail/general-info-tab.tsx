@@ -22,12 +22,26 @@ export const GeneralInfoTab = ({
   loanRequest,
   client
 }: GeneralInfoTabProps) => {
-  const [copied, setCopied] = useState(false);
+  const [copiedDNI, setCopiedDNI] = useState(false);
+  const [copiedPhone, setCopiedPhone] = useState(false);
 
   const copyDNI = () => {
     navigator.clipboard.writeText(loanRequest.dni);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    setCopiedDNI(true);
+    setTimeout(() => setCopiedDNI(false), 2000);
+  };
+
+  const copyPhone = (phoneNumber: string) => {
+    navigator.clipboard.writeText(phoneNumber);
+    setCopiedPhone(true);
+    setTimeout(() => setCopiedPhone(false), 2000);
+  };
+
+  const formatPhoneNumber = (phoneNumber: string) => {
+    // Remove any non-digit characters
+    const cleaned = phoneNumber.replace(/\D/g, '');
+    // Format as XXXX-XXXX
+    return cleaned.replace(/(\d{4})(\d{4})/, '$1-$2');
   };
 
   return (
@@ -45,7 +59,7 @@ export const GeneralInfoTab = ({
             >
               <Copy className='h-3 w-3 text-gray-500' />
             </button>
-            {copied && (
+            {copiedDNI && (
               <span className='text-xs text-green-500'>¡Copiado!</span>
             )}
           </div>
@@ -98,23 +112,37 @@ export const GeneralInfoTab = ({
         <InfoItem
           icon={<span className='text-blue-500'>@</span>}
           label='Correo Electrónico'
-          value={client.email || 'No disponible'}
+          value={client.email}
         />
       )}
 
-      {client && client.phone && (
+      {client && client.phoneNumber && (
         <InfoItem
           icon={<span className='text-green-500'>📞</span>}
           label='Teléfono'
-          value={client.phone || 'No disponible'}
+          value={
+            <div className='flex items-center gap-2'>
+              <span>+504 {formatPhoneNumber(client.phoneNumber)}</span>
+              <button
+                onClick={() => copyPhone(client.phoneNumber)}
+                className='rounded-full p-1 hover:bg-gray-100 dark:hover:bg-gray-800'
+                title='Copiar teléfono'
+              >
+                <Copy className='h-3 w-3 text-gray-500' />
+              </button>
+              {copiedPhone && (
+                <span className='text-xs text-green-500'>¡Copiado!</span>
+              )}
+            </div>
+          }
         />
       )}
 
-      {client && client.address && (
+      {client && client.residentialAddress && (
         <InfoItem
           icon={<MapPin className='h-4 w-4 text-orange-500' />}
           label='Dirección'
-          value={client.address || 'No disponible'}
+          value={client.residentialAddress}
         />
       )}
 
