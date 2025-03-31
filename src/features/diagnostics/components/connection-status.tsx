@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
+import { CheckCircle, XCircle, AlertTriangle, Code } from 'lucide-react';
 
 interface SignalRConnectionStatusProps {
   minimal?: boolean;
@@ -10,10 +11,13 @@ interface SignalRConnectionStatusProps {
 export function SignalRConnectionStatus({
   minimal = false
 }: SignalRConnectionStatusProps) {
-  const [status, setStatus] = useState<string>('Checking connection...');
+  const [status, setStatus] = useState<string>('Verificando conexión...');
   const [connectionState, setConnectionState] = useState<string>('');
   const [showBackendSuggestions, setShowBackendSuggestions] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const [lastReconnectAttempt, setLastReconnectAttempt] = useState<Date | null>(
+    null
+  );
 
   useEffect(() => {
     setIsMounted(true);
@@ -33,7 +37,7 @@ export function SignalRConnectionStatus({
       const signalRConnection = (window as any).__signalrConnection;
 
       if (!signalRConnection) {
-        setStatus('No SignalR connection found');
+        setStatus('No se encontró conexión SignalR');
         setConnectionState('Disconnected');
         return;
       }
@@ -43,19 +47,20 @@ export function SignalRConnectionStatus({
       // Comprobar el estado de la conexión
       switch (signalRConnection.state) {
         case 'Connected':
-          setStatus('Connected successfully to SignalR hub');
+          setStatus('Conectado exitosamente al hub SignalR');
           break;
         case 'Disconnected':
-          setStatus('Disconnected from SignalR hub');
+          setStatus('Desconectado del hub SignalR');
           break;
         case 'Connecting':
-          setStatus('Connecting to SignalR hub...');
+          setStatus('Conectando al hub SignalR...');
           break;
         case 'Reconnecting':
-          setStatus('Reconnecting to SignalR hub...');
+          setStatus('Reconectando al hub SignalR...');
+          setLastReconnectAttempt(new Date());
           break;
         default:
-          setStatus(`SignalR connection state: ${signalRConnection.state}`);
+          setStatus(`Estado de conexión SignalR: ${signalRConnection.state}`);
       }
     };
 
@@ -65,9 +70,46 @@ export function SignalRConnectionStatus({
     // Configurar un intervalo para verificar el estado periódicamente
     const intervalId = setInterval(checkConnectionState, 5000);
 
+    // Intentar reconectar cuando se detecta que está desconectado
+    const reconnectIfNeeded = () => {
+      if (typeof window === 'undefined') return;
+
+      const signalRConnection = (window as any).__signalrConnection;
+      if (signalRConnection && signalRConnection.state === 'Disconnected') {
+        try {
+          signalRConnection.start();
+          setLastReconnectAttempt(new Date());
+        } catch (err) {
+          console.error('Error al intentar reconectar:', err);
+        }
+      }
+    };
+
     // Limpiar el intervalo cuando el componente se desmonte
     return () => clearInterval(intervalId);
   }, [isMounted]);
+
+  const handleReconnect = () => {
+    if (typeof window === 'undefined') return;
+
+    const signalRConnection = (window as any).__signalrConnection;
+    if (signalRConnection) {
+      try {
+        if (signalRConnection.state !== 'Connected') {
+          signalRConnection.start();
+          setLastReconnectAttempt(new Date());
+          setStatus('Intentando reconectar...');
+        }
+      } catch (err) {
+        console.error('Error al intentar reconectar:', err);
+        setStatus(
+          `Error al reconectar: ${err instanceof Error ? err.message : 'Error desconocido'}`
+        );
+      }
+    } else {
+      setStatus('No se encontró conexión SignalR para reconectar');
+    }
+  };
 
   // Información para desarrolladores sobre cómo implementar SignalR en su backend
   const backendCodeSuggestions = `
@@ -95,62 +137,101 @@ app.UseCors("SignalRClientPolicy");
 app.MapHub<NotificationsHub>("/notificationshub");
 `;
 
+  const getStatusIcon = () => {
+    if (connectionState === 'Connected') {
+      return (
+        <CheckCircle
+          className={
+            minimal ? 'h-4 w-4 text-green-500' : 'h-6 w-6 text-green-500'
+          }
+        />
+      );
+    } else if (
+      connectionState === 'Connecting' ||
+      connectionState === 'Reconnecting'
+    ) {
+      return (
+        <AlertTriangle
+          className={
+            minimal ? 'h-4 w-4 text-amber-500' : 'h-6 w-6 text-amber-500'
+          }
+        />
+      );
+    } else {
+      return (
+        <XCircle
+          className={minimal ? 'h-4 w-4 text-red-500' : 'h-6 w-6 text-red-500'}
+        />
+      );
+    }
+  };
+
+  const getStatusColor = () => {
+    if (connectionState === 'Connected') {
+      return 'text-green-700 dark:text-green-300 border-green-300 dark:border-green-800 bg-green-50 dark:bg-green-900/20';
+    } else if (
+      connectionState === 'Connecting' ||
+      connectionState === 'Reconnecting'
+    ) {
+      return 'text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20';
+    } else {
+      return 'text-red-700 dark:text-red-300 border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-900/20';
+    }
+  };
+
   if (minimal) {
     return (
-      <div className='flex items-center justify-between'>
-        <div className='space-y-0.5'>
-          <p className='text-sm font-medium'>Estado de Conexión SignalR</p>
-          <p className='text-xs text-muted-foreground'>{status}</p>
-        </div>
-        <div
-          className={`h-3 w-3 rounded-full ${
-            connectionState === 'Connected'
-              ? 'bg-green-500'
-              : connectionState === 'Connecting' ||
-                  connectionState === 'Reconnecting'
-                ? 'bg-yellow-500'
-                : 'bg-red-500'
-          }`}
-        />
+      <div className='flex items-center space-x-2'>
+        {getStatusIcon()}
+        <span className='text-sm'>{connectionState || 'Sin verificar'}</span>
       </div>
     );
   }
 
   return (
     <div className='space-y-4'>
-      <div className='flex items-center justify-between'>
-        <div className='space-y-0.5'>
-          <p className='text-sm font-medium'>Estado de Conexión SignalR</p>
-          <p className='text-xs text-muted-foreground'>{status}</p>
+      <div className={`rounded border p-4 ${getStatusColor()}`}>
+        <div className='mb-4 flex items-center space-x-3'>
+          {getStatusIcon()}
+          <h4 className='font-medium'>{status}</h4>
         </div>
-        <div
-          className={`h-3 w-3 rounded-full ${
-            connectionState === 'Connected'
-              ? 'bg-green-500'
-              : connectionState === 'Connecting' ||
-                  connectionState === 'Reconnecting'
-                ? 'bg-yellow-500'
-                : 'bg-red-500'
-          }`}
-        />
+
+        {lastReconnectAttempt && (
+          <div className='mb-2 text-sm text-black dark:text-white'>
+            <span className='font-medium'>Último intento de reconexión: </span>
+            {lastReconnectAttempt.toLocaleString()}
+          </div>
+        )}
+
+        <div className='mt-4 flex space-x-2'>
+          <Button
+            onClick={handleReconnect}
+            disabled={
+              connectionState === 'Connected' ||
+              connectionState === 'Connecting'
+            }
+            className='w-full'
+          >
+            Reconectar
+          </Button>
+
+          <Button
+            variant='outline'
+            size='icon'
+            onClick={() => setShowBackendSuggestions(!showBackendSuggestions)}
+            title={showBackendSuggestions ? 'Ocultar código' : 'Mostrar código'}
+          >
+            <Code className='h-4 w-4' />
+          </Button>
+        </div>
       </div>
 
-      <Button
-        variant='outline'
-        size='sm'
-        onClick={() => setShowBackendSuggestions(!showBackendSuggestions)}
-      >
-        {showBackendSuggestions
-          ? 'Ocultar código de backend'
-          : 'Mostrar sugerencias para backend'}
-      </Button>
-
       {showBackendSuggestions && (
-        <div className='max-h-60 overflow-auto rounded-md border border-slate-200 bg-slate-50 p-4'>
+        <div className='max-h-60 overflow-auto rounded-md border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800/50'>
           <h3 className='mb-2 text-sm font-medium'>
             Configuración recomendada para backend
           </h3>
-          <pre className='whitespace-pre-wrap font-mono text-xs'>
+          <pre className='whitespace-pre-wrap font-mono text-xs text-black dark:text-white'>
             {backendCodeSuggestions}
           </pre>
         </div>

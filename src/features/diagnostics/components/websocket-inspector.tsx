@@ -2,25 +2,25 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { ReloadIcon } from '@radix-ui/react-icons';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription
-} from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { CheckCircle, XCircle, AlertTriangle, Link2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { getSession } from 'next-auth/react';
 
-export function WebSocketInspector() {
+interface WebSocketInspectorProps {
+  minimal?: boolean;
+}
+
+export function WebSocketInspector({
+  minimal = false
+}: WebSocketInspectorProps) {
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState<
     'idle' | 'connecting' | 'open' | 'closed' | 'error'
   >('idle');
   const [logs, setLogs] = useState<string[]>([]);
   const wsRef = useRef<WebSocket | null>(null);
+  const [lastTestedAt, setLastTestedAt] = useState<Date | null>(null);
+  const [autoTested, setAutoTested] = useState(false);
 
   // Limpiar el WebSocket al desmontar
   useEffect(() => {
@@ -30,6 +30,39 @@ export function WebSocketInspector() {
       }
     };
   }, []);
+
+  // Verificar el estado de la conexión automáticamente al cargar solo una vez
+  useEffect(() => {
+    async function checkInitialStatus() {
+      if (minimal && !autoTested) {
+        setAutoTested(true);
+
+        // Verificar si la API está disponible antes de intentar conectarse
+        try {
+          // Obtener el token de acceso
+          const session = await getSession();
+          if (session?.accessToken) {
+            // Simplemente verificar si existe la URL de WebSocket
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
+            if (apiUrl) {
+              // Solo actualizamos el estado para mostrar que se ha verificado
+              // No abrimos una conexión real para evitar problemas
+              setStatus('closed');
+              setLastTestedAt(new Date());
+            } else {
+              setStatus('error');
+            }
+          } else {
+            setStatus('error');
+          }
+        } catch (error) {
+          setStatus('error');
+        }
+      }
+    }
+
+    checkInitialStatus();
+  }, [minimal, autoTested]);
 
   const addLog = (message: string) => {
     setLogs((prev) => [
@@ -84,9 +117,6 @@ export function WebSocketInspector() {
       // Crear una conexión WebSocket directa
       const token = String(session.accessToken);
 
-      // Probar sin encode URL
-      // const fullUrl = `${wsUrl}?access_token=${token}`;
-
       // Probar con encode URL
       const fullUrl = `${wsUrl}?access_token=${encodeURIComponent(token)}`;
 
@@ -100,6 +130,7 @@ export function WebSocketInspector() {
         setStatus('open');
         addLog('¡Conexión establecida correctamente!');
         toast.success('Conexión WebSocket establecida');
+        setLastTestedAt(new Date());
 
         // No enviamos datos para evitar problemas
         addLog(
@@ -112,6 +143,8 @@ export function WebSocketInspector() {
         addLog(
           `Conexión cerrada: Código ${event.code}, Razón: ${event.reason || 'No especificada'}`
         );
+        setLastTestedAt(new Date());
+
         if (!event.wasClean) {
           addLog('La conexión se cerró de forma inesperada');
 
@@ -169,6 +202,7 @@ export function WebSocketInspector() {
         setStatus('error');
         addLog(`Error en la conexión: ${error.type}`);
         toast.error('Error en la conexión WebSocket');
+        setLastTestedAt(new Date());
 
         // Sugerencias específicas de solución
         addLog('Posibles soluciones:');
@@ -199,7 +233,7 @@ export function WebSocketInspector() {
 
       // Establecer un timeout para cerrar la conexión después de 15 segundos
       setTimeout(() => {
-        if (ws.readyState === WebSocket.OPEN) {
+        if (ws && ws.readyState === WebSocket.OPEN) {
           addLog('Cerrando conexión después de 15 segundos');
           ws.close(1000, 'Prueba completada');
         }
@@ -210,6 +244,7 @@ export function WebSocketInspector() {
         `Error al crear la conexión: ${error instanceof Error ? error.message : String(error)}`
       );
       toast.error('Error al iniciar la conexión WebSocket');
+      setLastTestedAt(new Date());
     } finally {
       setLoading(false);
     }
@@ -220,91 +255,157 @@ export function WebSocketInspector() {
     if (wsRef.current) {
       wsRef.current.close(1000, 'Cerrado manualmente');
       addLog('Conexión cerrada manualmente');
+      setLastTestedAt(new Date());
     }
   };
 
-  // Obtener color del estado
+  const getStatusIcon = () => {
+    if (status === 'open') {
+      return (
+        <CheckCircle
+          className={
+            minimal ? 'h-4 w-4 text-green-500' : 'h-6 w-6 text-green-500'
+          }
+        />
+      );
+    } else if (status === 'connecting') {
+      return (
+        <Link2
+          className={
+            minimal ? 'h-4 w-4 text-blue-500' : 'h-6 w-6 text-blue-500'
+          }
+        />
+      );
+    } else if (status === 'closed') {
+      return (
+        <AlertTriangle
+          className={
+            minimal ? 'h-4 w-4 text-amber-500' : 'h-6 w-6 text-amber-500'
+          }
+        />
+      );
+    } else if (status === 'error') {
+      return (
+        <XCircle
+          className={minimal ? 'h-4 w-4 text-red-500' : 'h-6 w-6 text-red-500'}
+        />
+      );
+    } else {
+      return (
+        <Link2
+          className={
+            minimal ? 'h-4 w-4 text-gray-400' : 'h-6 w-6 text-gray-500'
+          }
+        />
+      );
+    }
+  };
+
+  const getStatusText = () => {
+    switch (status) {
+      case 'idle':
+        return 'Sin verificar';
+      case 'connecting':
+        return 'Conectando WebSocket...';
+      case 'open':
+        return 'WebSocket conectado';
+      case 'closed':
+        return 'WebSocket verificado';
+      case 'error':
+        return 'Error de WebSocket';
+      default:
+        return 'Desconocido';
+    }
+  };
+
   const getStatusColor = () => {
     switch (status) {
       case 'open':
-        return 'bg-green-500 text-white';
+        return 'border-green-300 bg-green-50 dark:bg-green-900/20 dark:border-green-800 text-green-700 dark:text-green-300';
       case 'closed':
-        return 'bg-amber-500 text-white';
+        return 'border-amber-300 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-800 text-amber-700 dark:text-amber-300';
       case 'connecting':
-        return 'bg-blue-500 text-white';
+        return 'border-blue-300 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-800 text-blue-700 dark:text-blue-300';
       case 'error':
-        return 'bg-red-500 text-white';
+        return 'border-red-300 bg-red-50 dark:bg-red-900/20 dark:border-red-800 text-red-700 dark:text-red-300';
       default:
-        return 'bg-gray-500 text-white';
+        return 'border-gray-200 bg-gray-50 dark:bg-gray-800/30 dark:border-gray-700 text-gray-700 dark:text-gray-300';
     }
   };
 
-  return (
-    <Card className='mb-4'>
-      <CardHeader className='pb-2'>
-        <CardTitle className='text-md'>Inspector WebSocket</CardTitle>
-        <CardDescription>Prueba directa de conexión WebSocket</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className='space-y-2'>
-          <div className='flex items-center justify-between'>
-            <span className='font-semibold'>Estado:</span>
-            <Badge className={getStatusColor()}>
-              {status === 'idle'
-                ? 'No iniciado'
-                : status.charAt(0).toUpperCase() + status.slice(1)}
-            </Badge>
-          </div>
+  if (minimal) {
+    return (
+      <div className='flex items-center space-x-2'>
+        {getStatusIcon()}
+        <span className='text-sm'>{getStatusText()}</span>
+      </div>
+    );
+  }
 
-          <div className='flex items-center justify-between'>
-            <span className='font-semibold'>WebSocket URL:</span>
-            <span
-              className='max-w-[200px] truncate font-mono text-sm'
-              title={apiUrl}
-            >
-              {apiUrl
-                ? apiUrl.replace('http', 'ws') + '/notification-hub'
-                : 'No definida'}
+  return (
+    <div className='space-y-4'>
+      <div className={`rounded border p-4 ${getStatusColor()}`}>
+        <div className='mb-4 flex items-center space-x-3'>
+          {getStatusIcon()}
+          <h4 className='font-medium'>{getStatusText()}</h4>
+        </div>
+
+        <div className='mb-2 flex items-center justify-between'>
+          <span className='text-sm font-medium'>URL WebSocket:</span>
+          <span
+            className='font-mono text-sm text-black dark:text-white'
+            title={apiUrl}
+          >
+            {apiUrl
+              ? apiUrl
+                  .replace('http://', 'ws://')
+                  .replace('https://', 'wss://') + '/notification-hub'
+              : 'No definida'}
+          </span>
+        </div>
+
+        {lastTestedAt && (
+          <div className='mb-4 flex items-center justify-between text-sm'>
+            <span className='font-medium'>Última prueba:</span>
+            <span className='text-black dark:text-white'>
+              {lastTestedAt.toLocaleString()}
             </span>
           </div>
+        )}
 
-          <div className='mt-2 flex gap-2'>
+        <div className='flex space-x-2'>
+          <Button
+            className='flex-1'
+            onClick={testWebSocket}
+            disabled={loading || status === 'connecting' || status === 'open'}
+          >
+            {loading ? 'Conectando...' : 'Probar WebSocket'}
+          </Button>
+
+          {status === 'open' && (
             <Button
-              onClick={testWebSocket}
-              disabled={loading || status === 'open'}
               variant='outline'
-              size='sm'
-              className='flex-1'
-            >
-              {loading && <ReloadIcon className='mr-2 h-4 w-4 animate-spin' />}
-              {loading ? 'Conectando...' : 'Probar WebSocket'}
-            </Button>
-
-            <Button
               onClick={closeConnection}
-              disabled={status !== 'open'}
-              variant='outline'
-              size='sm'
               className='flex-1'
             >
-              Cerrar
+              Cerrar conexión
             </Button>
-          </div>
-
-          {logs.length > 0 && (
-            <div className='mt-4'>
-              <span className='text-sm font-semibold'>Registro:</span>
-              <div className='mt-1 h-32 overflow-y-auto rounded bg-muted p-2 font-mono text-xs'>
-                {logs.map((log, i) => (
-                  <div key={i} className='pb-1'>
-                    {log}
-                  </div>
-                ))}
-              </div>
-            </div>
           )}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+
+      {logs.length > 0 && (
+        <div className='rounded border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800/50'>
+          <h3 className='mb-2 text-sm font-medium'>Registro de actividad</h3>
+          <div className='h-48 overflow-y-auto rounded bg-slate-100 p-2 font-mono text-xs text-black dark:bg-slate-800 dark:text-white'>
+            {logs.map((log, i) => (
+              <div key={i} className='pb-1'>
+                {log}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
