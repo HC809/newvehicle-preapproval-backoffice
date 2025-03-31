@@ -9,12 +9,12 @@ import {
 import NotificationList from '@/features/notifications/components/notification-list';
 import { AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { SignalRConnectionStatus } from '@/features/notifications/components/connection-status';
-import { ApiConnectivityTest } from '@/features/notifications/components/api-status';
-import { TokenValidator } from '@/features/notifications/components/token-validator';
-import { NegotiateTester } from '@/features/notifications/components/negotiate-tester';
-import { WebSocketInspector } from '@/features/notifications/components/websocket-inspector';
-import { HttpTester } from '@/features/notifications/components/http-tester';
+import { SignalRConnectionStatus } from '@/features/diagnostics/components/connection-status';
+import { ApiConnectivityTest } from '@/features/diagnostics/components/api-status';
+import { TokenValidator } from '@/features/diagnostics/components/token-validator';
+import { NegotiateTester } from '@/features/diagnostics/components/negotiate-tester';
+import { WebSocketInspector } from '@/features/diagnostics/components/websocket-inspector';
+import { HttpTester } from '@/features/diagnostics/components/http-tester';
 import useAxios from '@/hooks/use-axios';
 
 export default function NotificationsPage() {

@@ -12,12 +12,12 @@ import {
   CardTitle
 } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { SignalRConnectionStatus } from '@/features/notifications/components/connection-status';
-import { ApiConnectivityTest } from '@/features/notifications/components/api-status';
-import { WebSocketInspector } from '@/features/notifications/components/websocket-inspector';
-import { TokenValidator } from '@/features/notifications/components/token-validator';
-import { NegotiateTester } from '@/features/notifications/components/negotiate-tester';
-import { HttpTester } from '@/features/notifications/components/http-tester';
+import { SignalRConnectionStatus } from '@/features/diagnostics/components/connection-status';
+import { ApiConnectivityTest } from '@/features/diagnostics/components/api-status';
+import { WebSocketInspector } from '@/features/diagnostics/components/websocket-inspector';
+import { TokenValidator } from '@/features/diagnostics/components/token-validator';
+import { NegotiateTester } from '@/features/diagnostics/components/negotiate-tester';
+import { HttpTester } from '@/features/diagnostics/components/http-tester';
 
 export default function DiagnosticsPage() {
   const [activeTab, setActiveTab] = useState('overview');
