@@ -19,8 +19,6 @@ export const useNotifications = (
     queryKey: [NOTIFICATIONS_KEY, 'all'],
     queryFn: async (): Promise<LoanNotification[]> => {
       if (!apiClient) throw new Error('API client not initialized');
-
-      console.log(`Fetching all notifications from: ${NOTIFICATION_ENDPOINT}`);
       const response = await apiClient.get<LoanNotification[]>(
         NOTIFICATION_ENDPOINT
       );
@@ -29,7 +27,11 @@ export const useNotifications = (
         type: notification.type as LoanNotification['type']
       }));
     },
-    enabled: !!apiClient && enabled
+    enabled: !!apiClient && enabled,
+    refetchInterval: 15000, // Refetch every 15 seconds
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
+    staleTime: 10000 // Consider data stale after 10 seconds
   });
 };
 
@@ -42,10 +44,6 @@ export const useUnreadNotifications = (
     queryKey: [NOTIFICATIONS_KEY, 'unread'],
     queryFn: async (): Promise<LoanNotification[]> => {
       if (!apiClient) throw new Error('API client not initialized');
-
-      console.log(
-        `Fetching unread notifications from: ${NOTIFICATION_ENDPOINT}/unread`
-      );
       const response = await apiClient.get<LoanNotification[]>(
         `${NOTIFICATION_ENDPOINT}/unread`
       );
@@ -58,42 +56,6 @@ export const useUnreadNotifications = (
   });
 };
 
-// Eliminar una notificación
-export const useDeleteNotification = (
-  apiClient: AxiosInstance | undefined
-): UseMutationResult<void, Error, string> => {
-  return useMutation({
-    mutationKey: [NOTIFICATIONS_KEY, 'delete'],
-    mutationFn: async (notificationId: string): Promise<void> => {
-      if (!apiClient) throw new Error('API client not initialized');
-
-      console.log(
-        `Deleting notification at: ${NOTIFICATION_ENDPOINT}/${notificationId}`
-      );
-      await apiClient.delete(`${NOTIFICATION_ENDPOINT}/${notificationId}`);
-    }
-  });
-};
-
-// Marcar una notificación como leída
-export const useMarkAsRead = (
-  apiClient: AxiosInstance | undefined
-): UseMutationResult<void, Error, string> => {
-  return useMutation({
-    mutationKey: [NOTIFICATIONS_KEY, 'markAsRead'],
-    mutationFn: async (notificationId: string): Promise<void> => {
-      if (!apiClient) throw new Error('API client not initialized');
-
-      console.log(
-        `Marking notification as read at: ${NOTIFICATION_ENDPOINT}/${notificationId}/mark-as-read`
-      );
-      await apiClient.put(
-        `${NOTIFICATION_ENDPOINT}/${notificationId}/mark-as-read`
-      );
-    }
-  });
-};
-
 // Marcar todas las notificaciones como leídas
 export const useMarkAllAsRead = (
   apiClient: AxiosInstance | undefined
@@ -102,10 +64,6 @@ export const useMarkAllAsRead = (
     mutationKey: [NOTIFICATIONS_KEY, 'markAllAsRead'],
     mutationFn: async (): Promise<void> => {
       if (!apiClient) throw new Error('API client not initialized');
-
-      console.log(
-        `Marking all notifications as read at: ${NOTIFICATION_ENDPOINT}/mark-all-as-read`
-      );
       await apiClient.put(`${NOTIFICATION_ENDPOINT}/mark-all-as-read`);
     }
   });
