@@ -5,30 +5,28 @@ import {
   UseMutationResult
 } from '@tanstack/react-query';
 import { AxiosInstance } from 'axios';
-import { Notification } from '../types';
+import { LoanNotification } from '../../../../types/Notifications';
 
 const NOTIFICATIONS_KEY = 'notifications';
-// NOTA: Asegúrese de que esta ruta coincida con la configuración de su backend
-// Si el backend espera /notifications en lugar de /api/notifications, ajuste este valor
 const NOTIFICATION_ENDPOINT = '/notifications';
 
 // Obtener todas las notificaciones
 export const useNotifications = (
   apiClient: AxiosInstance | undefined,
   enabled: boolean = true
-): UseQueryResult<Notification[], Error> => {
+): UseQueryResult<LoanNotification[], Error> => {
   return useQuery({
     queryKey: [NOTIFICATIONS_KEY, 'all'],
-    queryFn: async (): Promise<Notification[]> => {
+    queryFn: async (): Promise<LoanNotification[]> => {
       if (!apiClient) throw new Error('API client not initialized');
 
       console.log(`Fetching all notifications from: ${NOTIFICATION_ENDPOINT}`);
-      const response = await apiClient.get<Notification[]>(
+      const response = await apiClient.get<LoanNotification[]>(
         NOTIFICATION_ENDPOINT
       );
       return response.data.map((notification) => ({
         ...notification,
-        type: notification.type as Notification['type']
+        type: notification.type as LoanNotification['type']
       }));
     },
     enabled: !!apiClient && enabled
@@ -39,24 +37,41 @@ export const useNotifications = (
 export const useUnreadNotifications = (
   apiClient: AxiosInstance | undefined,
   enabled: boolean = true
-): UseQueryResult<Notification[], Error> => {
+): UseQueryResult<LoanNotification[], Error> => {
   return useQuery({
     queryKey: [NOTIFICATIONS_KEY, 'unread'],
-    queryFn: async (): Promise<Notification[]> => {
+    queryFn: async (): Promise<LoanNotification[]> => {
       if (!apiClient) throw new Error('API client not initialized');
 
       console.log(
         `Fetching unread notifications from: ${NOTIFICATION_ENDPOINT}/unread`
       );
-      const response = await apiClient.get<Notification[]>(
+      const response = await apiClient.get<LoanNotification[]>(
         `${NOTIFICATION_ENDPOINT}/unread`
       );
       return response.data.map((notification) => ({
         ...notification,
-        type: notification.type as Notification['type']
+        type: notification.type as LoanNotification['type']
       }));
     },
     enabled: !!apiClient && enabled
+  });
+};
+
+// Eliminar una notificación
+export const useDeleteNotification = (
+  apiClient: AxiosInstance | undefined
+): UseMutationResult<void, Error, string> => {
+  return useMutation({
+    mutationKey: [NOTIFICATIONS_KEY, 'delete'],
+    mutationFn: async (notificationId: string): Promise<void> => {
+      if (!apiClient) throw new Error('API client not initialized');
+
+      console.log(
+        `Deleting notification at: ${NOTIFICATION_ENDPOINT}/${notificationId}`
+      );
+      await apiClient.delete(`${NOTIFICATION_ENDPOINT}/${notificationId}`);
+    }
   });
 };
 

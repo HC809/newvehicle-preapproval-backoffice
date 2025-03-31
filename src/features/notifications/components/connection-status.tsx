@@ -1,212 +1,160 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { ReloadIcon } from '@radix-ui/react-icons';
-import { getSession } from 'next-auth/react';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription
-} from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import notificationService from '../SignalRNotificationService';
-import { toast } from 'sonner';
 
-/**
- * Componente para depurar la conexión SignalR.
- * Muestra el estado de la conexión y permite realizar acciones.
- * SOLO PARA DESARROLLO - Quítalo en producción.
- */
-export function SignalRConnectionStatus() {
-  const [connectionState, setConnectionState] = useState('Disconnected');
-  const [connectionId, setConnectionId] = useState<string | null>(null);
-  const [reconnecting, setReconnecting] = useState(false);
-  const [apiUrl, setApiUrl] = useState('');
-  const [lastUpdate, setLastUpdate] = useState(new Date());
+interface SignalRConnectionStatusProps {
+  minimal?: boolean;
+}
+
+export function SignalRConnectionStatus({
+  minimal = false
+}: SignalRConnectionStatusProps) {
+  const [status, setStatus] = useState<string>('Checking connection...');
+  const [connectionState, setConnectionState] = useState<string>('');
   const [showBackendSuggestions, setShowBackendSuggestions] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
 
-  // Actualizar el estado de la conexión cada segundo
   useEffect(() => {
-    const interval = setInterval(() => {
-      // Obtener el estado actual de la conexión
-      const state = notificationService.getConnectionState();
-      setConnectionState(state);
-
-      // Obtener el ID de conexión actual
-      const id = notificationService.getConnectionId();
-      setConnectionId(id);
-
-      // Obtener la URL base de la API
-      const url = notificationService.getApiUrl();
-      setApiUrl(url);
-
-      // Actualizar la hora de última verificación
-      setLastUpdate(new Date());
-    }, 1000);
-
-    return () => clearInterval(interval);
+    setIsMounted(true);
+    return () => {
+      setIsMounted(false);
+    };
   }, []);
 
-  // Función para reconectar manualmente
-  const handleReconnect = async () => {
-    try {
-      setReconnecting(true);
-      toast.info('Intentando reconectar a SignalR...');
+  // Este efecto obtiene el estado de la conexión
+  useEffect(() => {
+    if (!isMounted) return;
 
-      // Obtener el token de acceso
-      const session = await getSession();
-      if (!session?.accessToken) {
-        console.error('No hay token de acceso disponible');
-        toast.error('No hay token de acceso disponible para reconectar');
+    const checkConnectionState = () => {
+      if (typeof window === 'undefined') return;
+
+      // Verificar si existe la conexión SignalR en el window
+      const signalRConnection = (window as any).__signalrConnection;
+
+      if (!signalRConnection) {
+        setStatus('No SignalR connection found');
+        setConnectionState('Disconnected');
         return;
       }
 
-      // Intentar reconectar
-      await notificationService.reconnect();
-      toast.success('Reconexión exitosa');
-    } catch (error) {
-      console.error('Error al reconectar:', error);
-      toast.error(
-        'Error al reconectar: ' +
-          (error instanceof Error ? error.message : String(error))
-      );
-    } finally {
-      setReconnecting(false);
-    }
-  };
+      setConnectionState(signalRConnection.state);
 
-  // Función para determinar el color del estado
-  const getStateColor = () => {
-    switch (connectionState) {
-      case 'Connected':
-        return 'bg-green-500 text-white';
-      case 'Disconnected':
-        return 'bg-red-500 text-white';
-      case 'Connecting':
-      case 'Reconnecting':
-        return 'bg-yellow-500 text-white';
-      default:
-        return 'bg-gray-500 text-white';
-    }
-  };
+      // Comprobar el estado de la conexión
+      switch (signalRConnection.state) {
+        case 'Connected':
+          setStatus('Connected successfully to SignalR hub');
+          break;
+        case 'Disconnected':
+          setStatus('Disconnected from SignalR hub');
+          break;
+        case 'Connecting':
+          setStatus('Connecting to SignalR hub...');
+          break;
+        case 'Reconnecting':
+          setStatus('Reconnecting to SignalR hub...');
+          break;
+        default:
+          setStatus(`SignalR connection state: ${signalRConnection.state}`);
+      }
+    };
 
-  // Recomendaciones para el código del backend
+    // Verificar el estado inicial
+    checkConnectionState();
+
+    // Configurar un intervalo para verificar el estado periódicamente
+    const intervalId = setInterval(checkConnectionState, 5000);
+
+    // Limpiar el intervalo cuando el componente se desmonte
+    return () => clearInterval(intervalId);
+  }, [isMounted]);
+
+  // Información para desarrolladores sobre cómo implementar SignalR en su backend
   const backendCodeSuggestions = `
-// Asegúrate de que la política CORS correcta está siendo aplicada al hub
+// Configuración recomendada para el backend .NET:
+
+// 1. Configura CORS adecuadamente para permitir la conexión WebSocket
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("CorsPolicy", policy =>
+    options.AddPolicy("SignalRClientPolicy", policy =>
     {
-        policy.WithOrigins(
-                "http://localhost:3000",  // Origen exacto del frontend
-                "https://localhost:3000"
-            )
-            .AllowAnyMethod()
-            .AllowAnyHeader()
-            .AllowCredentials();  // Crucial para WebSockets
+        policy.WithOrigins("http://localhost:3000") // Agrega tu origen del frontend
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials(); // Importante para WebSockets
     });
 });
 
-// Asegúrate de que estás aplicando la política CORS al hub
-app.UseCors("CorsPolicy");  // Esto es crucial, debe ir ANTES de app.MapHub
+// 2. Configura SignalR
+builder.Services.AddSignalR();
 
-// Y luego mapea tu hub
-app.MapHub<notification-hub>("/notification-hub");
+// 3. En el método Configure, aplica CORS ANTES de MapHub
+app.UseCors("SignalRClientPolicy");
 
-// Opcional: Configura SignalR con opciones adicionales
-builder.Services.AddSignalR(options =>
-{
-    options.EnableDetailedErrors = true;
-    options.KeepAliveInterval = TimeSpan.FromSeconds(15);
-    options.ClientTimeoutInterval = TimeSpan.FromSeconds(30);
-});
+// 4. Mapea tu hub de SignalR
+app.MapHub<NotificationsHub>("/notificationshub");
 `;
 
-  return (
-    <Card className='mb-4'>
-      <CardHeader className='pb-2'>
-        <CardTitle className='text-md'>Estado de la Conexión SignalR</CardTitle>
-        <CardDescription>Diagnóstico para desarrolladores</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className='space-y-2'>
-          <div className='flex items-center justify-between'>
-            <span className='font-semibold'>Estado:</span>
-            <Badge className={getStateColor()}>{connectionState}</Badge>
-          </div>
-
-          <div className='flex items-center justify-between'>
-            <span className='font-semibold'>ID de Conexión:</span>
-            <span className='font-mono text-sm'>
-              {connectionId || 'Sin conexión'}
-            </span>
-          </div>
-
-          <div className='flex items-center justify-between'>
-            <span className='font-semibold'>API URL:</span>
-            <span
-              className='max-w-[200px] truncate font-mono text-sm'
-              title={apiUrl}
-            >
-              {apiUrl || 'No definida'}
-            </span>
-          </div>
-
-          <div className='flex items-center justify-between'>
-            <span className='font-semibold'>Endpoint:</span>
-            <span className='max-w-[200px] truncate font-mono text-sm'>
-              {apiUrl ? apiUrl + '/notification-hub' : 'No definido'}
-            </span>
-          </div>
-
-          <div className='flex items-center justify-between'>
-            <span className='font-semibold'>Última verificación:</span>
-            <span className='font-mono text-sm'>
-              {lastUpdate.toLocaleTimeString()}
-            </span>
-          </div>
-
-          <div className='mt-2 flex gap-2'>
-            <Button
-              onClick={handleReconnect}
-              disabled={reconnecting || connectionState === 'Connected'}
-              variant='outline'
-              size='sm'
-              className='flex-1'
-            >
-              {reconnecting && (
-                <ReloadIcon className='mr-2 h-4 w-4 animate-spin' />
-              )}
-              {reconnecting ? 'Reconectando...' : 'Reconectar'}
-            </Button>
-
-            <Button
-              onClick={() => setShowBackendSuggestions(!showBackendSuggestions)}
-              variant='outline'
-              size='sm'
-              className='flex-1'
-            >
-              {showBackendSuggestions
-                ? 'Ocultar sugerencias'
-                : 'Ver sugerencias backend'}
-            </Button>
-          </div>
-
-          {showBackendSuggestions && (
-            <div className='mt-4'>
-              <div className='mb-1 text-sm font-semibold'>
-                Sugerencias para el backend:
-              </div>
-              <div className='max-h-48 overflow-auto rounded bg-muted p-2 font-mono text-xs'>
-                <pre>{backendCodeSuggestions}</pre>
-              </div>
-            </div>
-          )}
+  if (minimal) {
+    return (
+      <div className='flex items-center justify-between'>
+        <div className='space-y-0.5'>
+          <p className='text-sm font-medium'>Estado de Conexión SignalR</p>
+          <p className='text-xs text-muted-foreground'>{status}</p>
         </div>
-      </CardContent>
-    </Card>
+        <div
+          className={`h-3 w-3 rounded-full ${
+            connectionState === 'Connected'
+              ? 'bg-green-500'
+              : connectionState === 'Connecting' ||
+                  connectionState === 'Reconnecting'
+                ? 'bg-yellow-500'
+                : 'bg-red-500'
+          }`}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div className='space-y-4'>
+      <div className='flex items-center justify-between'>
+        <div className='space-y-0.5'>
+          <p className='text-sm font-medium'>Estado de Conexión SignalR</p>
+          <p className='text-xs text-muted-foreground'>{status}</p>
+        </div>
+        <div
+          className={`h-3 w-3 rounded-full ${
+            connectionState === 'Connected'
+              ? 'bg-green-500'
+              : connectionState === 'Connecting' ||
+                  connectionState === 'Reconnecting'
+                ? 'bg-yellow-500'
+                : 'bg-red-500'
+          }`}
+        />
+      </div>
+
+      <Button
+        variant='outline'
+        size='sm'
+        onClick={() => setShowBackendSuggestions(!showBackendSuggestions)}
+      >
+        {showBackendSuggestions
+          ? 'Ocultar código de backend'
+          : 'Mostrar sugerencias para backend'}
+      </Button>
+
+      {showBackendSuggestions && (
+        <div className='max-h-60 overflow-auto rounded-md border border-slate-200 bg-slate-50 p-4'>
+          <h3 className='mb-2 text-sm font-medium'>
+            Configuración recomendada para backend
+          </h3>
+          <pre className='whitespace-pre-wrap font-mono text-xs'>
+            {backendCodeSuggestions}
+          </pre>
+        </div>
+      )}
+    </div>
   );
 }

@@ -34,7 +34,8 @@ import {
   PercentIcon,
   X,
   List,
-  Users
+  Users,
+  Terminal
 } from 'lucide-react';
 
 export type Icon = LucideIcon;
@@ -73,6 +74,7 @@ export const Icons = {
   requests: List,
   tasas: PercentIcon,
   clients: Users,
+  terminal: Terminal,
   gitHub: ({ ...props }: LucideProps) => (
     <svg
       aria-hidden='true'

@@ -12,13 +12,12 @@ import {
 import { Bell, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
+import { LoanNotificationType } from 'types/Notifications';
 
 export default function Notifications() {
   const {
     unreadCount,
     notifications,
-    markAsRead,
-    markAllAsRead,
     refreshNotifications,
     isLoading,
     hasError
@@ -86,16 +85,6 @@ export default function Notifications() {
                 className={cn('h-4 w-4', refreshing && 'animate-spin')}
               />
             </Button>
-            {unreadCount > 0 && (
-              <Button
-                onClick={() => markAllAsRead()}
-                variant='ghost'
-                className='h-auto py-1 text-xs'
-                disabled={refreshing}
-              >
-                Marcar todas
-              </Button>
-            )}
             <Link
               href='/dashboard/notifications'
               className='text-xs text-blue-600 hover:text-blue-800'
@@ -109,7 +98,10 @@ export default function Notifications() {
           {isLoading && !refreshing ? (
             <div className='space-y-2 p-4'>
               {[...Array(3)].map((_, i) => (
-                <div key={i} className='flex animate-pulse flex-col gap-2'>
+                <div
+                  key={`loading-skeleton-${i}`}
+                  className='flex animate-pulse flex-col gap-2'
+                >
                   <div className='h-4 w-3/4 rounded bg-muted/50'></div>
                   <div className='h-2 w-1/2 rounded bg-muted/30'></div>
                   <div className='h-3 w-full rounded bg-muted/40'></div>
@@ -140,12 +132,14 @@ export default function Notifications() {
                 <div
                   key={notification.id}
                   className={cn(
-                    'cursor-pointer border-b p-4 last:border-b-0 hover:bg-muted/50',
-                    notification.type === 'error' && 'bg-destructive/10',
-                    notification.type === 'warning' && 'bg-yellow-50/20',
-                    notification.type === 'success' && 'bg-green-50/20'
+                    'border-b p-4 last:border-b-0 hover:bg-muted/50',
+                    notification.type === LoanNotificationType.System &&
+                      'bg-destructive/10',
+                    notification.type === LoanNotificationType.StatusChanged &&
+                      'bg-yellow-50/20',
+                    notification.type === LoanNotificationType.Message &&
+                      'bg-green-50/20'
                   )}
-                  onClick={() => markAsRead(notification.id)}
                 >
                   <div className='flex flex-col gap-1'>
                     <h4 className='font-medium'>{notification.title}</h4>

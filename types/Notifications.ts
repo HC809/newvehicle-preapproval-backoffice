@@ -1,10 +1,14 @@
-export type NotificationType = 'info' | 'success' | 'error' | 'warning';
+export enum LoanNotificationType {
+  StatusChanged = 'StatusChanged',
+  Message = 'Message',
+  System = 'System'
+}
 
-export interface Notification {
+export interface LoanNotification {
   id: string;
   title: string;
   message: string;
-  type: NotificationType;
+  type: LoanNotificationType;
   userToNotifyId?: string;
   expiredAt?: string;
   isRead: boolean;
@@ -13,11 +17,11 @@ export interface Notification {
   metadata?: Record<string, any>;
 }
 
-export interface NotificationResponse {
+export interface LoanNotificationResponse {
   id: string;
   title: string;
   message: string;
-  type: string;
+  type: LoanNotificationType;
   userToNotifyId: string;
   expiredAt?: string;
   isRead: boolean;

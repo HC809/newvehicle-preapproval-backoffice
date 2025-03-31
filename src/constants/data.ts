@@ -1,5 +1,8 @@
 import { NavItem } from 'types';
 
+// Determinar si estamos en modo de desarrollo
+const isDevelopment = process.env.NODE_ENV === 'development';
+
 //Info: The following data is used for the sidebar navigation and Cmd K bar.
 export const navItems: NavItem[] = [
   {
@@ -23,6 +26,14 @@ export const navItems: NavItem[] = [
     url: '/dashboard/clients',
     icon: 'clients',
     shortcut: ['u', 'u'],
+    isActive: false,
+    items: []
+  },
+  {
+    title: 'Diagnósticos',
+    url: '/dashboard/diagnostics',
+    icon: 'terminal',
+    shortcut: ['d', 'g'],
     isActive: false,
     items: []
   }

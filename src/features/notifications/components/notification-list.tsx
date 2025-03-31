@@ -1,17 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Notification } from '../types';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@/components/ui/select';
 import {
   Pagination,
   PaginationContent,
@@ -20,33 +11,33 @@ import {
   PaginationNext,
   PaginationPrevious
 } from '@/components/ui/pagination';
-import { Check, MoreHorizontal, Trash } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { MoreHorizontal, Trash } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
+import { Button } from '@/components/ui/button';
+import {
+  LoanNotification,
+  LoanNotificationType
+} from '../../../../types/Notifications';
 
-interface NotificationListProps {
-  notifications: Notification[];
+export interface NotificationListProps {
+  notifications: LoanNotification[];
   isLoading: boolean;
-  onMarkAsRead: (id: string) => void;
-  onMarkAllAsRead: () => void;
-  onDeleteNotification?: (id: string) => void;
+  onDelete?: (id: string) => void;
+  error?: Error | null;
 }
 
 export default function NotificationList({
   notifications,
   isLoading,
-  onMarkAsRead,
-  onMarkAllAsRead,
-  onDeleteNotification
+  onDelete,
+  error
 }: NotificationListProps) {
   const [currentPage, setCurrentPage] = useState(1);
-  const [filter, setFilter] = useState<'all' | 'unread' | 'read'>('all');
-  const [typeFilter, setTypeFilter] = useState<string>('all');
 
   const itemsPerPage = 10;
 
@@ -73,89 +64,41 @@ export default function NotificationList({
     });
   };
 
-  // Filtrar las notificaciones
-  const filteredNotifications = notifications.filter((notification) => {
-    // Filtro por estado (leído/no leído)
-    if (filter === 'read' && !notification.isRead) return false;
-    if (filter === 'unread' && notification.isRead) return false;
-
-    // Filtro por tipo
-    if (typeFilter !== 'all' && notification.type !== typeFilter) return false;
-
-    return true;
-  });
+  // Función para obtener el nombre legible del tipo de notificación
+  const getNotificationTypeName = (type: LoanNotificationType): string => {
+    switch (type) {
+      case LoanNotificationType.StatusChanged:
+        return 'Estado Cambiado';
+      case LoanNotificationType.Message:
+        return 'Mensaje';
+      case LoanNotificationType.System:
+        return 'Sistema';
+      default:
+        return type;
+    }
+  };
 
   // Paginar las notificaciones
-  const totalPages = Math.ceil(filteredNotifications.length / itemsPerPage);
-  const paginatedNotifications = filteredNotifications.slice(
+  const totalPages = Math.ceil(notifications.length / itemsPerPage);
+  const paginatedNotifications = notifications.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
 
-  // Obtener tipos únicos de notificaciones
-  const uniqueTypes = Array.from(new Set(notifications.map((n) => n.type)));
-
   return (
     <div className='space-y-6'>
-      <div className='flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center'>
-        <div className='flex flex-wrap gap-2'>
-          <Select
-            value={filter}
-            onValueChange={(value) => {
-              setFilter(value as 'all' | 'unread' | 'read');
-              setCurrentPage(1);
-            }}
-          >
-            <SelectTrigger className='w-[180px]'>
-              <SelectValue placeholder='Filtrar por estado' />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value='all'>Todas</SelectItem>
-              <SelectItem value='unread'>No leídas</SelectItem>
-              <SelectItem value='read'>Leídas</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Select
-            value={typeFilter}
-            onValueChange={(value) => {
-              setTypeFilter(value);
-              setCurrentPage(1);
-            }}
-          >
-            <SelectTrigger className='w-[180px]'>
-              <SelectValue placeholder='Filtrar por tipo' />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value='all'>Todos los tipos</SelectItem>
-              {uniqueTypes.map((type) => (
-                <SelectItem key={type} value={type}>
-                  {type.charAt(0).toUpperCase() + type.slice(1)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        {filter === 'unread' && (
-          <Button
-            variant='outline'
-            onClick={onMarkAllAsRead}
-            disabled={!filteredNotifications.some((n) => !n.isRead)}
-          >
-            Marcar todas como leídas
-          </Button>
-        )}
-      </div>
-
       {isLoading ? (
         <div className='space-y-4'>
           {[...Array(3)].map((_, i) => (
-            <Card key={i} className='animate-pulse'>
+            <Card key={`loading-skeleton-${i}`} className='animate-pulse'>
               <CardHeader className='h-20 bg-muted/20'></CardHeader>
               <CardContent className='h-12 bg-muted/10'></CardContent>
             </Card>
           ))}
+        </div>
+      ) : error ? (
+        <div className='p-4 text-center text-red-500'>
+          Error al cargar notificaciones: {error.message}
         </div>
       ) : paginatedNotifications.length === 0 ? (
         <Card>
@@ -168,13 +111,7 @@ export default function NotificationList({
       ) : (
         <div className='space-y-4'>
           {paginatedNotifications.map((notification) => (
-            <Card
-              key={notification.id}
-              className={cn(
-                'transition-colors',
-                !notification.isRead && 'border-l-4 border-l-primary'
-              )}
-            >
+            <Card key={notification.id} className='transition-colors'>
               <CardHeader className='pb-2'>
                 <div className='flex items-start justify-between'>
                   <div className='flex flex-col'>
@@ -187,54 +124,42 @@ export default function NotificationList({
                       </span>
                       <Badge
                         variant={
-                          notification.type === 'error'
+                          notification.type === LoanNotificationType.System
                             ? 'destructive'
-                            : notification.type === 'warning'
+                            : notification.type ===
+                                LoanNotificationType.StatusChanged
                               ? 'default'
-                              : notification.type === 'success'
+                              : notification.type ===
+                                  LoanNotificationType.Message
                                 ? 'outline'
                                 : 'secondary'
                         }
                         className='text-xs'
                       >
-                        {notification.type.charAt(0).toUpperCase() +
-                          notification.type.slice(1)}
+                        {getNotificationTypeName(notification.type)}
                       </Badge>
-                      {notification.isRead && (
-                        <Badge variant='outline' className='bg-muted text-xs'>
-                          Leída
-                        </Badge>
-                      )}
                     </div>
                   </div>
 
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant='ghost' size='icon' className='h-8 w-8'>
-                        <MoreHorizontal className='h-4 w-4' />
-                        <span className='sr-only'>Acciones</span>
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align='end'>
-                      {!notification.isRead && (
-                        <DropdownMenuItem
-                          onClick={() => onMarkAsRead(notification.id)}
-                        >
-                          <Check className='mr-2 h-4 w-4' />
-                          <span>Marcar como leída</span>
-                        </DropdownMenuItem>
-                      )}
-                      {onDeleteNotification && (
+                  {onDelete && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant='ghost' size='icon' className='h-8 w-8'>
+                          <MoreHorizontal className='h-4 w-4' />
+                          <span className='sr-only'>Acciones</span>
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align='end'>
                         <DropdownMenuItem
                           className='text-destructive focus:text-destructive'
-                          onClick={() => onDeleteNotification(notification.id)}
+                          onClick={() => onDelete(notification.id)}
                         >
                           <Trash className='mr-2 h-4 w-4' />
                           <span>Eliminar</span>
                         </DropdownMenuItem>
-                      )}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
                 </div>
               </CardHeader>
               <CardContent>
@@ -260,7 +185,7 @@ export default function NotificationList({
             </PaginationItem>
 
             {[...Array(totalPages)].map((_, i) => (
-              <PaginationItem key={i}>
+              <PaginationItem key={`page-${i + 1}`}>
                 <PaginationLink
                   onClick={() => setCurrentPage(i + 1)}
                   isActive={currentPage === i + 1}
