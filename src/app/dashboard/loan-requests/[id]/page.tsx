@@ -177,35 +177,13 @@ export default function LoanRequestDetailPage() {
 
     const loanRequestId = loanRequestDetail.loanRequest.id;
 
-    setShowFullPageLoader(true);
-    setLoaderError(null);
-    setFullPageLoaderMessage('Calculando cuota y detalles del préstamo');
-    setFullPageLoaderSubMessage(
-      'Estamos calculando los detalles del préstamo. Este proceso puede tardar unos segundos.'
-    );
-
     loanCalculationMutation.mutate(loanRequestId, {
       onSuccess: () => {
-        try {
-          setTimeout(async () => {
-            try {
-              await refetch();
-              setShowFullPageLoader(false);
-              toast.success('Cálculo de préstamo completado exitosamente');
-            } catch (error) {
-              setLoaderError(
-                'Error al recargar los datos. Por favor, actualice la página manualmente.'
-              );
-            }
-          }, 1000);
-        } catch (error) {
-          setLoaderError(
-            'Error al recargar los datos. Por favor, actualice la página manualmente.'
-          );
-        }
+        refetch();
+        toast.success('Cálculo de préstamo completado exitosamente');
       },
       onError: (error: Error) => {
-        setLoaderError(error.message);
+        toast.error(`Error al calcular el préstamo: ${error.message}`);
       }
     });
   };
@@ -213,13 +191,6 @@ export default function LoanRequestDetailPage() {
   // Función para aprobar la solicitud
   const handleApproveLoan = async () => {
     if (!loanRequestDetail) return;
-
-    setShowFullPageLoader(true);
-    setLoaderError(null);
-    setFullPageLoaderMessage('Procesando aprobación de la solicitud');
-    setFullPageLoaderSubMessage(
-      'Por favor espere mientras completamos el proceso.'
-    );
 
     try {
       if (userRole === UserRole.BusinessDevelopment_User) {
@@ -236,8 +207,6 @@ export default function LoanRequestDetailPage() {
       toast.success('Solicitud aprobada exitosamente');
     } catch (error) {
       toast.error('Error al aprobar la solicitud');
-    } finally {
-      setShowFullPageLoader(false);
     }
   };
 
@@ -429,10 +398,21 @@ export default function LoanRequestDetailPage() {
                   <Button
                     variant='default'
                     onClick={handleApproveLoan}
+                    disabled={
+                      approveByAgentMutation.isPending ||
+                      approveByManagerMutation.isPending
+                    }
                     className='gap-2 bg-green-600 hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-700'
                   >
-                    <CheckCircle className='h-4 w-4' />
-                    Aprobar
+                    {approveByAgentMutation.isPending ||
+                    approveByManagerMutation.isPending ? (
+                      'Aprobando...'
+                    ) : (
+                      <>
+                        <CheckCircle className='h-4 w-4' />
+                        Aprobar
+                      </>
+                    )}
                   </Button>
                   <Button
                     variant='destructive'
