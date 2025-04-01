@@ -6,8 +6,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
-  DialogClose
+  DialogTrigger
 } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { formatHNL } from '@/utils/formatCurrency';
@@ -27,8 +26,14 @@ export const FinancialSummaryCard = ({
   loanCalculation,
   client
 }: FinancialSummaryCardProps) => {
+  // Create a key that will change when relevant loan request data changes
+  const dataKey = `${loanRequest.id}-${loanRequest.requestedAmount}-${loanRequest.vehicleInsuranceRate}-${loanRequest.appliedInterestRate}-${loanRequest.requestedLoanTermMonths}`;
+
   return (
-    <Card className='border-l-4 border-l-emerald-500 dark:border-l-emerald-400'>
+    <Card
+      className='border-l-4 border-l-emerald-500 dark:border-l-emerald-400'
+      key={dataKey}
+    >
       <CardHeader className='flex flex-row items-center justify-between pb-2'>
         <CardTitle className='flex items-center gap-2 text-lg'>
           <DollarSign className='h-5 w-5 text-emerald-500 dark:text-emerald-400' />
@@ -57,9 +62,17 @@ export const FinancialSummaryCard = ({
             </span>
           </div>
           <div className='flex items-center justify-between rounded-lg p-3'>
-            <span className='text-sm text-muted-foreground'>Plazo Máximo</span>
+            <span className='text-sm text-muted-foreground'>
+              {loanRequest.approvedLoanTermMonths &&
+              loanRequest.approvedLoanTermMonths > 0
+                ? 'Plazo Aprobado'
+                : 'Plazo Máximo'}
+            </span>
             <span className='font-medium'>
-              {loanRequest.requestedLoanTermMonths} meses
+              {loanRequest.approvedLoanTermMonths &&
+              loanRequest.approvedLoanTermMonths > 0
+                ? `${loanRequest.approvedLoanTermMonths} meses`
+                : `${loanRequest.requestedLoanTermMonths} meses`}
             </span>
           </div>
           <div className='flex items-center justify-between rounded-lg bg-muted/30 p-3'>
@@ -102,9 +115,6 @@ export const FinancialSummaryCard = ({
                 <DialogTitle className='text-xl'>
                   Desglose del Cálculo Financiero
                 </DialogTitle>
-                <DialogClose className='absolute right-0 top-0 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground'>
-                  <span className='sr-only'>Cerrar</span>
-                </DialogClose>
               </DialogHeader>
               <ScrollArea className='h-full max-h-[calc(90vh-80px)] pr-4'>
                 <div className='relative grid gap-12 py-6 sm:grid-cols-2 lg:grid-cols-3'>

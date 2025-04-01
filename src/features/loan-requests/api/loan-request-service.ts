@@ -8,7 +8,8 @@ import { AxiosInstance } from 'axios';
 import {
   LoanRequest,
   LoanRequestListingParams,
-  LoanRequestDetail
+  LoanRequestDetail,
+  UpdateLoanRequestForm
 } from 'types/LoanRequests';
 
 const LOAN_REQUESTS_KEY = 'loanRequests';
@@ -222,6 +223,22 @@ export const useRejectByManager = (apiClient: AxiosInstance) => {
       const response = await apiClient.post(
         `/loan-requests/reject-by-manager/${loanRequestId}`,
         { rejectionReason }
+      );
+      return response.data;
+    }
+  });
+};
+
+// Update loan request mutation
+export const useUpdateLoanRequest = (apiClient: AxiosInstance) => {
+  return useMutation({
+    mutationFn: async ({
+      loanRequestId,
+      ...data
+    }: UpdateLoanRequestForm & { loanRequestId: string }) => {
+      const response = await apiClient.put(
+        `/loan-requests/update/${loanRequestId}`,
+        data
       );
       return response.data;
     }

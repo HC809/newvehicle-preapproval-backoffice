@@ -7,7 +7,8 @@ import {
   CheckCircle,
   XCircle,
   FileText,
-  History
+  History,
+  Pencil
 } from 'lucide-react';
 import { toast } from 'sonner';
 import PageContainer from '@/components/layout/page-container';
@@ -44,6 +45,7 @@ import { LoanRequestStatus } from 'types/LoanRequests';
 import { UserRole } from 'types/User';
 import { LoanRequestTimeline } from '@/features/loan-requests/components/loan-request-timeline';
 import { RejectionModal } from '@/features/loan-requests/components/rejection-modal';
+import { LoanRequestEditForm } from '@/features/loan-requests/components';
 
 export default function LoanRequestDetailPage() {
   const router = useRouter();
@@ -63,6 +65,7 @@ export default function LoanRequestDetailPage() {
   const [showTimeline, setShowTimeline] = useState(false);
   const [showRejectionModal, setShowRejectionModal] = useState(false);
   const [isManagerRejection, setIsManagerRejection] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
 
   // Fetch loan request details from API
   const {
@@ -382,6 +385,18 @@ export default function LoanRequestDetailPage() {
 
           {loanRequestDetail && (
             <div className='flex gap-2'>
+              {loanRequestDetail.loanRequest.equifaxChecked &&
+                loanRequestDetail.loanRequest.bantotalChecked &&
+                loanRequestDetail.loanRequest.financingCalculated && (
+                  <Button
+                    variant='outline'
+                    onClick={() => setShowEditModal(true)}
+                    className='gap-2'
+                  >
+                    <Pencil className='h-4 w-4' />
+                    Editar
+                  </Button>
+                )}
               <Button
                 variant='outline'
                 onClick={() => setShowTimeline(true)}
@@ -538,6 +553,15 @@ export default function LoanRequestDetailPage() {
                 rejectByAgentMutation.isPending ||
                 rejectByManagerMutation.isPending
               }
+            />
+
+            <LoanRequestEditForm
+              open={showEditModal}
+              onOpenChange={setShowEditModal}
+              loanRequest={loanRequestDetail.loanRequest}
+              onSuccess={() => {
+                refetch();
+              }}
             />
           </>
         )}

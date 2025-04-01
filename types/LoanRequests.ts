@@ -25,6 +25,7 @@ export interface LoanRequest {
   vehicleTypeName: string;
   requestedLoanTermMonths: number;
   approvedLoanTermMonths: number;
+  approvedDownPaymentPercentage: number;
   requestedAmount: number;
   appliedInterestRate: number;
   vehicleInsuranceRate: number;
@@ -58,4 +59,17 @@ export interface LoanRequestListingParams {
   dealership?: string;
   manager?: string;
   status?: string;
+}
+
+export interface UpdateLoanRequestForm {
+  id: string;
+  vehicleBrand: string;
+  vehicleModel: string;
+  vehicleYear: number;
+  vehicleTypeId: string;
+  requestedAmount: number;
+  approvedLoanTermMonths: number;
+  approvedDownPaymentPercentage: number;
+  vehicleInsuranceRate: number;
+  monthlyIncome: number;
 }

@@ -8,8 +8,11 @@ interface FinancialInfoTabProps {
 }
 
 export const FinancialInfoTab = ({ loanRequest }: FinancialInfoTabProps) => {
+  // Create a key that will change when relevant loan request data changes
+  const dataKey = `${loanRequest.id}-${loanRequest.requestedAmount}-${loanRequest.vehicleInsuranceRate}-${loanRequest.appliedInterestRate}-${loanRequest.requestedLoanTermMonths}`;
+
   return (
-    <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
+    <div className='grid grid-cols-1 gap-4 md:grid-cols-2' key={dataKey}>
       <InfoItem
         label='Monto Solicitado'
         value={formatHNL(loanRequest.requestedAmount)}
@@ -24,6 +27,15 @@ export const FinancialInfoTab = ({ loanRequest }: FinancialInfoTabProps) => {
         icon={<Calendar size={18} />}
         iconColor='text-violet-500'
       />
+      {loanRequest.approvedLoanTermMonths &&
+        loanRequest.approvedLoanTermMonths > 0 && (
+          <InfoItem
+            label='Plazo Aprobado'
+            value={`${loanRequest.approvedLoanTermMonths} meses`}
+            icon={<Calendar size={18} />}
+            iconColor='text-violet-500'
+          />
+        )}
       {/* <InfoItem
         label='Tipo de Cambio USD'
         value={`$${loanRequest.dollarExchangeRate.toFixed(2)}`}
@@ -32,12 +44,6 @@ export const FinancialInfoTab = ({ loanRequest }: FinancialInfoTabProps) => {
         textColor='text-emerald-700'
         darkTextColor='dark:text-emerald-300'
       /> */}
-      {/* <InfoItem
-                label='Plazo Aprobado'
-                value={`${loanRequest.approvedLoanTermMonths} meses`}
-                icon={<Calendar size={18} />}
-                iconColor='text-violet-500'
-            /> */}
       <InfoItem
         label='Tasa de Interés'
         value={`${loanRequest.appliedInterestRate}%`}
