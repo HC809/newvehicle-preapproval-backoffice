@@ -11,6 +11,7 @@ import { useToken } from '@/features/auth/TokenContext';
 import notificationService from './SignalRNotificationService';
 import { toast } from 'sonner';
 import { LoanNotification, LoanNotificationType } from 'types/Notifications';
+import { useNotificationStore } from '@/stores/notification-store';
 
 interface NotificationContextProps {
   unreadCount: number;
@@ -55,6 +56,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({
   const [unreadCount, setUnreadCount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [hasError, setHasError] = useState(false);
+  const { addNotification } = useNotificationStore();
 
   // Cargar notificaciones no leídas
   const fetchUnreadNotifications = useCallback(async () => {
@@ -157,9 +159,12 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({
                 toast.info(`${notification.title}: ${notification.message}`);
             }
 
-            // Actualizar estado
+            // Actualizar estado local
             setNotifications((prev) => [notification, ...prev]);
             setUnreadCount((prev) => prev + 1);
+
+            // Actualizar estado global en Zustand - añadir notificación al store
+            addNotification(notification);
 
             // Recargar notificaciones para asegurar sincronización
             fetchUnreadNotifications();
@@ -198,7 +203,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({
       notificationService.stop();
       clearTimeout(retryTimeout);
     };
-  }, [accessToken, fetchUnreadNotifications]);
+  }, [accessToken, fetchUnreadNotifications, addNotification]);
 
   return (
     <NotificationContext.Provider

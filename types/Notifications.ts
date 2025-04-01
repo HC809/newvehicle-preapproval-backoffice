@@ -11,8 +11,6 @@ export interface LoanNotification {
   type: LoanNotificationType;
   userToNotifyId?: string;
   expiredAt?: string;
-  isRead: boolean;
-  readAt?: string;
   createdAt: string;
   metadata?: Record<string, any>;
 }
@@ -24,8 +22,6 @@ export interface LoanNotificationResponse {
   type: LoanNotificationType;
   userToNotifyId: string;
   expiredAt?: string;
-  isRead: boolean;
-  readAt?: string;
   createdAt: string;
   metadata?: Record<string, any>;
 }

@@ -9,6 +9,7 @@ import useAxios from '@/hooks/use-axios';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useNotificationStore } from '@/stores/notification-store';
 
 // Agregar CSS personalizado para el scrollbar
 const scrollbarStyles = `
@@ -42,6 +43,7 @@ const scrollbarStyles = `
 export default function NotificationsPage() {
   const apiClient = useAxios();
   const [containerHeight, setContainerHeight] = useState('calc(100vh - 6rem)');
+  const { clearNotifications } = useNotificationStore();
 
   // Calcular la altura del contenedor al cargar y al cambiar el tamaño de la ventana
   useEffect(() => {
@@ -56,6 +58,11 @@ export default function NotificationsPage() {
     window.addEventListener('resize', calculateHeight);
     return () => window.removeEventListener('resize', calculateHeight);
   }, []);
+
+  // Limpiar las notificaciones al cargar la página
+  useEffect(() => {
+    clearNotifications();
+  }, [clearNotifications]);
 
   // Obtener las notificaciones
   const {

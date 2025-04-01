@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useNotification } from './NotificationContext';
+import { useNotificationStore } from '@/stores/notification-store';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -11,19 +12,19 @@ import {
 } from '@/components/ui/popover';
 import { Bell, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import Link from 'next/link';
 import { LoanNotificationType } from 'types/Notifications';
+import { useRouter } from 'next/navigation';
 
 export default function Notifications() {
-  const {
-    unreadCount,
-    notifications,
-    refreshNotifications,
-    isLoading,
-    hasError
-  } = useNotification();
+  const router = useRouter();
+  const { refreshNotifications, isLoading, hasError } = useNotification();
+
+  // Estado local del popover
   const [open, setOpen] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+
+  // Estado global de notificaciones con Zustand
+  const { count, clearBadgeOnly, recentNotifications } = useNotificationStore();
 
   // Format time difference
   const formatTimeDifference = (dateString: string) => {
@@ -49,8 +50,24 @@ export default function Notifications() {
     }
   };
 
+  // Manejar apertura/cierre del popover
+  const handleOpenChange = (isOpen: boolean) => {
+    setOpen(isOpen);
+
+    // Si se abre el popover, limpiar el contador del badge
+    if (isOpen && count > 0) {
+      clearBadgeOnly();
+    }
+  };
+
+  // Redirigir a la página de notificaciones y cerrar el popover
+  const handleViewAllClick = () => {
+    setOpen(false); // Cerrar popover
+    router.push('/dashboard/notifications');
+  };
+
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
         <Button
           variant='ghost'
@@ -59,12 +76,12 @@ export default function Notifications() {
           aria-label='Notificaciones'
         >
           <Bell className='h-5 w-5' />
-          {unreadCount > 0 && (
+          {count > 0 && (
             <Badge
               className='absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full p-0 text-xs'
               variant='destructive'
             >
-              {unreadCount}
+              {count > 99 ? '99+' : count}
             </Badge>
           )}
         </Button>
@@ -85,12 +102,14 @@ export default function Notifications() {
                 className={cn('h-4 w-4', refreshing && 'animate-spin')}
               />
             </Button>
-            <Link
-              href='/dashboard/notifications'
-              className='text-xs text-blue-600 hover:text-blue-800'
+            <Button
+              variant='link'
+              size='sm'
+              className='h-auto p-0 text-xs text-blue-600 hover:text-blue-800'
+              onClick={handleViewAllClick}
             >
               Ver todas
-            </Link>
+            </Button>
           </div>
         </div>
 
@@ -122,13 +141,13 @@ export default function Notifications() {
                 Reintentar
               </Button>
             </div>
-          ) : notifications.length === 0 ? (
+          ) : recentNotifications.length === 0 ? (
             <div className='p-4 text-center text-muted-foreground'>
               No tienes notificaciones nuevas
             </div>
           ) : (
             <>
-              {notifications.slice(0, 5).map((notification) => (
+              {recentNotifications.map((notification) => (
                 <div
                   key={notification.id}
                   className={cn(
@@ -153,16 +172,16 @@ export default function Notifications() {
                 </div>
               ))}
 
-              {notifications.length > 5 && (
-                <div className='border-t p-2 text-center'>
-                  <Link
-                    href='/dashboard/notifications'
-                    className='text-sm text-blue-600 hover:text-blue-800'
-                  >
-                    Ver todas las notificaciones ({notifications.length})
-                  </Link>
-                </div>
-              )}
+              <div className='border-t p-2 text-center'>
+                <Button
+                  variant='link'
+                  size='sm'
+                  className='text-sm text-blue-600 hover:text-blue-800'
+                  onClick={handleViewAllClick}
+                >
+                  Ver todas las notificaciones
+                </Button>
+              </div>
             </>
           )}
         </div>
