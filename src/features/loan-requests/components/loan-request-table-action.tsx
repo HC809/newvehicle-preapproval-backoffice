@@ -12,18 +12,7 @@ import { useUsers } from '@/features/users/api/user-service';
 import { useDealerships } from '@/features/dealerships/api/dealership-service';
 import { UserRole } from 'types/User';
 import { LoanRequestStatus } from 'types/LoanRequests';
-import { Badge } from '@/components/ui/badge';
 import { translateStatus, getStatusVariant } from '@/utils/getStatusColor';
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue
-} from '@/components/ui/select';
-import { FilterIcon } from 'lucide-react';
 
 export function useLoanRequestTableFilters() {
   const router = useRouter();

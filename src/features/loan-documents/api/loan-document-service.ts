@@ -24,26 +24,3 @@ export const useLoanDocumentContent = (
     enabled: false // Deshabilitado por defecto
   });
 };
-
-/**
- * Obtiene la extensión de archivo basada en el tipo MIME
- */
-function getExtensionFromMimeType(mimeType: string): string {
-  const mimeToExt: Record<string, string> = {
-    'application/pdf': 'pdf',
-    'image/jpeg': 'jpg',
-    'image/png': 'png',
-    'image/gif': 'gif',
-    'application/xml': 'xml',
-    'text/xml': 'xml',
-    'text/plain': 'txt',
-    'application/msword': 'doc',
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
-      'docx',
-    'application/vnd.ms-excel': 'xls',
-    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'xlsx'
-  };
-
-  // Devolver la extensión correspondiente o 'bin' si no se encuentra
-  return mimeToExt[mimeType] || 'bin';
-}

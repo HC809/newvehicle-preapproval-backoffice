@@ -21,7 +21,7 @@ import { HttpTester } from '@/features/diagnostics/components/http-tester';
 
 export default function DiagnosticsPage() {
   const [activeComponent, setActiveComponent] = useState<string | null>(null);
-  const [autoRefresh, setAutoRefresh] = useState<boolean>(false);
+  const [autoRefresh] = useState<boolean>(false);
 
   useEffect(() => {
     // Si autoRefresh está activado, actualiza cada 20 segundos

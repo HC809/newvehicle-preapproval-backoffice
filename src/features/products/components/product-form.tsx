@@ -74,9 +74,7 @@ export default function ProductForm({
     values: defaultValues
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values);
-  }
+  function onSubmit(values: z.infer<typeof formSchema>) {}
 
   return (
     <Card className='mx-auto w-full'>

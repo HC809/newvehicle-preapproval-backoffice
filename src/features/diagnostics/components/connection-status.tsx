@@ -70,21 +70,6 @@ export function SignalRConnectionStatus({
     // Configurar un intervalo para verificar el estado periódicamente
     const intervalId = setInterval(checkConnectionState, 5000);
 
-    // Intentar reconectar cuando se detecta que está desconectado
-    const reconnectIfNeeded = () => {
-      if (typeof window === 'undefined') return;
-
-      const signalRConnection = (window as any).__signalrConnection;
-      if (signalRConnection && signalRConnection.state === 'Disconnected') {
-        try {
-          signalRConnection.start();
-          setLastReconnectAttempt(new Date());
-        } catch (err) {
-          console.error('Error al intentar reconectar:', err);
-        }
-      }
-    };
-
     // Limpiar el intervalo cuando el componente se desmonte
     return () => clearInterval(intervalId);
   }, [isMounted]);
@@ -101,7 +86,6 @@ export function SignalRConnectionStatus({
           setStatus('Intentando reconectar...');
         }
       } catch (err) {
-        console.error('Error al intentar reconectar:', err);
         setStatus(
           `Error al reconectar: ${err instanceof Error ? err.message : 'Error desconocido'}`
         );

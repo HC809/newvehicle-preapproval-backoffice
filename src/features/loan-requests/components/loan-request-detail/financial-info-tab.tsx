@@ -27,7 +27,8 @@ export const FinancialInfoTab = ({ loanRequest }: FinancialInfoTabProps) => {
         icon={<Calendar size={18} />}
         iconColor='text-violet-500'
       />
-      {loanRequest.approvedLoanTermMonths &&
+      {loanRequest.approvedLoanTermMonths !== undefined &&
+        loanRequest.approvedLoanTermMonths !== null &&
         loanRequest.approvedLoanTermMonths > 0 && (
           <InfoItem
             label='Plazo Aprobado'

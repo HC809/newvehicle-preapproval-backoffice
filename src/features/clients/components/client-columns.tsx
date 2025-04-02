@@ -63,7 +63,7 @@ export const ClientColumns: ClientColumnsType = (onRowClick) => {
       cell: ({ row }) => (
         <div className='flex items-center gap-2'>
           <Phone className='h-4 w-4 text-purple-500 dark:text-purple-400' />
-          <span>{row.original.phone}</span>
+          <span>{row.original.phoneNumber}</span>
         </div>
       )
     },

@@ -221,7 +221,9 @@ export default function ClientDetailPage() {
                 </p>
                 <div className='flex items-start gap-2'>
                   <MapPin className='mt-1 h-4 w-4 text-muted-foreground' />
-                  <p className='text-base'>{displayClient.address}</p>
+                  <p className='text-base'>
+                    {displayClient?.residentialAddress}
+                  </p>
                 </div>
               </div>
 
@@ -241,7 +243,7 @@ export default function ClientDetailPage() {
                   </p>
                   <div className='flex items-center gap-2'>
                     <Phone className='h-4 w-4 text-muted-foreground' />
-                    <p className='text-base'>{displayClient.phone}</p>
+                    <p className='text-base'>{displayClient.phoneNumber}</p>
                   </div>
                 </div>
               </div>
