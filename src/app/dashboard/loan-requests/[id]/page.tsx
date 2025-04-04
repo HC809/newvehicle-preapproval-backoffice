@@ -498,7 +498,11 @@ export default function LoanRequestDetailPage() {
                             new Date(a.uploadedAt).getTime()
                         )
                         .map((doc) => (
-                          <DocumentViewer key={doc.id} document={doc} />
+                          <DocumentViewer
+                            key={doc.id}
+                            document={doc}
+                            onDocumentDeleted={() => refetch()}
+                          />
                         ))}
                     </div>
                   </div>

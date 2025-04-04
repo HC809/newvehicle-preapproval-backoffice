@@ -67,3 +67,21 @@ export const useCreateLoanDocument = (
     }
   });
 };
+
+/**
+ * Hook para eliminar un documento de préstamo
+ */
+export const useDeleteLoanDocument = (
+  apiClient: AxiosInstance | undefined
+): UseMutationResult<any, Error, string> => {
+  return useMutation({
+    mutationFn: async (loanDocumentId: string) => {
+      if (!apiClient) throw new Error('API client not initialized');
+
+      const response = await apiClient.delete(
+        `/loan-documents/${loanDocumentId}`
+      );
+      return response.data;
+    }
+  });
+};
