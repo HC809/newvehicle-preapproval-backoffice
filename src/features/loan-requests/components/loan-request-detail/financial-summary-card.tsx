@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { formatHNL } from '@/utils/formatCurrency';
-import { DollarSign, Edit, Calculator } from 'lucide-react';
+import { DollarSign, Calculator } from 'lucide-react';
 import { LoanRequest } from 'types/LoanRequests';
 import { LoanCalculation } from 'types/LoanCalculation';
 import { Client } from 'types/Client';
@@ -39,17 +39,6 @@ export const FinancialSummaryCard = ({
           <DollarSign className='h-5 w-5 text-emerald-500 dark:text-emerald-400' />
           <span>Resumen Financiero</span>
         </CardTitle>
-        {loanRequest.equifaxChecked && (
-          <Button
-            variant='outline'
-            size='sm'
-            className='h-8 gap-1'
-            disabled={!loanRequest.equifaxChecked}
-          >
-            <Edit className='h-3.5 w-3.5' />
-            <span>Editar</span>
-          </Button>
-        )}
       </CardHeader>
       <CardContent className='space-y-4'>
         <div className='grid gap-2 pt-4'>

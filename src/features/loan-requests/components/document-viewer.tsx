@@ -7,7 +7,11 @@ import useAxios from '@/hooks/use-axios';
 import { getDocumentIcon } from '@/utils/document-utils';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale/es';
-import { LoanDocument } from 'types/LoanDocument';
+import {
+  LoanDocument,
+  DocumentType,
+  documentTypeTranslations
+} from 'types/LoanDocument';
 
 interface DocumentViewerProps {
   document: LoanDocument;
@@ -83,7 +87,10 @@ export const DocumentViewer = ({ document: doc }: DocumentViewerProps) => {
       >
         {doc.fileName}
       </span>
-      <span className='text-xs text-muted-foreground'>{doc.documentType}</span>
+      <span className='text-xs text-muted-foreground'>
+        {documentTypeTranslations[doc.documentType as DocumentType] ||
+          doc.documentType}
+      </span>
       <span className='text-xs text-muted-foreground'>
         {format(new Date(doc.uploadedAt), 'PPP', {
           locale: es
