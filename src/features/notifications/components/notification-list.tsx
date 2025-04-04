@@ -104,9 +104,9 @@ export default function NotificationList({
   );
 
   return (
-    <div className='flex h-full flex-col'>
+    <div className='flex w-full flex-col'>
       {isLoading ? (
-        <div className='space-y-5 px-1 pb-4'>
+        <div className='space-y-5 pb-4'>
           {[...Array(3)].map((_, i) => (
             <Card
               key={`loading-skeleton-${i}`}
@@ -129,18 +129,18 @@ export default function NotificationList({
           ))}
         </div>
       ) : error ? (
-        <div className='m-1 rounded-lg border border-destructive/50 bg-destructive/10 p-4 text-center text-destructive'>
+        <div className='rounded-lg border border-destructive/50 bg-destructive/10 p-4 text-center text-destructive'>
           Error al cargar notificaciones: {error.message}
         </div>
       ) : paginatedNotifications.length === 0 ? (
-        <div className='m-1 flex h-40 flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center'>
+        <div className='flex h-40 flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center'>
           <p className='text-muted-foreground'>
             No hay notificaciones que mostrar
           </p>
         </div>
       ) : (
         <>
-          <div className='space-y-5 px-2 pb-20'>
+          <div className='space-y-5 pb-24'>
             {paginatedNotifications.map((notification) => (
               <Card
                 key={notification.id}
@@ -189,53 +189,48 @@ export default function NotificationList({
           </div>
 
           {totalPages > 1 && (
-            <div className='fixed bottom-0 left-0 right-0 z-10 border-t bg-background/95 py-4 shadow-md backdrop-blur-sm'>
-              <div className='container mx-auto'>
-                <div className='mx-auto max-w-3xl'>
-                  <Pagination>
-                    <PaginationContent>
-                      <PaginationItem>
-                        <PaginationPrevious
-                          onClick={() =>
-                            setCurrentPage((prev) => Math.max(prev - 1, 1))
-                          }
-                          className={
-                            currentPage === 1
-                              ? 'pointer-events-none opacity-50'
-                              : 'cursor-pointer'
-                          }
-                        />
-                      </PaginationItem>
+            <div className='mt-4 border-t bg-background py-3 shadow-md'>
+              <Pagination>
+                <PaginationContent className='flex flex-wrap items-center justify-center gap-2'>
+                  <PaginationItem>
+                    <PaginationPrevious
+                      onClick={() =>
+                        setCurrentPage((prev) => Math.max(prev - 1, 1))
+                      }
+                      className={`h-9 rounded border px-4 ${
+                        currentPage === 1
+                          ? 'pointer-events-none opacity-50'
+                          : 'cursor-pointer hover:bg-muted'
+                      }`}
+                    />
+                  </PaginationItem>
 
-                      {[...Array(totalPages)].map((_, i) => (
-                        <PaginationItem key={`page-${i + 1}`}>
-                          <PaginationLink
-                            onClick={() => setCurrentPage(i + 1)}
-                            isActive={currentPage === i + 1}
-                          >
-                            {i + 1}
-                          </PaginationLink>
-                        </PaginationItem>
-                      ))}
+                  {[...Array(totalPages)].map((_, i) => (
+                    <PaginationItem key={`page-${i + 1}`}>
+                      <PaginationLink
+                        onClick={() => setCurrentPage(i + 1)}
+                        isActive={currentPage === i + 1}
+                        className='h-9 min-w-9 px-3'
+                      >
+                        {i + 1}
+                      </PaginationLink>
+                    </PaginationItem>
+                  ))}
 
-                      <PaginationItem>
-                        <PaginationNext
-                          onClick={() =>
-                            setCurrentPage((prev) =>
-                              Math.min(prev + 1, totalPages)
-                            )
-                          }
-                          className={
-                            currentPage === totalPages
-                              ? 'pointer-events-none opacity-50'
-                              : 'cursor-pointer'
-                          }
-                        />
-                      </PaginationItem>
-                    </PaginationContent>
-                  </Pagination>
-                </div>
-              </div>
+                  <PaginationItem>
+                    <PaginationNext
+                      onClick={() =>
+                        setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                      }
+                      className={`h-9 rounded border px-4 ${
+                        currentPage === totalPages
+                          ? 'pointer-events-none opacity-50'
+                          : 'cursor-pointer hover:bg-muted'
+                      }`}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
             </div>
           )}
         </>
