@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, Suspense, useEffect, useMemo } from 'react';
+import { useState, Suspense, useEffect, useMemo, useCallback } from 'react';
 import { ReloadIcon } from '@radix-ui/react-icons';
 import PageContainer from '@/components/layout/page-container';
 import { Heading } from '@/components/ui/heading';
@@ -25,8 +25,10 @@ function LoanRequestContent() {
   const [viewMode, setViewMode] = useState<'assigned' | 'all'>('assigned');
   const searchParams = useSearchParams();
 
-  // Obtener los valores de los filtros desde la URL
-  const dniFilter = searchParams.get('dni') || '';
+  // Estado local para el filtro de DNI (usado exclusivamente de forma local)
+  const [dniFilter, setDniFilter] = useState('');
+
+  // Obtener los valores de los otros filtros desde la URL
   const dealershipFilter = searchParams.get('dealership') || '';
   const managerFilter = searchParams.get('manager') || '';
   const statusFilter = searchParams.get('status') || '';
@@ -41,7 +43,7 @@ function LoanRequestContent() {
     apiClient,
     {
       viewAll: viewMode === 'all',
-      dni: dniFilter || undefined,
+      // No enviamos el filtro DNI a la API
       dealership: dealershipFilter || undefined,
       manager: managerFilter || undefined,
       status: statusFilter || undefined
@@ -59,12 +61,16 @@ function LoanRequestContent() {
   const filteredLoanRequests = useMemo(() => {
     if (!allLoanRequests) return [];
 
-    return allLoanRequests.filter((request) => {
+    const filtered = allLoanRequests.filter((request) => {
       // No necesitamos filtrar por viewMode aquí ya que eso se maneja en la API
 
-      // Filtro por DNI (solo si no se envía al API)
-      if (dniFilter && !request.dni.includes(dniFilter)) {
-        return false;
+      // Filtro por DNI (caso insensitivo y eliminando espacios)
+      if (dniFilter && dniFilter.trim() !== '') {
+        const normalizedDni = request.dni.toLowerCase().trim();
+        const normalizedFilter = dniFilter.toLowerCase().trim();
+        if (!normalizedDni.includes(normalizedFilter)) {
+          return false;
+        }
       }
 
       // Filtro por concesionaria (solo si no se envía al API)
@@ -84,6 +90,8 @@ function LoanRequestContent() {
 
       return true;
     });
+
+    return filtered;
   }, [
     allLoanRequests,
     dniFilter,
@@ -92,17 +100,17 @@ function LoanRequestContent() {
     statusValues
   ]);
 
-  // Refetch cuando cambie el modo de vista o alguno de los filtros
+  // Refetch solo cuando cambie el modo de vista o los filtros que se envían al API
+  // No hacemos refetch cuando solo cambia el filtro de DNI (se maneja localmente)
   useEffect(() => {
     refetch();
-  }, [
-    viewMode,
-    dniFilter,
-    dealershipFilter,
-    managerFilter,
-    statusFilter,
-    refetch
-  ]);
+  }, [viewMode, dealershipFilter, managerFilter, statusFilter, refetch]);
+
+  // Función para resetear todos los filtros, incluyendo el de DNI
+  const resetAllFilters = useCallback(() => {
+    setDniFilter('');
+    // Aquí podrías resetear los otros filtros si es necesario
+  }, []);
 
   const kbarActions = {};
 
@@ -145,7 +153,11 @@ function LoanRequestContent() {
 
           <Separator />
 
-          <LoanRequestTableAction />
+          <LoanRequestTableAction
+            dniFilter={dniFilter}
+            setDniFilter={setDniFilter}
+            resetAllFilters={resetAllFilters}
+          />
 
           {error ? (
             <div className='space-y-4'>

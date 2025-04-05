@@ -61,7 +61,6 @@ export function DataTableSearch({
   }, [searchQuery]);
 
   const handleSearch = () => {
-    //console.log('Ejecutando búsqueda con valor:', inputValue);
     setSearchQuery(inputValue, { startTransition });
     setPage(1); // Reset page to 1 when search changes
   };

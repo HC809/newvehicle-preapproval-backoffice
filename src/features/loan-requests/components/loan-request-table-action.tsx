@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { DataTableSearch } from '@/components/ui/table/data-table-search';
 import { DataTableFilterBox } from '@/components/ui/table/data-table-filter-box';
@@ -13,6 +13,11 @@ import { useDealerships } from '@/features/dealerships/api/dealership-service';
 import { UserRole } from 'types/User';
 import { LoanRequestStatus } from 'types/LoanRequests';
 import { translateStatus, getStatusVariant } from '@/utils/getStatusColor';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Search } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { useTransition } from 'react';
 
 export function useLoanRequestTableFilters() {
   const router = useRouter();
@@ -20,7 +25,6 @@ export function useLoanRequestTableFilters() {
   const searchParams = useSearchParams();
 
   const [page, setPage] = useState(1);
-  const [searchQuery, setSearchQuery] = useState(searchParams.get('dni') || '');
   const [dealershipFilter, setDealershipFilter] = useState(
     searchParams.get('dealership') || ''
   );
@@ -42,25 +46,6 @@ export function useLoanRequestTableFilters() {
       return params.toString();
     },
     [searchParams]
-  );
-
-  const setSearchQueryValue = useCallback(
-    (
-      value: string | ((old: string) => string | null) | null,
-      options?: Options
-    ) => {
-      let newValue: string | null = null;
-      if (typeof value === 'function') {
-        newValue = value(searchQuery);
-      } else {
-        newValue = value;
-      }
-      setSearchQuery(newValue || '');
-      const queryString = createQueryString('dni', newValue);
-      router.push(`${pathname}?${queryString}`);
-      return Promise.resolve(new URLSearchParams(queryString));
-    },
-    [searchQuery, createQueryString, pathname, router]
   );
 
   const setPageValue = useCallback(
@@ -143,7 +128,6 @@ export function useLoanRequestTableFilters() {
   );
 
   const resetFilters = useCallback(() => {
-    setSearchQuery('');
     setDealershipFilter('');
     setManagerFilter('');
     setStatusFilter('');
@@ -151,16 +135,11 @@ export function useLoanRequestTableFilters() {
   }, [pathname, router]);
 
   const isAnyFilterActive =
-    searchQuery !== '' ||
-    dealershipFilter !== '' ||
-    managerFilter !== '' ||
-    statusFilter !== '';
+    dealershipFilter !== '' || managerFilter !== '' || statusFilter !== '';
 
   return {
     page,
     setPageValue,
-    searchQuery,
-    setSearchQueryValue,
     dealershipFilter,
     setDealershipFilterValue,
     managerFilter,
@@ -172,27 +151,39 @@ export function useLoanRequestTableFilters() {
   };
 }
 
-export default function LoanRequestTableAction() {
+interface LoanRequestTableActionProps {
+  dniFilter: string;
+  setDniFilter: (value: string) => void;
+  resetAllFilters: () => void;
+}
+
+export default function LoanRequestTableAction({
+  dniFilter,
+  setDniFilter,
+  resetAllFilters
+}: LoanRequestTableActionProps) {
   const { data: session } = useSession();
   const isAdmin = !!session?.isSystemAdmin;
   const apiClient = useAxios();
+  const [isLoading, startTransition] = useTransition();
+  const [inputValue, setInputValue] = useState(dniFilter || '');
 
-  // Obtener usuarios con rol BusinessDevelopment_User y que estén activos
+  useEffect(() => {
+    setInputValue(dniFilter);
+  }, [dniFilter]);
+
   const { data: users = [] } = useUsers(apiClient);
   const activeManagers = users.filter(
     (user) => user.role === UserRole.BusinessDevelopment_User && user.isActive
   );
 
-  // Obtener concesionarias
   const { data: dealerships = [] } = useDealerships(apiClient);
 
   const {
-    searchQuery,
     dealershipFilter,
     managerFilter,
     statusFilter,
     setPageValue,
-    setSearchQueryValue,
     setDealershipFilterValue,
     setManagerFilterValue,
     setStatusFilterValue,
@@ -200,19 +191,33 @@ export default function LoanRequestTableAction() {
     isAnyFilterActive
   } = useLoanRequestTableFilters();
 
-  // Mapear concesionarias para el filtro
+  const handleDniSearch = () => {
+    setDniFilter(inputValue);
+    setPageValue(1);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleDniSearch();
+    }
+  };
+
+  const handleResetAll = () => {
+    setInputValue('');
+    resetAllFilters();
+    resetFilters();
+  };
+
   const DEALERSHIP_OPTIONS = dealerships.map((dealership) => ({
     value: dealership.id,
     label: dealership.name
   }));
 
-  // Mapear responsables para el filtro
   const MANAGER_OPTIONS = activeManagers.map((manager) => ({
     value: manager.name,
     label: manager.name
   }));
 
-  // Estado para las opciones de status
   const STATUS_OPTIONS = Object.values(LoanRequestStatus).map((status) => ({
     value: status,
     label: translateStatus(status),
@@ -238,14 +243,23 @@ export default function LoanRequestTableAction() {
 
   return (
     <div className='flex flex-wrap items-center gap-4'>
-      <DataTableSearch
-        searchKey='DNI'
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQueryValue}
-        setPage={setPageValue}
-        translatedPlaceholder='Buscar por DNI...'
-        translatedSelected='Seleccionado'
-      />
+      <div className='flex w-full md:max-w-sm'>
+        <Input
+          placeholder='Buscar por DNI...'
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
+          onKeyDown={handleKeyDown}
+          className={cn('rounded-r-none', isLoading && 'animate-pulse')}
+        />
+        <Button
+          type='button'
+          onClick={handleDniSearch}
+          className='rounded-l-none'
+          disabled={isLoading}
+        >
+          <Search className='h-4 w-4' />
+        </Button>
+      </div>
       <DataTableFilterBox
         filterKey='dealerships'
         title='Concesionarias'
@@ -278,8 +292,8 @@ export default function LoanRequestTableAction() {
       />
 
       <DataTableResetFilter
-        isFilterActive={isAnyFilterActive}
-        onReset={resetFilters}
+        isFilterActive={isAnyFilterActive || dniFilter !== ''}
+        onReset={handleResetAll}
         translatedReset='Restablecer filtros'
       />
     </div>
