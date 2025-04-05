@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { DataTableSearch } from '@/components/ui/table/data-table-search';
+//import { DataTableSearch } from '@/components/ui/table/data-table-search';
 import { DataTableFilterBox } from '@/components/ui/table/data-table-filter-box';
 import { DataTableResetFilter } from '@/components/ui/table/data-table-reset-filter';
 import { useSession } from 'next-auth/react';
