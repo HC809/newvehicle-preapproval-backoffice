@@ -28,15 +28,15 @@ export const navItems: NavItem[] = [
     shortcut: ['u', 'u'],
     isActive: false,
     items: []
-  },
-  {
-    title: 'Diagnósticos',
-    url: '/dashboard/diagnostics',
-    icon: 'terminal',
-    shortcut: ['d', 'g'],
-    isActive: false,
-    items: []
   }
+  // {
+  //   title: 'Diagnósticos',
+  //   url: '/dashboard/diagnostics',
+  //   icon: 'terminal',
+  //   shortcut: ['d', 'g'],
+  //   isActive: false,
+  //   items: []
+  // }
 ];
 
 export const adminNavItems: NavItem[] = [
