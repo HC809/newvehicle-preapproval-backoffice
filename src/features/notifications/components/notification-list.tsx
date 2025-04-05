@@ -10,7 +10,14 @@ import {
   PaginationNext,
   PaginationPrevious
 } from '@/components/ui/pagination';
-import { MessageSquare, AlertTriangle, BellRing } from 'lucide-react';
+import {
+  MessageSquare,
+  AlertTriangle,
+  BellRing,
+  FileSymlink
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useRouter } from 'next/navigation';
 import {
   LoanNotification,
   LoanNotificationType
@@ -27,9 +34,15 @@ export default function NotificationList({
   isLoading,
   error
 }: NotificationListProps) {
+  const router = useRouter();
   const [currentPage, setCurrentPage] = useState(1);
 
   const itemsPerPage = 10;
+
+  // Navegar a la solicitud de préstamo
+  const navigateToLoanRequest = (loanRequestId: string) => {
+    router.push(`/dashboard/loan-requests/${loanRequestId}`);
+  };
 
   // Formatea la fecha relativa
   const formatRelativeTime = (dateString: string) => {
@@ -182,6 +195,24 @@ export default function NotificationList({
                         {formatRelativeTime(notification.createdAt)}
                       </div>
                     </div>
+
+                    {notification.loanRequestId && (
+                      <div className='ml-2 flex items-center self-center'>
+                        <Button
+                          variant='outline'
+                          size='sm'
+                          className='flex items-center gap-1 text-primary hover:bg-primary/10 hover:text-primary'
+                          onClick={() =>
+                            navigateToLoanRequest(notification.loanRequestId!)
+                          }
+                        >
+                          <FileSymlink className='h-4 w-4' />
+                          <span className='hidden sm:inline'>
+                            Ver solicitud
+                          </span>
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
