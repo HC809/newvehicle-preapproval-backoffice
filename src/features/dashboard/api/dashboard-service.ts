@@ -1,12 +1,17 @@
 import { useQuery, UseQueryResult } from '@tanstack/react-query';
 import { AxiosInstance } from 'axios';
-import { DealershipStatistics, LoanRequestStatistics } from 'types/Dashboard';
+import {
+  DealershipStatistics,
+  LoanRequestStatistics,
+  VehicleTypeStatistics
+} from 'types/Dashboard';
 
 const DASHBOARD_KEY = 'dashboard';
 
 export interface DashboardData {
   loanRequestStats: LoanRequestStatistics;
   dealershipStats: DealershipStatistics;
+  vehicleTypeStats: VehicleTypeStatistics;
 }
 
 // Combined hook to fetch both statistics at once
@@ -19,15 +24,18 @@ export const useDashboardData = (
     queryFn: async (): Promise<DashboardData> => {
       if (!apiClient) throw new Error('API client not initialized');
 
-      // Fetch both endpoints in parallel
-      const [loanRequestStats, dealershipStats] = await Promise.all([
-        fetchLoanRequestStatistics(apiClient),
-        fetchDealershipStatistics(apiClient)
-      ]);
+      // Fetch all endpoints in parallel
+      const [loanRequestStats, dealershipStats, vehicleTypeStats] =
+        await Promise.all([
+          fetchLoanRequestStatistics(apiClient),
+          fetchDealershipStatistics(apiClient),
+          fetchVehicleTypeStatistics(apiClient)
+        ]);
 
       return {
         loanRequestStats,
-        dealershipStats
+        dealershipStats,
+        vehicleTypeStats
       };
     },
     enabled: !!apiClient && enabled
@@ -63,6 +71,20 @@ export const useDealershipStatistics = (
   });
 };
 
+export const useVehicleTypeStatistics = (
+  apiClient: AxiosInstance | undefined,
+  enabled: boolean = true
+): UseQueryResult<VehicleTypeStatistics, Error> => {
+  return useQuery({
+    queryKey: [DASHBOARD_KEY, 'vehicle-type-statistics'],
+    queryFn: async (): Promise<VehicleTypeStatistics> => {
+      if (!apiClient) throw new Error('API client not initialized');
+      return fetchVehicleTypeStatistics(apiClient);
+    },
+    enabled: !!apiClient && enabled
+  });
+};
+
 // Helper functions to fetch individual endpoints
 async function fetchLoanRequestStatistics(
   apiClient: AxiosInstance
@@ -78,6 +100,15 @@ async function fetchDealershipStatistics(
 ): Promise<DealershipStatistics> {
   const response = await apiClient.get<DealershipStatistics>(
     '/dashboard/requests-by-dealership'
+  );
+  return response.data;
+}
+
+async function fetchVehicleTypeStatistics(
+  apiClient: AxiosInstance
+): Promise<VehicleTypeStatistics> {
+  const response = await apiClient.get<VehicleTypeStatistics>(
+    '/dashboard/requests-by-vehicle-type'
   );
   return response.data;
 }

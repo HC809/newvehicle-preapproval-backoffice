@@ -10,6 +10,16 @@ export interface DealershipStatistics {
   dealerships: DealershipRequestCount[];
 }
 
+export interface VehicleTypeRequestCount {
+  vehicleTypeId: string;
+  vehicleTypeName: string;
+  requestCount: number;
+}
+
+export interface VehicleTypeStatistics {
+  vehicleTypes: VehicleTypeRequestCount[];
+}
+
 export interface LoanRequestStatistics {
   totalRequests: number;
   requestsByStatus: Record<LoanRequestStatus, number>;

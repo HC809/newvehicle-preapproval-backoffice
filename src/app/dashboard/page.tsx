@@ -6,11 +6,12 @@ import { useDashboardData } from '@/features/dashboard/api/dashboard-service';
 import { StatusStatistics } from '@/features/dashboard/components/status-statistics';
 import { StatusChart } from '@/features/dashboard/components/status-chart';
 import { DealershipBarChart } from '@/features/dashboard/components/dealership-bar-chart';
+import { VehicleTypeBarChart } from '@/features/dashboard/components/vehicle-type-bar-chart';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ReloadIcon } from '@radix-ui/react-icons';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { BarChart4, PieChart, ShieldCheck } from 'lucide-react';
+import { BarChart4, CarIcon, ShieldCheck, StoreIcon } from 'lucide-react';
 
 export default function DashboardPage() {
   const apiClient = useAxios();
@@ -50,14 +51,21 @@ export default function DashboardPage() {
         </div>
 
         <Tabs defaultValue='overview' className='space-y-6'>
-          <TabsList className='grid w-full grid-cols-2 md:w-auto'>
+          <TabsList className='grid w-full grid-cols-3 md:w-auto'>
             <TabsTrigger value='overview' className='flex items-center gap-2'>
               <ShieldCheck className='h-4 w-4' />
               <span>Estado</span>
             </TabsTrigger>
-            <TabsTrigger value='detailed' className='flex items-center gap-2'>
-              <BarChart4 className='h-4 w-4' />
+            <TabsTrigger
+              value='dealerships'
+              className='flex items-center gap-2'
+            >
+              <StoreIcon className='h-4 w-4' />
               <span>Concesionarios</span>
+            </TabsTrigger>
+            <TabsTrigger value='vehicles' className='flex items-center gap-2'>
+              <CarIcon className='h-4 w-4' />
+              <span>Vehículos</span>
             </TabsTrigger>
           </TabsList>
 
@@ -91,10 +99,18 @@ export default function DashboardPage() {
             */}
           </TabsContent>
 
-          {/* Detailed Tab - Dealership Bar Chart */}
-          <TabsContent value='detailed' className='space-y-6'>
+          {/* Dealerships Tab - Dealership Bar Chart */}
+          <TabsContent value='dealerships' className='space-y-6'>
             <DealershipBarChart
               data={data?.dealershipStats}
+              isLoading={isLoading}
+            />
+          </TabsContent>
+
+          {/* Vehicles Tab - Vehicle Type Bar Chart */}
+          <TabsContent value='vehicles' className='space-y-6'>
+            <VehicleTypeBarChart
+              data={data?.vehicleTypeStats}
               isLoading={isLoading}
             />
           </TabsContent>
