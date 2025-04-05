@@ -21,8 +21,8 @@ export default function Header() {
           <SearchInput />
         </div>
         <Notifications />
-        <UserNav />
         <ThemeToggle />
+        <UserNav />
       </div>
     </header>
   );
