@@ -218,15 +218,16 @@ export const DocumentViewer = ({
           <DialogHeader>
             <DialogTitle>{doc.fileName}</DialogTitle>
           </DialogHeader>
-          <div className='flex flex-1 items-center justify-center overflow-auto'>
+          <div className='flex flex-1 items-center justify-center overflow-auto p-4'>
             {imageUrl && (
               <Image
                 src={imageUrl}
                 alt={doc.fileName}
                 className='max-h-full max-w-full object-contain'
-                fill
-                sizes='80vw'
-                style={{ objectFit: 'contain' }}
+                width={1200}
+                height={900}
+                style={{ maxHeight: 'calc(80vh - 80px)' }}
+                priority
               />
             )}
           </div>
