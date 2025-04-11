@@ -19,7 +19,9 @@ import { authenticate } from '../actions/auth-actions';
 import { useRouter } from 'next/navigation';
 
 const formSchema = z.object({
-  email: z.string().email({ message: 'Ingrese un correo electrónico válido' }),
+  username: z
+    .string()
+    .min(3, { message: 'Ingrese un nombre de usuario válido' }),
   password: z
     .string()
     .min(6, { message: 'La contraseña debe tener al menos 6 caracteres' })
@@ -44,7 +46,7 @@ export default function UserAuthForm() {
   const form = useForm<UserFormValue>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      email: '',
+      username: '',
       password: ''
     }
   });
@@ -58,7 +60,7 @@ export default function UserAuthForm() {
 
     try {
       const authResponse = await authenticate(
-        credentials.email,
+        credentials.username,
         credentials.password
       );
 
@@ -97,14 +99,14 @@ export default function UserAuthForm() {
 
         <FormField
           control={form.control}
-          name='email'
+          name='username'
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Correo Electrónico</FormLabel>
+              <FormLabel>Usuario</FormLabel>
               <FormControl>
                 <Input
-                  type='email'
-                  placeholder='Ingrese su correo electrónico...'
+                  type='text'
+                  placeholder='Ingrese su nombre de usuario...'
                   disabled={loading}
                   {...field}
                 />
