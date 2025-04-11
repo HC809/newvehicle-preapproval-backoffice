@@ -1,7 +1,11 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { PlusIcon, ReloadIcon } from '@radix-ui/react-icons';
+import {
+  PlusIcon,
+  ReloadIcon,
+  MagnifyingGlassIcon
+} from '@radix-ui/react-icons';
 import PageContainer from '@/components/layout/page-container';
 import { Heading } from '@/components/ui/heading';
 import { Separator } from '@/components/ui/separator';
@@ -172,26 +176,45 @@ function UserContent() {
           <Separator />
 
           <div className='flex gap-4'>
-            <Input
-              placeholder='Buscar por nombre...'
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className='max-w-sm'
-            />
+            <div className='relative w-[300px]'>
+              <MagnifyingGlassIcon className='absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground' />
+              <Input
+                placeholder='Buscar por nombre...'
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className='pl-9'
+              />
+            </div>
             <Select
               value={selectedRole}
               onValueChange={(value) =>
                 setSelectedRole(value as UserRole | 'all')
               }
             >
-              <SelectTrigger className='w-[180px]'>
-                <SelectValue placeholder='Filtrar por rol' />
+              <SelectTrigger className='w-[300px]'>
+                <SelectValue placeholder='Filtrar por rol'>
+                  {selectedRole === 'all' ? (
+                    'Todos los roles'
+                  ) : (
+                    <div className='flex items-center gap-2'>
+                      <span className='max-w-[250px] truncate'>
+                        {roleTranslations[selectedRole]}
+                      </span>
+                    </div>
+                  )}
+                </SelectValue>
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value='all'>Todos los roles</SelectItem>
+              <SelectContent className='max-h-[300px] w-[300px]'>
+                <SelectItem value='all' className='font-medium'>
+                  <div className='flex items-center gap-2'>
+                    <span>Todos los roles</span>
+                  </div>
+                </SelectItem>
                 {Object.values(UserRole).map((role) => (
                   <SelectItem key={role} value={role}>
-                    {roleTranslations[role]}
+                    <div className='flex items-center gap-2'>
+                      <span className='truncate'>{roleTranslations[role]}</span>
+                    </div>
                   </SelectItem>
                 ))}
               </SelectContent>
