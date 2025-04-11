@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { PlusIcon, ReloadIcon } from '@radix-ui/react-icons';
 import PageContainer from '@/components/layout/page-container';
 import { Heading } from '@/components/ui/heading';
@@ -21,6 +21,16 @@ import {
 import { getUserModalProps } from '@/features/users/helpers/modal-helpers';
 import KBar from '@/components/kbar';
 import { toast } from 'sonner';
+import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select';
+import { UserRole } from 'types/User';
+import { roleTranslations } from '@/utils/roleTranslations';
 
 function UserContent() {
   const apiClient = useAxios();
@@ -31,6 +41,9 @@ function UserContent() {
     error,
     refetch
   } = useUsers(apiClient);
+
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedRole, setSelectedRole] = useState<UserRole | 'all'>('all');
 
   const deleteUserMutation = useDeleteUser(apiClient);
   const restoreUserMutation = useRestoreUser(apiClient);
@@ -45,6 +58,20 @@ function UserContent() {
   } = useUserStore();
 
   const [isFormOpen, setIsFormOpen] = useState(false);
+
+  // Filter users locally based on search term and role
+  const filteredUsers = useMemo(() => {
+    if (!users) return [];
+
+    return users.filter((user) => {
+      const matchesSearch = user.name
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase());
+      const matchesRole = selectedRole === 'all' || user.role === selectedRole;
+
+      return matchesSearch && matchesRole;
+    });
+  }, [users, searchTerm, selectedRole]);
 
   const modalAction = userToDelete
     ? 'delete'
@@ -144,6 +171,33 @@ function UserContent() {
 
           <Separator />
 
+          <div className='flex gap-4'>
+            <Input
+              placeholder='Buscar por nombre...'
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className='max-w-sm'
+            />
+            <Select
+              value={selectedRole}
+              onValueChange={(value) =>
+                setSelectedRole(value as UserRole | 'all')
+              }
+            >
+              <SelectTrigger className='w-[180px]'>
+                <SelectValue placeholder='Filtrar por rol' />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value='all'>Todos los roles</SelectItem>
+                {Object.values(UserRole).map((role) => (
+                  <SelectItem key={role} value={role}>
+                    {roleTranslations[role]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
           {error ? (
             <div className='space-y-4'>
               <ErrorAlert error={error?.message || String(error)} />
@@ -151,8 +205,8 @@ function UserContent() {
           ) : (
             <>
               <UserListingPage
-                users={users || []}
-                totalItems={users?.length || 0}
+                users={filteredUsers}
+                totalItems={filteredUsers.length}
                 isLoading={isLoading || !users}
               />
 
