@@ -24,6 +24,23 @@ export const useUsers = (
   });
 };
 
+export const useSyncCofisaUsers = (apiClient: AxiosInstance | undefined) => {
+  const queryClient = useQueryClient();
+
+  return useMutation<boolean, Error>({
+    mutationFn: async (): Promise<boolean> => {
+      if (!apiClient) throw new Error('API client not initialized');
+      const response = await apiClient.post<boolean>(
+        '/users/sync-cofisa-users'
+      );
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [USERS_KEY] });
+    }
+  });
+};
+
 export const useCreateUser = (apiClient: AxiosInstance | undefined) => {
   const queryClient = useQueryClient();
 

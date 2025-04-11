@@ -4,7 +4,8 @@ import { useState, useMemo } from 'react';
 import {
   PlusIcon,
   ReloadIcon,
-  MagnifyingGlassIcon
+  MagnifyingGlassIcon,
+  UpdateIcon
 } from '@radix-ui/react-icons';
 import PageContainer from '@/components/layout/page-container';
 import { Heading } from '@/components/ui/heading';
@@ -20,7 +21,8 @@ import { AlertModal } from '@/components/modal/alert-modal';
 import {
   useUsers,
   useDeleteUser,
-  useRestoreUser
+  useRestoreUser,
+  useSyncCofisaUsers
 } from '@/features/users/api/user-service';
 import { getUserModalProps } from '@/features/users/helpers/modal-helpers';
 import KBar from '@/components/kbar';
@@ -51,6 +53,7 @@ function UserContent() {
 
   const deleteUserMutation = useDeleteUser(apiClient);
   const restoreUserMutation = useRestoreUser(apiClient);
+  const syncCofisaUsersMutation = useSyncCofisaUsers(apiClient);
 
   const {
     userToEdit,
@@ -146,6 +149,15 @@ function UserContent() {
     openUserForm: () => setIsFormOpen(true)
   };
 
+  const handleSyncCofisaUsers = async () => {
+    try {
+      await syncCofisaUsersMutation.mutateAsync();
+      toast.success('Usuarios de Cofisa sincronizados correctamente.');
+    } catch (error) {
+      toast.error('Error al sincronizar usuarios de Cofisa.');
+    }
+  };
+
   return (
     <KBar actions={kbarActions}>
       <PageContainer scrollable={false}>
@@ -160,13 +172,30 @@ function UserContent() {
                 variant='default'
                 size='icon'
                 onClick={() => refetch()}
-                disabled={isFetching}
+                disabled={isFetching || syncCofisaUsersMutation.isPending}
               >
                 <ReloadIcon
                   className={cn('h-4 w-4', isFetching && 'animate-spin')}
                 />
               </Button>
-              <Button variant='default' onClick={() => setIsFormOpen(true)}>
+              <Button
+                variant='default'
+                onClick={handleSyncCofisaUsers}
+                disabled={syncCofisaUsersMutation.isPending}
+              >
+                <UpdateIcon
+                  className={cn(
+                    'mr-2 h-4 w-4',
+                    syncCofisaUsersMutation.isPending && 'animate-spin'
+                  )}
+                />
+                Sincronizar
+              </Button>
+              <Button
+                variant='default'
+                onClick={() => setIsFormOpen(true)}
+                disabled={syncCofisaUsersMutation.isPending}
+              >
                 <PlusIcon className='mr-2 h-4 w-4' />
                 Agregar Usuario
               </Button>
