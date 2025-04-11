@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { DataTableSearch } from '@/components/ui/table/data-table-search';
+//import { DataTableSearch } from '@/components/ui/table/data-table-search';
 import { DataTableFilterBox } from '@/components/ui/table/data-table-filter-box';
 import { DataTableResetFilter } from '@/components/ui/table/data-table-reset-filter';
 import { useSession } from 'next-auth/react';
@@ -13,6 +13,8 @@ import { useDealerships } from '@/features/dealerships/api/dealership-service';
 import { UserRole } from 'types/User';
 import { LoanRequestStatus } from 'types/LoanRequests';
 import { translateStatus, getStatusVariant } from '@/utils/getStatusColor';
+import { Input } from '@/components/ui/input';
+import { MagnifyingGlassIcon } from '@radix-ui/react-icons';
 
 export function useLoanRequestTableFilters() {
   const router = useRouter();
@@ -20,7 +22,7 @@ export function useLoanRequestTableFilters() {
   const searchParams = useSearchParams();
 
   const [page, setPage] = useState(1);
-  const [searchQuery, setSearchQuery] = useState(searchParams.get('dni') || '');
+  const [dniFilter, setDniFilter] = useState(searchParams.get('dni') || '');
   const [dealershipFilter, setDealershipFilter] = useState(
     searchParams.get('dealership') || ''
   );
@@ -44,46 +46,46 @@ export function useLoanRequestTableFilters() {
     [searchParams]
   );
 
-  const setSearchQueryValue = useCallback(
+  const setDniFilterValue = useCallback(
     (
       value: string | ((old: string) => string | null) | null,
       options?: Options
     ) => {
       let newValue: string | null = null;
       if (typeof value === 'function') {
-        newValue = value(searchQuery);
+        newValue = value(dniFilter);
       } else {
         newValue = value;
       }
-      setSearchQuery(newValue || '');
+      setDniFilter(newValue || '');
       const queryString = createQueryString('dni', newValue);
       router.push(`${pathname}?${queryString}`);
       return Promise.resolve(new URLSearchParams(queryString));
     },
-    [searchQuery, createQueryString, pathname, router]
+    [dniFilter, createQueryString, pathname, router]
   );
 
-  const setPageValue = useCallback(
-    (
-      value: number | ((old: number) => number | null) | null,
-      options?: Options
-    ) => {
-      let newValue: number | null = null;
-      if (typeof value === 'function') {
-        newValue = value(page);
-      } else {
-        newValue = value;
-      }
-      if (newValue !== null) {
-        setPage(newValue);
-        const queryString = createQueryString('page', newValue.toString());
-        router.push(`${pathname}?${queryString}`);
-        return Promise.resolve(new URLSearchParams(queryString));
-      }
-      return Promise.resolve(new URLSearchParams());
-    },
-    [page, createQueryString, pathname, router]
-  );
+  // const setPageValue = useCallback(
+  //   (
+  //     value: number | ((old: number) => number | null) | null,
+  //     options?: Options
+  //   ) => {
+  //     let newValue: number | null = null;
+  //     if (typeof value === 'function') {
+  //       newValue = value(page);
+  //     } else {
+  //       newValue = value;
+  //     }
+  //     if (newValue !== null) {
+  //       setPage(newValue);
+  //       const queryString = createQueryString('page', newValue.toString());
+  //       router.push(`${pathname}?${queryString}`);
+  //       return Promise.resolve(new URLSearchParams(queryString));
+  //     }
+  //     return Promise.resolve(new URLSearchParams());
+  //   },
+  //   [page, createQueryString, pathname, router]
+  // );
 
   const setDealershipFilterValue = useCallback(
     (
@@ -143,24 +145,23 @@ export function useLoanRequestTableFilters() {
   );
 
   const resetFilters = useCallback(() => {
-    setSearchQuery('');
+    setDniFilter('');
     setDealershipFilter('');
     setManagerFilter('');
     setStatusFilter('');
     router.push(pathname);
   }, [pathname, router]);
 
-  const isAnyFilterActive =
-    searchQuery !== '' ||
-    dealershipFilter !== '' ||
-    managerFilter !== '' ||
-    statusFilter !== '';
+  const isAnyFilterActive = useMemo(() => {
+    return (
+      !!dniFilter || !!dealershipFilter || !!managerFilter || !!statusFilter
+    );
+  }, [dniFilter, dealershipFilter, managerFilter, statusFilter]);
 
   return {
     page,
-    setPageValue,
-    searchQuery,
-    setSearchQueryValue,
+    dniFilter,
+    setDniFilterValue,
     dealershipFilter,
     setDealershipFilterValue,
     managerFilter,
@@ -187,12 +188,11 @@ export default function LoanRequestTableAction() {
   const { data: dealerships = [] } = useDealerships(apiClient);
 
   const {
-    searchQuery,
+    dniFilter,
+    setDniFilterValue,
     dealershipFilter,
     managerFilter,
     statusFilter,
-    setPageValue,
-    setSearchQueryValue,
     setDealershipFilterValue,
     setManagerFilterValue,
     setStatusFilterValue,
@@ -238,14 +238,15 @@ export default function LoanRequestTableAction() {
 
   return (
     <div className='flex flex-wrap items-center gap-4'>
-      <DataTableSearch
-        searchKey='DNI'
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQueryValue}
-        setPage={setPageValue}
-        translatedPlaceholder='Buscar por DNI...'
-        translatedSelected='Seleccionado'
-      />
+      <div className='relative w-[300px]'>
+        <MagnifyingGlassIcon className='absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground' />
+        <Input
+          placeholder='Buscar por DNI...'
+          value={dniFilter}
+          onChange={(e) => setDniFilterValue(e.target.value)}
+          className='pl-9'
+        />
+      </div>
       <DataTableFilterBox
         filterKey='dealerships'
         title='Concesionarias'
