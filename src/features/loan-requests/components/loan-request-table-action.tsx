@@ -3,7 +3,6 @@
 import { useState, useCallback, useMemo } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 //import { DataTableSearch } from '@/components/ui/table/data-table-search';
-//import { DataTableSearch } from '@/components/ui/table/data-table-search';
 import { DataTableFilterBox } from '@/components/ui/table/data-table-filter-box';
 import { DataTableResetFilter } from '@/components/ui/table/data-table-reset-filter';
 import { useSession } from 'next-auth/react';
@@ -174,32 +173,18 @@ export function useLoanRequestTableFilters() {
   };
 }
 
-interface LoanRequestTableActionProps {
-  dniFilter: string;
-  setDniFilter: (value: string) => void;
-  resetAllFilters: () => void;
-}
-
-export default function LoanRequestTableAction({
-  dniFilter,
-  setDniFilter,
-  resetAllFilters
-}: LoanRequestTableActionProps) {
+export default function LoanRequestTableAction() {
   const { data: session } = useSession();
   const isAdmin = !!session?.isSystemAdmin;
   const apiClient = useAxios();
-  const [isLoading, startTransition] = useTransition();
-  const [inputValue, setInputValue] = useState(dniFilter || '');
 
-  useEffect(() => {
-    setInputValue(dniFilter);
-  }, [dniFilter]);
-
+  // Obtener usuarios con rol BusinessDevelopment_User y que estén activos
   const { data: users = [] } = useUsers(apiClient);
   const activeManagers = users.filter(
     (user) => user.role === UserRole.BusinessDevelopment_User && user.isActive
   );
 
+  // Obtener concesionarias
   const { data: dealerships = [] } = useDealerships(apiClient);
 
   const {
@@ -215,33 +200,19 @@ export default function LoanRequestTableAction({
     isAnyFilterActive
   } = useLoanRequestTableFilters();
 
-  const handleDniSearch = () => {
-    setDniFilter(inputValue);
-    setPageValue(1);
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      handleDniSearch();
-    }
-  };
-
-  const handleResetAll = () => {
-    setInputValue('');
-    resetAllFilters();
-    resetFilters();
-  };
-
+  // Mapear concesionarias para el filtro
   const DEALERSHIP_OPTIONS = dealerships.map((dealership) => ({
     value: dealership.id,
     label: dealership.name
   }));
 
+  // Mapear responsables para el filtro
   const MANAGER_OPTIONS = activeManagers.map((manager) => ({
     value: manager.name,
     label: manager.name
   }));
 
+  // Estado para las opciones de status
   const STATUS_OPTIONS = Object.values(LoanRequestStatus).map((status) => ({
     value: status,
     label: translateStatus(status),
@@ -308,8 +279,8 @@ export default function LoanRequestTableAction({
       />
 
       <DataTableResetFilter
-        isFilterActive={isAnyFilterActive || dniFilter !== ''}
-        onReset={handleResetAll}
+        isFilterActive={isAnyFilterActive}
+        onReset={resetFilters}
         translatedReset='Restablecer filtros'
       />
     </div>
