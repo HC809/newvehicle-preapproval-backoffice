@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { formatHNL } from '@/utils/formatCurrency';
-import { DollarSign, Edit, Calculator } from 'lucide-react';
+import { DollarSign, Calculator } from 'lucide-react';
 import { LoanRequest } from 'types/LoanRequests';
 import { LoanCalculation } from 'types/LoanCalculation';
 import { Client } from 'types/Client';
@@ -39,17 +39,6 @@ export const FinancialSummaryCard = ({
           <DollarSign className='h-5 w-5 text-emerald-500 dark:text-emerald-400' />
           <span>Resumen Financiero</span>
         </CardTitle>
-        {loanRequest.equifaxChecked && (
-          <Button
-            variant='outline'
-            size='sm'
-            className='h-8 gap-1'
-            disabled={!loanRequest.equifaxChecked}
-          >
-            <Edit className='h-3.5 w-3.5' />
-            <span>Editar</span>
-          </Button>
-        )}
       </CardHeader>
       <CardContent className='space-y-4'>
         <div className='grid gap-2 pt-4'>
@@ -197,14 +186,14 @@ export const FinancialSummaryCard = ({
                   </div>
 
                   {/* Columna 3 - Información Adicional */}
-                  <div className='space-y-8'>
+                  <div className='relative space-y-8'>
                     <h3 className='flex items-center gap-2 text-lg font-semibold'>
                       <div className='flex h-7 w-7 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30'>
                         3
                       </div>
                       <span>Información Adicional</span>
                     </h3>
-                    <div className='space-y-8'>
+                    <div className='space-y-4'>
                       <FinancialItem
                         label='Relación crédito/garantía'
                         value={`${(loanCalculation.loanToValueRatio * 100).toFixed(2)}%`}

@@ -32,8 +32,11 @@ export const useLoanRequests = (
         if (params.viewAll !== undefined) {
           queryParams.append('viewAll', params.viewAll.toString());
         }
+
+        // Parámetros que se manejan localmente y no se envían al API:
+        // - dni: Se filtra localmente en el componente page.tsx
+
         // Añadir otros parámetros si son necesarios en el futuro
-        // if (params.dni) queryParams.append('dni', params.dni);
         // if (params.dealership) queryParams.append('dealership', params.dealership);
         // if (params.manager) queryParams.append('manager', params.manager);
         // if (params.status) queryParams.append('status', params.status);

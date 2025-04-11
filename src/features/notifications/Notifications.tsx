@@ -10,7 +10,7 @@ import {
   PopoverContent,
   PopoverTrigger
 } from '@/components/ui/popover';
-import { Bell, RefreshCw } from 'lucide-react';
+import { Bell, RefreshCw, FileSymlink } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { LoanNotificationType } from 'types/Notifications';
 import { useRouter } from 'next/navigation';
@@ -25,6 +25,12 @@ export default function Notifications() {
 
   // Estado global de notificaciones con Zustand
   const { count, clearBadgeOnly, recentNotifications } = useNotificationStore();
+
+  // Navegar a la solicitud de préstamo
+  const navigateToLoanRequest = (loanRequestId: string) => {
+    setOpen(false); // Cerrar popover al navegar
+    router.push(`/dashboard/loan-requests/${loanRequestId}`);
+  };
 
   // Format time difference
   const formatTimeDifference = (dateString: string) => {
@@ -165,9 +171,24 @@ export default function Notifications() {
                     <p className='line-clamp-2 text-sm text-muted-foreground'>
                       {notification.message}
                     </p>
-                    <span className='text-xs text-muted-foreground'>
-                      {formatTimeDifference(notification.createdAt)}
-                    </span>
+                    <div className='flex items-center justify-between'>
+                      <span className='text-xs text-muted-foreground'>
+                        {formatTimeDifference(notification.createdAt)}
+                      </span>
+                      {notification.loanRequestId && (
+                        <Button
+                          variant='ghost'
+                          size='sm'
+                          className='h-6 p-1 text-xs text-primary hover:bg-primary/10 hover:text-primary'
+                          onClick={() =>
+                            navigateToLoanRequest(notification.loanRequestId!)
+                          }
+                        >
+                          <FileSymlink className='mr-1 h-3 w-3' />
+                          Ver solicitud
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}

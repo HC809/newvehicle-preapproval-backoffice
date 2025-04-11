@@ -1,6 +1,6 @@
 'use client';
 
-import { CrossIcon, UploadIcon } from 'lucide-react';
+import { UploadIcon, Trash, FileIcon } from 'lucide-react';
 import Image from 'next/image';
 import * as React from 'react';
 import Dropzone, {
@@ -269,10 +269,13 @@ interface FileCardProps {
 }
 
 function FileCard({ file, progress, onRemove }: FileCardProps) {
+  const isImage = file.type.startsWith('image/');
+  const isPdf = file.type === 'application/pdf';
+
   return (
     <div className='relative flex items-center space-x-4'>
       <div className='flex flex-1 space-x-4'>
-        {isFileWithPreview(file) ? (
+        {isImage && isFileWithPreview(file) ? (
           <Image
             src={file.preview}
             alt={file.name}
@@ -281,7 +284,15 @@ function FileCard({ file, progress, onRemove }: FileCardProps) {
             loading='lazy'
             className='aspect-square shrink-0 rounded-md object-cover'
           />
-        ) : null}
+        ) : isPdf ? (
+          <div className='flex h-12 w-12 shrink-0 items-center justify-center rounded-md bg-red-50 dark:bg-red-950'>
+            <FileIcon className='h-6 w-6 text-red-500' />
+          </div>
+        ) : (
+          <div className='flex h-12 w-12 shrink-0 items-center justify-center rounded-md bg-gray-100 dark:bg-gray-800'>
+            <FileIcon className='h-6 w-6 text-gray-500' />
+          </div>
+        )}
         <div className='flex w-full flex-col gap-2'>
           <div className='space-y-px'>
             <p className='line-clamp-1 text-sm font-medium text-foreground/80'>
@@ -299,10 +310,10 @@ function FileCard({ file, progress, onRemove }: FileCardProps) {
           type='button'
           variant='outline'
           size='icon'
-          className='size-7'
+          className='size-7 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950'
           onClick={onRemove}
         >
-          <CrossIcon className='size-4' aria-hidden='true' />
+          <Trash className='size-4 text-red-500' aria-hidden='true' />
           <span className='sr-only'>Remove file</span>
         </Button>
       </div>

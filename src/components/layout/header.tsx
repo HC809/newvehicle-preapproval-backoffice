@@ -20,9 +20,9 @@ export default function Header() {
         <div className='hidden md:flex'>
           <SearchInput />
         </div>
+        <ThemeToggle />
         <Notifications />
         <UserNav />
-        <ThemeToggle />
       </div>
     </header>
   );

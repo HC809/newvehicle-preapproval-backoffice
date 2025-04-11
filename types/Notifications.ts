@@ -10,6 +10,7 @@ export interface LoanNotification {
   message: string;
   type: LoanNotificationType;
   userToNotifyId?: string;
+  loanRequestId?: string;
   expiredAt?: string;
   createdAt: string;
   metadata?: Record<string, any>;
@@ -21,6 +22,7 @@ export interface LoanNotificationResponse {
   message: string;
   type: LoanNotificationType;
   userToNotifyId: string;
+  loanRequestId?: string;
   expiredAt?: string;
   createdAt: string;
   metadata?: Record<string, any>;
