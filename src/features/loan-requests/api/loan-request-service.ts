@@ -247,3 +247,25 @@ export const useUpdateLoanRequest = (apiClient: AxiosInstance) => {
     }
   });
 };
+
+// Assign visit mutation
+export interface AssignVisitData {
+  branchCode: number;
+  pymeAdvisorId: string;
+  branchManagerId: string;
+}
+
+export const useAssignVisit = (apiClient: AxiosInstance) => {
+  return useMutation({
+    mutationFn: async ({
+      loanRequestId,
+      ...data
+    }: AssignVisitData & { loanRequestId: string }) => {
+      const response = await apiClient.post(
+        `/loan-requests/assign-visit/${loanRequestId}`,
+        data
+      );
+      return response.data;
+    }
+  });
+};

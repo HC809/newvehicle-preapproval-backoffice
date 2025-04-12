@@ -8,7 +8,8 @@ import {
   XCircle,
   FileText,
   History,
-  Pencil
+  Pencil,
+  Building
 } from 'lucide-react';
 import { toast } from 'sonner';
 import PageContainer from '@/components/layout/page-container';
@@ -47,6 +48,7 @@ import { LoanRequestTimeline } from '@/features/loan-requests/components/loan-re
 import { RejectionModal } from '@/features/loan-requests/components/rejection-modal';
 import { LoanRequestEditForm } from '@/features/loan-requests/components';
 import { UploadDocumentButton } from '@/features/loan-documents/components';
+import AssignVisitForm from '@/features/loan-requests/components/assign-visit-form';
 
 export default function LoanRequestDetailPage() {
   const router = useRouter();
@@ -67,6 +69,7 @@ export default function LoanRequestDetailPage() {
   const [showRejectionModal, setShowRejectionModal] = useState(false);
   const [isManagerRejection, setIsManagerRejection] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showAssignVisitModal, setShowAssignVisitModal] = useState(false);
 
   // Fetch loan request details from API
   const {
@@ -322,6 +325,15 @@ export default function LoanRequestDetailPage() {
     return false;
   };
 
+  // Check if user can assign visit (when status is AcceptedByCustomer and user is BusinessDevelopment_User)
+  const canAssignVisit = (status: LoanRequestStatus) => {
+    if (!userRole) return false;
+    return (
+      status === LoanRequestStatus.AcceptedByCustomer &&
+      userRole === UserRole.BusinessDevelopment_User
+    );
+  };
+
   // Loading state
   if (isLoading) {
     return (
@@ -398,6 +410,16 @@ export default function LoanRequestDetailPage() {
                     Editar
                   </Button>
                 )}
+              {canAssignVisit(loanRequestDetail.loanRequest.status) && (
+                <Button
+                  variant='outline'
+                  onClick={() => setShowAssignVisitModal(true)}
+                  className='gap-2'
+                >
+                  <Building className='h-4 w-4' />
+                  Asignar Visita
+                </Button>
+              )}
               <Button
                 variant='outline'
                 onClick={() => setShowTimeline(true)}
@@ -601,6 +623,15 @@ export default function LoanRequestDetailPage() {
               open={showEditModal}
               onOpenChange={setShowEditModal}
               loanRequest={loanRequestDetail.loanRequest}
+              onSuccess={() => {
+                refetch();
+              }}
+            />
+
+            <AssignVisitForm
+              open={showAssignVisitModal}
+              onOpenChange={setShowAssignVisitModal}
+              loanRequestId={loanRequestDetail.loanRequest.id}
               onSuccess={() => {
                 refetch();
               }}

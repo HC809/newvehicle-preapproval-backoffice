@@ -9,18 +9,39 @@ import { User, CreateUserForm } from 'types/User';
 
 const USERS_KEY = 'users';
 
+export interface UserQueryParams {
+  branchCode?: number;
+  role?: string;
+}
+
 export const useUsers = (
   apiClient: AxiosInstance | undefined,
-  enabled: boolean = true // Add the enabled parameter with default value of true
+  enabled: boolean = true,
+  params?: UserQueryParams
 ): UseQueryResult<User[], Error> => {
   return useQuery({
-    queryKey: [USERS_KEY],
+    queryKey: [USERS_KEY, params],
     queryFn: async (): Promise<User[]> => {
       if (!apiClient) throw new Error('API client not initialized');
-      const response = await apiClient.get<User[]>('/users');
+
+      // Construct query parameters if provided
+      const queryParams = new URLSearchParams();
+      if (params) {
+        if (params.branchCode !== undefined) {
+          queryParams.append('branchCode', params.branchCode.toString());
+        }
+        if (params.role) {
+          queryParams.append('role', params.role);
+        }
+      }
+
+      const queryString = queryParams.toString();
+      const url = `/users${queryString ? `?${queryString}` : ''}`;
+
+      const response = await apiClient.get<User[]>(url);
       return response.data;
     },
-    enabled: !!apiClient && enabled // Only run the query when API client is available and enabled is true
+    enabled: !!apiClient && enabled
   });
 };
 
