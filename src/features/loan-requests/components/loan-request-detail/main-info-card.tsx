@@ -14,19 +14,31 @@ import {
   getStatusClassName
 } from '@/utils/getStatusColor';
 import { formatLoanRequestId } from '@/utils/formatId';
-import { User, FileText } from 'lucide-react';
-import { LoanRequest } from 'types/LoanRequests';
+import { User, FileText, MapPin } from 'lucide-react';
+import { LoanRequest, LoanRequestStatus, Visit } from 'types/LoanRequests';
 import { GeneralInfoTab } from './general-info-tab';
 import { VehicleInfoTab } from './vehicle-info-tab';
 import { FinancialInfoTab } from './financial-info-tab';
+import { VisitInfoTab } from './visit-info-tab';
 import { Client } from 'types/Client';
 
 interface MainInfoCardProps {
   loanRequest: LoanRequest;
   client?: Client;
+  visit?: Visit;
 }
 
-export const MainInfoCard = ({ loanRequest, client }: MainInfoCardProps) => {
+export const MainInfoCard = ({
+  loanRequest,
+  client,
+  visit
+}: MainInfoCardProps) => {
+  const showVisitTab =
+    loanRequest.status === LoanRequestStatus.VisitAssigned && visit;
+
+  // Si está en estado VisitAssigned, la pestaña de visita debería ser la predeterminada
+  const defaultTab = showVisitTab ? 'visit' : 'general';
+
   return (
     <Card className='border-l-4 border-l-blue-500 dark:border-l-blue-400'>
       <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
@@ -49,11 +61,19 @@ export const MainInfoCard = ({ loanRequest, client }: MainInfoCardProps) => {
         </Badge>
       </CardHeader>
       <CardContent>
-        <Tabs defaultValue='general' className='w-full'>
-          <TabsList className='grid w-full grid-cols-3'>
+        <Tabs defaultValue={defaultTab} className='w-full'>
+          <TabsList
+            className={`grid w-full ${showVisitTab ? 'grid-cols-4' : 'grid-cols-3'}`}
+          >
             <TabsTrigger value='general'>General</TabsTrigger>
             <TabsTrigger value='vehicle'>Vehículo</TabsTrigger>
             <TabsTrigger value='financial'>Financiero</TabsTrigger>
+            {showVisitTab && (
+              <TabsTrigger value='visit' className='flex items-center gap-1'>
+                <MapPin className='h-3.5 w-3.5' />
+                Visita
+              </TabsTrigger>
+            )}
           </TabsList>
 
           <TabsContent
@@ -76,6 +96,15 @@ export const MainInfoCard = ({ loanRequest, client }: MainInfoCardProps) => {
           >
             <FinancialInfoTab loanRequest={loanRequest} />
           </TabsContent>
+
+          {showVisitTab && (
+            <TabsContent
+              value='visit'
+              className='mt-4 space-y-4 focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0'
+            >
+              <VisitInfoTab visit={visit} />
+            </TabsContent>
+          )}
         </Tabs>
       </CardContent>
       {loanRequest.comment && (

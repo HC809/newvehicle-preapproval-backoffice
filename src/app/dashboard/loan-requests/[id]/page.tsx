@@ -487,6 +487,7 @@ export default function LoanRequestDetailPage() {
               <MainInfoCard
                 loanRequest={loanRequestDetail.loanRequest}
                 client={loanRequestDetail.client}
+                visit={loanRequestDetail.visit}
               />
               <RejectionAlert
                 rejectionReason={loanRequestDetail.loanRequest.rejectionReason}

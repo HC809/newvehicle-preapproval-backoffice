@@ -6,3 +6,4 @@ export * from './rejection-alert';
 export * from './financial-summary-card';
 export * from './responsible-persons-card';
 export * from './verification-checklist-card';
+export * from './visit-info-tab';

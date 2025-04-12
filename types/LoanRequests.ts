@@ -46,12 +46,23 @@ export interface LoanRequest {
   managerId?: string;
 }
 
+export interface Visit {
+  branchCode: number;
+  branchName: string;
+  branchAddress: string;
+  pymeAdvisorId: string;
+  pymeAdvisorName: string;
+  branchManagerId: string;
+  branchManagerName: string;
+}
+
 export interface LoanRequestDetail {
   loanRequest: LoanRequest;
   client?: Client;
   documents?: LoanDocument[];
   loanCalculation?: LoanCalculation;
   events?: LoanRequestEvent[];
+  visit?: Visit;
 }
 
 export interface LoanRequestListingParams {
