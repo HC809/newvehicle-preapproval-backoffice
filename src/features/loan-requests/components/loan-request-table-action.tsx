@@ -15,6 +15,7 @@ import { LoanRequestStatus } from 'types/LoanRequests';
 import { translateStatus, getStatusVariant } from '@/utils/getStatusColor';
 import { Input } from '@/components/ui/input';
 import { MagnifyingGlassIcon } from '@radix-ui/react-icons';
+import { Dispatch, SetStateAction } from 'react';
 
 export function useLoanRequestTableFilters() {
   const router = useRouter();
@@ -173,7 +174,17 @@ export function useLoanRequestTableFilters() {
   };
 }
 
-export default function LoanRequestTableAction() {
+interface LoanRequestTableActionProps {
+  dniFilter?: string;
+  setDniFilter?: Dispatch<SetStateAction<string>>;
+  resetAllFilters?: () => void;
+}
+
+export default function LoanRequestTableAction({
+  dniFilter: externalDniFilter,
+  setDniFilter: externalSetDniFilter,
+  resetAllFilters: externalResetFilters
+}: LoanRequestTableActionProps = {}) {
   const { data: session } = useSession();
   const isAdmin = !!session?.isSystemAdmin;
   const apiClient = useAxios();
@@ -199,6 +210,15 @@ export default function LoanRequestTableAction() {
     resetFilters,
     isAnyFilterActive
   } = useLoanRequestTableFilters();
+
+  // Consider external filters if provided
+  const effectiveIsAnyFilterActive =
+    (externalDniFilter !== undefined
+      ? !!externalDniFilter
+      : isAnyFilterActive) ||
+    !!dealershipFilter ||
+    !!managerFilter ||
+    !!statusFilter;
 
   // Mapear concesionarias para el filtro
   const DEALERSHIP_OPTIONS = dealerships.map((dealership) => ({
@@ -242,8 +262,16 @@ export default function LoanRequestTableAction() {
         <MagnifyingGlassIcon className='absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground' />
         <Input
           placeholder='Buscar por DNI...'
-          value={dniFilter}
-          onChange={(e) => setDniFilterValue(e.target.value)}
+          value={
+            externalDniFilter !== undefined ? externalDniFilter : dniFilter
+          }
+          onChange={(e) => {
+            if (externalSetDniFilter) {
+              externalSetDniFilter(e.target.value);
+            } else {
+              setDniFilterValue(e.target.value);
+            }
+          }}
           className='pl-9'
         />
       </div>
@@ -278,11 +306,13 @@ export default function LoanRequestTableAction() {
         translatedClear='Limpiar filtros'
       />
 
-      <DataTableResetFilter
-        isFilterActive={isAnyFilterActive}
-        onReset={resetFilters}
-        translatedReset='Restablecer filtros'
-      />
+      {effectiveIsAnyFilterActive && (
+        <DataTableResetFilter
+          isFilterActive={effectiveIsAnyFilterActive}
+          onReset={externalResetFilters || resetFilters}
+          translatedReset='Restablecer filtros'
+        />
+      )}
     </div>
   );
 }
