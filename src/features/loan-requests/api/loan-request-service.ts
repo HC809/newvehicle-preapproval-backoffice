@@ -2,7 +2,8 @@ import {
   useQuery,
   useMutation,
   UseQueryResult,
-  UseMutationResult
+  UseMutationResult,
+  useQueryClient
 } from '@tanstack/react-query';
 import { AxiosInstance } from 'axios';
 import {
@@ -256,6 +257,8 @@ export interface AssignVisitData {
 }
 
 export const useAssignVisit = (apiClient: AxiosInstance) => {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: async ({
       loanRequestId,
@@ -266,6 +269,14 @@ export const useAssignVisit = (apiClient: AxiosInstance) => {
         data
       );
       return response.data;
+    },
+    onSuccess: (_, variables) => {
+      // Invalidate the specific loan request to update its details
+      queryClient.invalidateQueries({
+        queryKey: [LOAN_REQUESTS_KEY, 'detail', variables.loanRequestId]
+      });
+      // Also invalidate the list of loan requests
+      queryClient.invalidateQueries({ queryKey: [LOAN_REQUESTS_KEY] });
     }
   });
 };

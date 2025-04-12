@@ -17,6 +17,8 @@ export const getStatusVariant = (
       return 'destructive';
     case LoanRequestStatus.AcceptedByCustomer:
       return 'default';
+    case LoanRequestStatus.VisitAssigned:
+      return 'secondary';
     case LoanRequestStatus.DeclinedByCustomer:
       return 'secondary';
     case LoanRequestStatus.Pending:
@@ -41,6 +43,8 @@ export const getStatusClassName = (status: LoanRequestStatus): string => {
       return 'bg-red-700 text-white hover:bg-red-800 dark:bg-red-800 dark:hover:bg-red-900';
     case LoanRequestStatus.AcceptedByCustomer:
       return 'bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800';
+    case LoanRequestStatus.VisitAssigned:
+      return 'bg-purple-600 text-white hover:bg-purple-700 dark:bg-purple-700 dark:hover:bg-purple-800';
     case LoanRequestStatus.DeclinedByCustomer:
       return 'bg-gray-500 text-white hover:bg-gray-600 dark:bg-gray-600 dark:hover:bg-gray-700';
     default:
@@ -67,6 +71,8 @@ export const translateStatus = (status: LoanRequestStatus): string => {
       return 'Rechazado Gerente Neg.';
     case LoanRequestStatus.AcceptedByCustomer:
       return 'Aceptado por Cliente';
+    case LoanRequestStatus.VisitAssigned:
+      return 'Visita Asignada';
     case LoanRequestStatus.DeclinedByCustomer:
       return 'Cliente Desistió';
     case LoanRequestStatus.Cancelled:

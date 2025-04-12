@@ -275,7 +275,7 @@ export default function AssignVisitForm({
                   <div className='flex items-start'>
                     <MapPin className='mr-2 mt-0.5 h-4 w-4 text-primary' />
                     <div>
-                      <p className='text-sm font-medium'>Ciudad del Cliente</p>
+                      <p className='text-sm font-medium'>Ciudad</p>
                       <p className='text-sm text-muted-foreground'>
                         {clientCity}
                       </p>
@@ -284,9 +284,7 @@ export default function AssignVisitForm({
                   <div className='flex items-start'>
                     <Home className='mr-2 mt-0.5 h-4 w-4 text-primary' />
                     <div>
-                      <p className='text-sm font-medium'>
-                        Dirección Residencial
-                      </p>
+                      <p className='text-sm font-medium'>Dirección</p>
                       <p className='text-sm text-muted-foreground'>
                         {clientAddress}
                       </p>
