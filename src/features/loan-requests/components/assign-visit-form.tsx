@@ -32,7 +32,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import useAxios from '@/hooks/use-axios';
 import { toast } from 'sonner';
-import { useBranches } from '@/features/branches/api/branch-service';
+import { useBranches, Branch } from '@/features/branches/api/branch-service';
 import { useUsers, UserQueryParams } from '@/features/users/api/user-service';
 import {
   useAssignVisit,
@@ -76,10 +76,11 @@ export default function AssignVisitForm({
   const assignVisitMutation = useAssignVisit(apiClient!);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  // State for tracking the selected branch code for filtering users
+  // State for tracking the selected branch
   const [selectedBranchCode, setSelectedBranchCode] = useState<number | null>(
     null
   );
+  const [selectedBranch, setSelectedBranch] = useState<Branch | null>(null);
 
   // State for search filters
   const [branchSearchQuery, setBranchSearchQuery] = useState('');
@@ -161,13 +162,21 @@ export default function AssignVisitForm({
       form.setValue('branchManagerId', '');
       form.setValue('pymeAdvisorId', '');
 
-      // Update selectedBranchCode state which will trigger the users query
-      setSelectedBranchCode(value ? parseInt(value, 10) : null);
+      // Update selectedBranchCode and selectedBranch states
+      const branchCode = value ? parseInt(value, 10) : null;
+      setSelectedBranchCode(branchCode);
+
+      if (branchCode) {
+        const branch = branches.find((b) => b.codSuc === branchCode) || null;
+        setSelectedBranch(branch);
+      } else {
+        setSelectedBranch(null);
+      }
 
       // Reset search query
       setBranchSearchQuery('');
     },
-    [form]
+    [form, branches]
   );
 
   // Handle search input change
@@ -189,18 +198,21 @@ export default function AssignVisitForm({
     if (!open) {
       form.reset();
       setSelectedBranchCode(null);
+      setSelectedBranch(null);
       setBranchSearchQuery('');
     }
   }, [open, form]);
 
   const handleSubmit = useCallback(
     async (values: FormValues) => {
-      if (!loanRequestId) return;
+      if (!loanRequestId || !selectedBranch) return;
 
       assignVisitMutation.mutate(
         {
           loanRequestId,
           branchCode: parseInt(values.branchCode, 10),
+          branchName: selectedBranch.nombre || '',
+          branchAddress: selectedBranch.direccion || '',
           branchManagerId: values.branchManagerId,
           pymeAdvisorId: values.pymeAdvisorId
         },
@@ -220,7 +232,13 @@ export default function AssignVisitForm({
         }
       );
     },
-    [assignVisitMutation, loanRequestId, onOpenChange, onSuccess]
+    [
+      assignVisitMutation,
+      loanRequestId,
+      selectedBranch,
+      onOpenChange,
+      onSuccess
+    ]
   );
 
   const isFormLocked = assignVisitMutation.isPending;
@@ -275,7 +293,7 @@ export default function AssignVisitForm({
                   <div className='flex items-start'>
                     <MapPin className='mr-2 mt-0.5 h-4 w-4 text-primary' />
                     <div>
-                      <p className='text-sm font-medium'>Ciudad</p>
+                      <p className='text-sm font-medium'>Ciudad del Cliente</p>
                       <p className='text-sm text-muted-foreground'>
                         {clientCity}
                       </p>
@@ -284,7 +302,9 @@ export default function AssignVisitForm({
                   <div className='flex items-start'>
                     <Home className='mr-2 mt-0.5 h-4 w-4 text-primary' />
                     <div>
-                      <p className='text-sm font-medium'>Dirección</p>
+                      <p className='text-sm font-medium'>
+                        Dirección Residencial
+                      </p>
                       <p className='text-sm text-muted-foreground'>
                         {clientAddress}
                       </p>
@@ -366,6 +386,22 @@ export default function AssignVisitForm({
                       </FormItem>
                     )}
                   />
+
+                  {selectedBranch && (
+                    <div className='rounded-md bg-muted/50 p-3 text-sm'>
+                      <div className='mb-2 flex items-start'>
+                        <MapPin className='mr-2 mt-0.5 h-4 w-4 text-primary/70' />
+                        <div>
+                          <p className='font-medium'>
+                            Dirección de la agencia:
+                          </p>
+                          <p className='text-muted-foreground'>
+                            {selectedBranch.direccion || 'No disponible'}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   {selectedBranchCode && (
                     <>

@@ -252,6 +252,8 @@ export const useUpdateLoanRequest = (apiClient: AxiosInstance) => {
 // Assign visit mutation
 export interface AssignVisitData {
   branchCode: number;
+  branchName: string;
+  branchAddress: string;
   pymeAdvisorId: string;
   branchManagerId: string;
 }
