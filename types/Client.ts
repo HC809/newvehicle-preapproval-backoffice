@@ -1,3 +1,5 @@
+import { IncomeType } from './LoanRequests';
+
 export interface Client {
   id: string;
   name: string;
@@ -7,6 +9,7 @@ export interface Client {
   email: string;
   phoneNumber: string;
   residentialAddress: string;
+  incomeType: IncomeType | null;
   createdAt: string;
   updatedAt: string;
 }

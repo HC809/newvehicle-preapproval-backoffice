@@ -15,6 +15,12 @@ export enum LoanRequestStatus {
   Cancelled = 'Cancelled'
 }
 
+export enum IncomeType {
+  Salaried = 'Salaried',
+  BusinessOwner = 'BusinessOwner',
+  Both = 'Both'
+}
+
 export interface LoanRequest {
   id: string;
   dealershipId: string;
@@ -34,6 +40,7 @@ export interface LoanRequest {
   vehicleModel: string;
   vehicleYear: number;
   monthlyIncome: number | null;
+  incomeType: IncomeType | null;
   city: string;
   comment: string;
   status: LoanRequestStatus;

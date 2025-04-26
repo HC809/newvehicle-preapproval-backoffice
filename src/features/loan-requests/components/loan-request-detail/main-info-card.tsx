@@ -14,13 +14,14 @@ import {
   getStatusClassName
 } from '@/utils/getStatusColor';
 import { formatLoanRequestId } from '@/utils/formatId';
-import { User, FileText, MapPin } from 'lucide-react';
+import { User, FileText, MapPin, Copy } from 'lucide-react';
 import { LoanRequest, LoanRequestStatus, Visit } from 'types/LoanRequests';
 import { GeneralInfoTab } from './general-info-tab';
 import { VehicleInfoTab } from './vehicle-info-tab';
 import { FinancialInfoTab } from './financial-info-tab';
 import { VisitInfoTab } from './visit-info-tab';
 import { Client } from 'types/Client';
+import { useState } from 'react';
 
 interface MainInfoCardProps {
   loanRequest: LoanRequest;
@@ -33,8 +34,15 @@ export const MainInfoCard = ({
   client,
   visit
 }: MainInfoCardProps) => {
+  const [copiedId, setCopiedId] = useState(false);
   const showVisitTab =
     loanRequest.status === LoanRequestStatus.VisitAssigned && visit;
+
+  const copyId = () => {
+    navigator.clipboard.writeText(loanRequest.id.toString());
+    setCopiedId(true);
+    setTimeout(() => setCopiedId(false), 2000);
+  };
 
   // Si está en estado VisitAssigned, la pestaña de visita debería ser la predeterminada
   const defaultTab = showVisitTab ? 'visit' : 'general';
@@ -43,8 +51,18 @@ export const MainInfoCard = ({
     <Card className='border-l-4 border-l-blue-500 dark:border-l-blue-400'>
       <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
         <div>
-          <CardTitle className='text-xl'>
+          <CardTitle className='flex items-center gap-2 text-xl'>
             Solicitud #{formatLoanRequestId(loanRequest.id)}
+            <button
+              onClick={copyId}
+              className='rounded-full p-1 hover:bg-gray-100 dark:hover:bg-gray-800'
+              title='Copiar ID'
+            >
+              <Copy className='h-3 w-3 text-gray-500' />
+            </button>
+            {copiedId && (
+              <span className='text-xs text-green-500'>¡Copiado!</span>
+            )}
           </CardTitle>
           <CardDescription className='flex items-center gap-2'>
             <User className='h-4 w-4 text-green-500 dark:text-green-400' />

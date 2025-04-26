@@ -43,19 +43,38 @@ import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card, CardContent } from '@/components/ui/card';
+import { IncomeType } from 'types/LoanRequests';
+import { translateIncomeType } from '@/utils/translateIncomeType';
 
 // Schema for form validation
-const formSchema = z.object({
-  branchCode: z
-    .string()
-    .min(1, { message: 'Por favor seleccione una agencia.' }),
-  branchManagerId: z
-    .string()
-    .min(1, { message: 'Por favor seleccione un gerente de agencia.' }),
-  pymeAdvisorId: z
-    .string()
-    .min(1, { message: 'Por favor seleccione un asesor PYME.' })
-});
+const formSchema = z
+  .object({
+    incomeType: z.nativeEnum(IncomeType, {
+      required_error: 'Por favor seleccione el tipo de ingreso del cliente.'
+    }),
+    branchCode: z
+      .string()
+      .min(1, { message: 'Por favor seleccione una agencia.' }),
+    branchManagerId: z
+      .string()
+      .min(1, { message: 'Por favor seleccione un gerente de agencia.' }),
+    pymeAdvisorId: z.string().optional()
+  })
+  .refine(
+    (data) => {
+      if (
+        data.incomeType === IncomeType.BusinessOwner ||
+        data.incomeType === IncomeType.Both
+      ) {
+        return !!data.pymeAdvisorId;
+      }
+      return true;
+    },
+    {
+      message: 'Por favor seleccione un asesor PYME.',
+      path: ['pymeAdvisorId']
+    }
+  );
 
 type FormValues = z.infer<typeof formSchema>;
 
@@ -145,6 +164,7 @@ export default function AssignVisitForm({
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      incomeType: undefined,
       branchCode: '',
       branchManagerId: '',
       pymeAdvisorId: ''
@@ -210,11 +230,12 @@ export default function AssignVisitForm({
       assignVisitMutation.mutate(
         {
           loanRequestId,
+          incomeType: values.incomeType,
           branchCode: parseInt(values.branchCode, 10),
           branchName: selectedBranch.nombre || '',
           branchAddress: selectedBranch.direccion || '',
           branchManagerId: values.branchManagerId,
-          pymeAdvisorId: values.pymeAdvisorId
+          pymeAdvisorId: values.pymeAdvisorId || null
         },
         {
           onSuccess: () => {
@@ -255,7 +276,7 @@ export default function AssignVisitForm({
     <Dialog
       open={open}
       onOpenChange={(newOpenState) => {
-        if (!newOpenState && isFormLocked) return; // Prevent closing if mutation is pending
+        if (!newOpenState && isFormLocked) return;
         onOpenChange(newOpenState);
       }}
     >
@@ -277,7 +298,7 @@ export default function AssignVisitForm({
             Asignar Visita
           </DialogTitle>
           <DialogDescription className='text-sm md:text-base'>
-            Seleccione la agencia y los responsables para la visita.
+            Seleccione el tipo de ingreso y los responsables para la visita.
           </DialogDescription>
         </DialogHeader>
 
@@ -293,7 +314,7 @@ export default function AssignVisitForm({
                   <div className='flex items-start'>
                     <MapPin className='mr-2 mt-0.5 h-4 w-4 text-primary' />
                     <div>
-                      <p className='text-sm font-medium'>Ciudad del Cliente</p>
+                      <p className='text-sm font-medium'>Ciudad</p>
                       <p className='text-sm text-muted-foreground'>
                         {clientCity}
                       </p>
@@ -302,9 +323,7 @@ export default function AssignVisitForm({
                   <div className='flex items-start'>
                     <Home className='mr-2 mt-0.5 h-4 w-4 text-primary' />
                     <div>
-                      <p className='text-sm font-medium'>
-                        Dirección Residencial
-                      </p>
+                      <p className='text-sm font-medium'>Dirección</p>
                       <p className='text-sm text-muted-foreground'>
                         {clientAddress}
                       </p>
@@ -322,64 +341,30 @@ export default function AssignVisitForm({
                 <div className='space-y-4'>
                   <FormField
                     control={form.control}
-                    name='branchCode'
+                    name='incomeType'
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Agencia / Sucursal</FormLabel>
+                        <FormLabel>Tipo de Ingreso del Cliente</FormLabel>
                         <Select
-                          onValueChange={handleBranchChange}
+                          onValueChange={field.onChange}
                           value={field.value}
-                          disabled={isBranchesLoading || isFormLocked}
+                          disabled={isFormLocked}
                         >
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder='Seleccione una agencia' />
+                              <SelectValue placeholder='Seleccione el tipo de ingreso' />
                             </SelectTrigger>
                           </FormControl>
-                          <SelectContent
-                            onCloseAutoFocus={(e) => {
-                              // Prevent focus being returned to the trigger on close
-                              if (
-                                document.activeElement ===
-                                searchInputRef.current
-                              ) {
-                                e.preventDefault();
-                              }
-                            }}
-                          >
-                            <div className='flex items-center px-3 pb-2'>
-                              <Search className='mr-2 h-4 w-4 shrink-0 opacity-50' />
-                              <Input
-                                ref={searchInputRef}
-                                placeholder='Buscar agencia...'
-                                className='h-9 border-none bg-transparent focus-visible:ring-transparent'
-                                value={branchSearchQuery}
-                                onChange={handleSearchChange}
-                                onClick={(e) => e.stopPropagation()}
-                                onKeyDown={(e) => {
-                                  // Prevent select from closing on Enter
-                                  if (e.key === 'Enter') {
-                                    e.preventDefault();
-                                  }
-                                }}
-                              />
-                            </div>
-                            <ScrollArea className='max-h-[200px]'>
-                              {filteredBranches.length > 0 ? (
-                                filteredBranches.map((branch) => (
-                                  <SelectItem
-                                    key={branch.codSuc}
-                                    value={branch.codSuc.toString()}
-                                  >
-                                    {branch.nombre}
-                                  </SelectItem>
-                                ))
-                              ) : (
-                                <div className='px-2 py-4 text-center text-sm text-muted-foreground'>
-                                  No se encontraron agencias
-                                </div>
-                              )}
-                            </ScrollArea>
+                          <SelectContent>
+                            <SelectItem value={IncomeType.Salaried}>
+                              {translateIncomeType(IncomeType.Salaried)}
+                            </SelectItem>
+                            <SelectItem value={IncomeType.BusinessOwner}>
+                              {translateIncomeType(IncomeType.BusinessOwner)}
+                            </SelectItem>
+                            <SelectItem value={IncomeType.Both}>
+                              {translateIncomeType(IncomeType.Both)}
+                            </SelectItem>
                           </SelectContent>
                         </Select>
                         <FormMessage />
@@ -387,56 +372,66 @@ export default function AssignVisitForm({
                     )}
                   />
 
-                  {selectedBranch && (
-                    <div className='rounded-md bg-muted/50 p-3 text-sm'>
-                      <div className='mb-2 flex items-start'>
-                        <MapPin className='mr-2 mt-0.5 h-4 w-4 text-primary/70' />
-                        <div>
-                          <p className='font-medium'>
-                            Dirección de la agencia:
-                          </p>
-                          <p className='text-muted-foreground'>
-                            {selectedBranch.direccion || 'No disponible'}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {selectedBranchCode && (
+                  {form.watch('incomeType') && (
                     <>
                       <FormField
                         control={form.control}
-                        name='branchManagerId'
+                        name='branchCode'
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Gerente de Agencia</FormLabel>
+                            <FormLabel>Agencia / Sucursal</FormLabel>
                             <Select
-                              onValueChange={field.onChange}
+                              onValueChange={handleBranchChange}
                               value={field.value}
-                              disabled={isUsersLoading || isFormLocked}
+                              disabled={isBranchesLoading || isFormLocked}
                             >
                               <FormControl>
                                 <SelectTrigger>
-                                  <SelectValue placeholder='Seleccione un gerente de agencia' />
+                                  <SelectValue placeholder='Seleccione una agencia' />
                                 </SelectTrigger>
                               </FormControl>
-                              <SelectContent>
-                                {branchManagers.length > 0 ? (
-                                  branchManagers.map((manager) => (
-                                    <SelectItem
-                                      key={manager.id}
-                                      value={manager.id}
-                                    >
-                                      {manager.name}
-                                    </SelectItem>
-                                  ))
-                                ) : (
-                                  <SelectItem value='no-managers' disabled>
-                                    No hay gerentes disponibles para esta
-                                    agencia
-                                  </SelectItem>
-                                )}
+                              <SelectContent
+                                onCloseAutoFocus={(e) => {
+                                  if (
+                                    document.activeElement ===
+                                    searchInputRef.current
+                                  ) {
+                                    e.preventDefault();
+                                  }
+                                }}
+                              >
+                                <div className='flex items-center px-3 pb-2'>
+                                  <Search className='mr-2 h-4 w-4 shrink-0 opacity-50' />
+                                  <Input
+                                    ref={searchInputRef}
+                                    placeholder='Buscar agencia...'
+                                    className='h-9 border-none bg-transparent focus-visible:ring-transparent'
+                                    value={branchSearchQuery}
+                                    onChange={handleSearchChange}
+                                    onClick={(e) => e.stopPropagation()}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter') {
+                                        e.preventDefault();
+                                      }
+                                    }}
+                                  />
+                                </div>
+                                <ScrollArea className='max-h-[200px]'>
+                                  {filteredBranches.length > 0 ? (
+                                    filteredBranches.map((branch) => (
+                                      <SelectItem
+                                        key={branch.codSuc}
+                                        value={branch.codSuc.toString()}
+                                      >
+                                        {branch.nombre}
+                                      </SelectItem>
+                                    ))
+                                  ) : (
+                                    <div className='px-2 py-4 text-center text-sm text-muted-foreground'>
+                                      No se encontraron agencias
+                                    </div>
+                                  )}
+                                </ScrollArea>
                               </SelectContent>
                             </Select>
                             <FormMessage />
@@ -444,44 +439,110 @@ export default function AssignVisitForm({
                         )}
                       />
 
-                      <FormField
-                        control={form.control}
-                        name='pymeAdvisorId'
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Asesor PYME</FormLabel>
-                            <Select
-                              onValueChange={field.onChange}
-                              value={field.value}
-                              disabled={isUsersLoading || isFormLocked}
-                            >
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder='Seleccione un asesor PYME' />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                {pymeAdvisors.length > 0 ? (
-                                  pymeAdvisors.map((advisor) => (
-                                    <SelectItem
-                                      key={advisor.id}
-                                      value={advisor.id}
-                                    >
-                                      {advisor.name}
-                                    </SelectItem>
-                                  ))
-                                ) : (
-                                  <SelectItem value='no-advisors' disabled>
-                                    No hay asesores disponibles para esta
-                                    agencia
-                                  </SelectItem>
-                                )}
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                      {selectedBranch && (
+                        <div className='rounded-md bg-muted/50 p-3 text-sm'>
+                          <div className='mb-2 flex items-start'>
+                            <MapPin className='mr-2 mt-0.5 h-4 w-4 text-primary/70' />
+                            <div>
+                              <p className='font-medium'>
+                                Dirección de la agencia:
+                              </p>
+                              <p className='text-muted-foreground'>
+                                {selectedBranch.direccion || 'No disponible'}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {selectedBranchCode && (
+                        <>
+                          <FormField
+                            control={form.control}
+                            name='branchManagerId'
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Gerente de Agencia</FormLabel>
+                                <Select
+                                  onValueChange={field.onChange}
+                                  value={field.value}
+                                  disabled={isUsersLoading || isFormLocked}
+                                >
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder='Seleccione un gerente de agencia' />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    {branchManagers.length > 0 ? (
+                                      branchManagers.map((manager) => (
+                                        <SelectItem
+                                          key={manager.id}
+                                          value={manager.id}
+                                        >
+                                          {manager.name}
+                                        </SelectItem>
+                                      ))
+                                    ) : (
+                                      <SelectItem value='no-managers' disabled>
+                                        No hay gerentes disponibles para esta
+                                        agencia
+                                      </SelectItem>
+                                    )}
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          {(form.watch('incomeType') ===
+                            IncomeType.BusinessOwner ||
+                            form.watch('incomeType') === IncomeType.Both) && (
+                            <FormField
+                              control={form.control}
+                              name='pymeAdvisorId'
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Asesor PYME</FormLabel>
+                                  <Select
+                                    onValueChange={field.onChange}
+                                    value={field.value}
+                                    disabled={isUsersLoading || isFormLocked}
+                                  >
+                                    <FormControl>
+                                      <SelectTrigger>
+                                        <SelectValue placeholder='Seleccione un asesor PYME' />
+                                      </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                      {pymeAdvisors.length > 0 ? (
+                                        pymeAdvisors.map((advisor) => (
+                                          <SelectItem
+                                            key={advisor.id}
+                                            value={advisor.id}
+                                          >
+                                            {advisor.name}
+                                          </SelectItem>
+                                        ))
+                                      ) : (
+                                        <SelectItem
+                                          value='no-advisors'
+                                          disabled
+                                        >
+                                          No hay asesores disponibles para esta
+                                          agencia
+                                        </SelectItem>
+                                      )}
+                                    </SelectContent>
+                                  </Select>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          )}
+                        </>
+                      )}
                     </>
                   )}
                 </div>
@@ -511,7 +572,9 @@ export default function AssignVisitForm({
                     </div>
                   )}
 
-                {pymeAdvisors.length === 0 &&
+                {(form.watch('incomeType') === IncomeType.BusinessOwner ||
+                  form.watch('incomeType') === IncomeType.Both) &&
+                  pymeAdvisors.length === 0 &&
                   selectedBranchCode &&
                   !isUsersLoading && (
                     <div className='rounded-md border border-yellow-200 bg-yellow-50 p-4 dark:border-yellow-800 dark:bg-yellow-950/50'>

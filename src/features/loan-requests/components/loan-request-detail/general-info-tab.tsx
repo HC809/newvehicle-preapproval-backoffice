@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import { Client } from 'types/Client';
+import { translateIncomeType } from '@/utils/translateIncomeType';
 
 interface GeneralInfoTabProps {
   loanRequest: LoanRequest;
@@ -91,6 +92,14 @@ export const GeneralInfoTab = ({
           icon={<DollarSign className='h-4 w-4 text-green-500' />}
           label='Ingreso Mensual'
           value={formatHNL(loanRequest.monthlyIncome)}
+        />
+      )}
+
+      {loanRequest.incomeType && (
+        <InfoItem
+          icon={<DollarSign className='h-4 w-4 text-green-500' />}
+          label='Tipo de Ingreso'
+          value={translateIncomeType(loanRequest.incomeType)}
         />
       )}
 

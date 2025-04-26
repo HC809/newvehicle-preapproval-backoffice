@@ -43,11 +43,13 @@ export const VisitInfoTab = ({ visit }: VisitInfoTabProps) => {
             value={visit.branchManagerName || 'No asignado'}
           />
 
-          <InfoItem
-            icon={<User className='h-4 w-4 text-purple-500' />}
-            label='Asesor PYME'
-            value={visit.pymeAdvisorName || 'No asignado'}
-          />
+          {visit.pymeAdvisorName && (
+            <InfoItem
+              icon={<User className='h-4 w-4 text-purple-500' />}
+              label='Asesor PYME'
+              value={visit.pymeAdvisorName}
+            />
+          )}
         </div>
       </div>
     </div>

@@ -10,7 +10,8 @@ import {
   LoanRequest,
   LoanRequestListingParams,
   LoanRequestDetail,
-  UpdateLoanRequestForm
+  UpdateLoanRequestForm,
+  IncomeType
 } from 'types/LoanRequests';
 
 const LOAN_REQUESTS_KEY = 'loanRequests';
@@ -251,11 +252,12 @@ export const useUpdateLoanRequest = (apiClient: AxiosInstance) => {
 
 // Assign visit mutation
 export interface AssignVisitData {
+  incomeType: IncomeType;
   branchCode: number;
   branchName: string;
   branchAddress: string;
-  pymeAdvisorId: string;
   branchManagerId: string;
+  pymeAdvisorId: string | null;
 }
 
 export const useAssignVisit = (apiClient: AxiosInstance) => {
