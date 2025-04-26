@@ -18,13 +18,25 @@ import LoanRequestTableAction from '@/features/loan-requests/components/loan-req
 import { DataTableSkeleton } from '@/components/ui/table/data-table-skeleton';
 import { useSearchParams } from 'next/navigation';
 import { UserRole } from 'types/User';
+import { IncomeType } from 'types/LoanRequests';
+import { translateIncomeType } from '@/utils/translateIncomeType';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select';
+import { Briefcase } from 'lucide-react';
 
 function LoanRequestContent() {
   const apiClient = useAxios();
   const { data: session } = useSession();
   const isAdmin = !!session?.isSystemAdmin;
   const userRole = session?.role as UserRole;
+  const isBranchManager = userRole === UserRole.BranchManager;
   const [viewMode, setViewMode] = useState<'assigned' | 'all'>('assigned');
+  const [incomeTypeFilter, setIncomeTypeFilter] = useState<string>('all');
   const searchParams = useSearchParams();
 
   // Estado local para el filtro de DNI (usado exclusivamente de forma local)
@@ -90,6 +102,12 @@ function LoanRequestContent() {
         return false;
       }
 
+      // Filtro por tipo de ingreso para BranchManager
+      if (isBranchManager && incomeTypeFilter !== 'all') {
+        // De lo contrario, comparamos con el valor seleccionado
+        return request.incomeType === incomeTypeFilter;
+      }
+
       return true;
     });
 
@@ -99,7 +117,9 @@ function LoanRequestContent() {
     dniFilter,
     dealershipFilter,
     managerFilter,
-    statusValues
+    statusValues,
+    isBranchManager,
+    incomeTypeFilter
   ]);
 
   // Refetch solo cuando cambie el modo de vista o los filtros que se envían al API
@@ -111,8 +131,11 @@ function LoanRequestContent() {
   // Función para resetear todos los filtros, incluyendo el de DNI
   const resetAllFilters = useCallback(() => {
     setDniFilter('');
+    if (isBranchManager) {
+      setIncomeTypeFilter('all');
+    }
     // Aquí podrías resetear los otros filtros si es necesario
-  }, []);
+  }, [isBranchManager]);
 
   const kbarActions = {};
 
@@ -126,7 +149,7 @@ function LoanRequestContent() {
               description='Administración de solicitudes de préstamo para vehículos.'
             />
             <div className='flex items-center gap-4'>
-              {!isAdmin && (
+              {!isAdmin && !isBranchManager && (
                 <Tabs
                   value={viewMode}
                   onValueChange={(value) =>
@@ -140,6 +163,33 @@ function LoanRequestContent() {
                   </TabsList>
                 </Tabs>
               )}
+
+              {isBranchManager && (
+                <div className='mr-2 flex items-center gap-2'>
+                  <Briefcase className='h-4 w-4 text-amber-500' />
+                  <Select
+                    value={incomeTypeFilter}
+                    onValueChange={setIncomeTypeFilter}
+                  >
+                    <SelectTrigger className='w-[250px]'>
+                      <SelectValue placeholder='Filtrar por tipo de ingreso' />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value='all'>Todos</SelectItem>
+                      <SelectItem value={IncomeType.Salaried}>
+                        {translateIncomeType(IncomeType.Salaried)}
+                      </SelectItem>
+                      <SelectItem value={IncomeType.BusinessOwner}>
+                        {translateIncomeType(IncomeType.BusinessOwner)}
+                      </SelectItem>
+                      <SelectItem value={IncomeType.Both}>
+                        {translateIncomeType(IncomeType.Both)}
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
               <Button
                 variant='default'
                 size='icon'
