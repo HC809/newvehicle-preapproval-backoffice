@@ -22,6 +22,7 @@ export const getStatusVariant = (
     case LoanRequestStatus.DeclinedByCustomer:
       return 'secondary';
     case LoanRequestStatus.Pending:
+    case LoanRequestStatus.BranchManagerReview:
       return 'warning';
     case LoanRequestStatus.Cancelled:
       return 'default';
@@ -47,6 +48,8 @@ export const getStatusClassName = (status: LoanRequestStatus): string => {
       return 'bg-purple-600 text-white hover:bg-purple-700 dark:bg-purple-700 dark:hover:bg-purple-800';
     case LoanRequestStatus.DeclinedByCustomer:
       return 'bg-gray-500 text-white hover:bg-gray-600 dark:bg-gray-600 dark:hover:bg-gray-700';
+    case LoanRequestStatus.BranchManagerReview:
+      return 'bg-indigo-600 text-white hover:bg-indigo-700 dark:bg-indigo-700 dark:hover:bg-indigo-800';
     default:
       return '';
   }
@@ -77,6 +80,8 @@ export const translateStatus = (status: LoanRequestStatus): string => {
       return 'Cliente Desistió';
     case LoanRequestStatus.Cancelled:
       return 'Cancelado';
+    case LoanRequestStatus.BranchManagerReview:
+      return 'Revisión Gerente Agencia';
     default:
       return status;
   }

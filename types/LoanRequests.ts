@@ -12,7 +12,8 @@ export enum LoanRequestStatus {
   AcceptedByCustomer = 'AcceptedByCustomer',
   DeclinedByCustomer = 'DeclinedByCustomer',
   VisitAssigned = 'VisitAssigned',
-  Cancelled = 'Cancelled'
+  Cancelled = 'Cancelled',
+  BranchManagerReview = 'BranchManagerReview'
 }
 
 export enum IncomeType {
