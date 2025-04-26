@@ -19,7 +19,8 @@ import {
   CreditCard,
   Building2,
   Clock,
-  User
+  User,
+  Calendar
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
@@ -125,129 +126,135 @@ export function LoanRequestTimeline({
             {/* Timeline line */}
             <div className='absolute left-1/2 top-0 h-full w-0.5 -translate-x-1/2 bg-primary/20 dark:bg-primary/10' />
 
-            {Object.entries(groupedEvents).map(([date, dateEvents]) => (
-              <div key={date} className='space-y-6'>
-                <div className='sticky top-0 z-10 -mx-4 mb-4 bg-background/95 px-4 py-2 backdrop-blur supports-[backdrop-filter]:bg-background/60'>
-                  <h3 className='text-sm font-medium text-muted-foreground'>
-                    {date}
-                  </h3>
-                </div>
+            {Object.entries(groupedEvents).map(([date, dateEvents]) => {
+              // Track the event index for alternating sides within this date group
+              let eventIndex = 0;
 
-                {dateEvents.map((event, index) => {
-                  const isSameUser =
-                    index > 0 && event.userId === dateEvents[index - 1].userId;
-                  const isLeft = isSameUser ? index % 2 === 0 : index % 2 === 0;
+              return (
+                <div key={date} className='space-y-6'>
+                  <div className='sticky top-0 z-10 -mx-4 mb-4 bg-primary-foreground px-4 py-3 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-primary-foreground/90'>
+                    <h3 className='flex items-center gap-2 text-base font-semibold text-primary'>
+                      <Calendar className='h-4 w-4' />
+                      {date}
+                    </h3>
+                  </div>
 
-                  return (
-                    <div
-                      key={event.id}
-                      className={cn(
-                        'relative flex w-full items-start gap-4',
-                        isLeft ? 'justify-start' : 'justify-end'
-                      )}
-                    >
-                      {/* Timeline dot and line */}
+                  {dateEvents.map((event) => {
+                    // Simple alternating pattern: even indexes on left, odd on right
+                    const isLeft = eventIndex % 2 === 0;
+                    eventIndex++;
+
+                    return (
                       <div
+                        key={event.id}
                         className={cn(
-                          'absolute top-4 h-2 w-2 rounded-full bg-primary/20 dark:bg-primary/10',
-                          isLeft
-                            ? 'left-1/2 -translate-x-1/2'
-                            : 'right-1/2 translate-x-1/2'
-                        )}
-                      />
-
-                      {/* Event card */}
-                      <div
-                        className={cn(
-                          'relative flex w-[calc(50%-2rem)] gap-4 rounded-lg border bg-card p-4 shadow-sm transition-all hover:shadow-md dark:border-border/50',
-                          isLeft ? 'flex-row' : 'flex-row-reverse'
+                          'relative flex w-full items-start gap-4',
+                          isLeft ? 'justify-start' : 'justify-end'
                         )}
                       >
+                        {/* Timeline dot and line */}
                         <div
                           className={cn(
-                            'flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 dark:bg-primary/5',
-                            getEventColor(event.eventType)
+                            'absolute top-4 h-2 w-2 rounded-full bg-primary/20 dark:bg-primary/10',
+                            isLeft
+                              ? 'left-1/2 -translate-x-1/2'
+                              : 'right-1/2 translate-x-1/2'
+                          )}
+                        />
+
+                        {/* Event card */}
+                        <div
+                          className={cn(
+                            'relative flex w-[calc(50%-2rem)] gap-4 rounded-lg border bg-card p-4 shadow-sm transition-all hover:shadow-md dark:border-border/50',
+                            isLeft ? 'flex-row' : 'flex-row-reverse'
                           )}
                         >
-                          {getEventIcon(event.eventType)}
-                        </div>
-
-                        <div className='flex flex-1 flex-col gap-2'>
-                          {/* User and time info */}
-                          <div className='flex items-center justify-between'>
-                            <div className='flex items-center gap-2'>
-                              <div className='flex items-center gap-1.5'>
-                                <User className='h-4 w-4 text-muted-foreground' />
-                                <span className='max-w-[200px] truncate font-medium'>
-                                  {event.userName}
-                                </span>
-                              </div>
-                            </div>
-                            <div className='flex items-center gap-1 rounded-md bg-muted/50 px-2 py-1 text-xs text-muted-foreground'>
-                              <Clock className='h-3.5 w-3.5' />
-                              {format(new Date(event.timestamp), 'p', {
-                                locale: es
-                              })}
-                            </div>
-                          </div>
-
-                          {/* Event type badge */}
-                          <Badge
-                            variant='secondary'
+                          <div
                             className={cn(
-                              'w-fit shrink-0',
+                              'flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 dark:bg-primary/5',
                               getEventColor(event.eventType)
                             )}
                           >
-                            {getEventTypeTranslation(event.eventType)}
-                          </Badge>
+                            {getEventIcon(event.eventType)}
+                          </div>
 
-                          {/* Event comment */}
-                          <p className='text-sm text-muted-foreground'>
-                            {event.comment}
-                          </p>
-
-                          {/* Status changes */}
-                          {event.previousStatus && event.newStatus && (
-                            <div className='flex items-center gap-2 text-sm'>
-                              <span className='text-muted-foreground'>
-                                Estado:
-                              </span>
-                              <div className='flex items-center gap-1'>
-                                {event.newStatus !==
-                                  LoanRequestStatus.Pending && (
-                                  <>
-                                    <span className='font-medium text-red-500 dark:text-red-400'>
-                                      {translateStatus(
-                                        event.previousStatus as LoanRequestStatus
-                                      )}
-                                    </span>
-                                    <CircleDot className='h-3 w-3 text-muted-foreground' />
-                                  </>
-                                )}
-                                <span
-                                  className={cn(
-                                    'font-medium',
-                                    event.newStatus ===
-                                      LoanRequestStatus.Pending
-                                      ? 'text-yellow-600 dark:text-yellow-400'
-                                      : 'text-green-500 dark:text-green-400'
-                                  )}
-                                >
-                                  {translateStatus(
-                                    event.newStatus as LoanRequestStatus
-                                  )}
-                                </span>
+                          <div className='flex flex-1 flex-col gap-2'>
+                            {/* User and time info */}
+                            <div className='flex items-center justify-between'>
+                              <div className='flex items-center gap-2'>
+                                <div className='flex items-center gap-1.5'>
+                                  <User className='h-4 w-4 text-muted-foreground' />
+                                  <span className='max-w-[200px] truncate font-medium'>
+                                    {event.userName}
+                                  </span>
+                                </div>
+                              </div>
+                              <div className='flex items-center gap-1 rounded-md bg-muted/50 px-2 py-1 text-xs text-muted-foreground'>
+                                <Clock className='h-3.5 w-3.5' />
+                                {format(new Date(event.timestamp), 'p', {
+                                  locale: es
+                                })}
                               </div>
                             </div>
-                          )}
+
+                            {/* Event type badge */}
+                            <Badge
+                              variant='secondary'
+                              className={cn(
+                                'w-fit shrink-0',
+                                getEventColor(event.eventType)
+                              )}
+                            >
+                              {getEventTypeTranslation(event.eventType)}
+                            </Badge>
+
+                            {/* Event comment */}
+                            <p className='text-sm text-muted-foreground'>
+                              {event.comment}
+                            </p>
+
+                            {/* Status changes */}
+                            {event.previousStatus && event.newStatus && (
+                              <div className='flex items-center gap-2 text-sm'>
+                                <span className='text-muted-foreground'>
+                                  Estado:
+                                </span>
+                                <div className='flex items-center gap-1'>
+                                  {event.newStatus !==
+                                    LoanRequestStatus.Pending && (
+                                    <>
+                                      <span className='font-medium text-red-500 dark:text-red-400'>
+                                        {translateStatus(
+                                          event.previousStatus as LoanRequestStatus
+                                        )}
+                                      </span>
+                                      <CircleDot className='h-3 w-3 text-muted-foreground' />
+                                    </>
+                                  )}
+                                  <span
+                                    className={cn(
+                                      'font-medium',
+                                      event.newStatus ===
+                                        LoanRequestStatus.Pending
+                                        ? 'text-yellow-600 dark:text-yellow-400'
+                                        : 'text-green-500 dark:text-green-400'
+                                    )}
+                                  >
+                                    {translateStatus(
+                                      event.newStatus as LoanRequestStatus
+                                    )}
+                                  </span>
+                                </div>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
-            ))}
+                    );
+                  })}
+                </div>
+              );
+            })}
           </div>
         </ScrollArea>
       </DialogContent>
