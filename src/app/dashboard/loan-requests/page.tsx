@@ -17,11 +17,13 @@ import { useSession } from 'next-auth/react';
 import LoanRequestTableAction from '@/features/loan-requests/components/loan-request-table-action';
 import { DataTableSkeleton } from '@/components/ui/table/data-table-skeleton';
 import { useSearchParams } from 'next/navigation';
+import { UserRole } from 'types/User';
 
 function LoanRequestContent() {
   const apiClient = useAxios();
   const { data: session } = useSession();
   const isAdmin = !!session?.isSystemAdmin;
+  const userRole = session?.role as UserRole;
   const [viewMode, setViewMode] = useState<'assigned' | 'all'>('assigned');
   const searchParams = useSearchParams();
 
@@ -174,6 +176,7 @@ function LoanRequestContent() {
                   isLoading={isLoading || !allLoanRequests}
                   viewMode={viewMode}
                   isAdmin={isAdmin}
+                  userRole={userRole}
                 />
               </Suspense>
             </>

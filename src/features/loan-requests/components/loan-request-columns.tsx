@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { ColumnDef } from '@tanstack/react-table';
-import { Building, User, UserCog } from 'lucide-react';
+import { Building, User, UserCog, Briefcase } from 'lucide-react';
 import { LoanRequest, LoanRequestStatus } from 'types/LoanRequests';
 import { Badge } from '@/components/ui/badge';
 import { formatHNL } from '@/utils/formatCurrency';
@@ -15,6 +15,7 @@ import {
   getStatusVariant,
   getStatusClassName
 } from '@/utils/getStatusColor';
+import { translateIncomeType } from '@/utils/translateIncomeType';
 
 export const LoanRequestColumns = (
   viewMode: 'assigned' | 'all' = 'assigned',
@@ -22,6 +23,7 @@ export const LoanRequestColumns = (
   userRole?: UserRole
 ): ColumnDef<LoanRequest>[] => {
   const showManagerColumn = isAdmin || viewMode === 'all';
+  const isBranchManager = userRole === UserRole.BranchManager;
 
   const getStatusText = (status: LoanRequestStatus) => {
     return translateStatus(status);
@@ -121,6 +123,21 @@ export const LoanRequestColumns = (
     }
   ];
 
+  // Columna de tipo de ingreso que se mostrará solo para gerentes de agencia
+  const incomeTypeColumn: ColumnDef<LoanRequest> = {
+    accessorKey: 'incomeType',
+    header: () => <span className='font-bold'>Tipo de Ingreso</span>,
+    cell: ({ row }) => {
+      const incomeType = row.original.incomeType;
+      return (
+        <div className='flex items-center gap-2'>
+          <Briefcase className='h-4 w-4 text-amber-500 dark:text-amber-400' />
+          <span className='font-medium'>{translateIncomeType(incomeType)}</span>
+        </div>
+      );
+    }
+  };
+
   // Columna de responsable que se mostrará condicionalmente
   const managerColumn: ColumnDef<LoanRequest> = {
     accessorKey: 'managerName',
@@ -137,6 +154,16 @@ export const LoanRequestColumns = (
 
   // Construir el array final de columnas
   const finalColumns = [...baseColumns];
+
+  // Ubicación específica para insertar la columna incomeType (justo antes de createdAt)
+  // Asumiendo que las columnas se mantienen en el mismo orden que se definieron
+  // la columna createdAt está en la posición 8 (0-based index) en baseColumns
+  const createdAtColumnIndex = 8;
+
+  // Insertar la columna de tipo de ingreso antes de fecha de solicitud si el usuario es gerente de agencia
+  if (isBranchManager) {
+    finalColumns.splice(createdAtColumnIndex, 0, incomeTypeColumn);
+  }
 
   // Agregar la columna de manager después de status si es necesario
   if (showManagerColumn) {

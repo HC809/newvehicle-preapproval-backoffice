@@ -8,6 +8,7 @@ import { DataTableSkeleton } from '@/components/ui/table/data-table-skeleton';
 import { useRouter } from 'next/navigation';
 import { useLoanRequestStore } from '@/stores/loan-request-store';
 import { Row } from '@tanstack/react-table';
+import { UserRole } from 'types/User';
 
 interface LoanRequestListingPageProps {
   loanRequests: LoanRequest[];
@@ -15,6 +16,7 @@ interface LoanRequestListingPageProps {
   isLoading?: boolean;
   viewMode: 'assigned' | 'all';
   isAdmin: boolean;
+  userRole?: UserRole;
 }
 
 export default function LoanRequestListingPage({
@@ -22,7 +24,8 @@ export default function LoanRequestListingPage({
   totalItems,
   isLoading,
   viewMode,
-  isAdmin
+  isAdmin,
+  userRole
 }: LoanRequestListingPageProps) {
   const router = useRouter();
   const { setSelectedLoanRequest } = useLoanRequestStore();
@@ -67,7 +70,7 @@ export default function LoanRequestListingPage({
         </div>
       )} */}
       <LoanRequestsTable
-        columns={LoanRequestColumns(viewMode, isAdmin)}
+        columns={LoanRequestColumns(viewMode, isAdmin, userRole)}
         data={loanRequests}
         totalItems={totalItems}
         onRowClick={handleRowClick}
