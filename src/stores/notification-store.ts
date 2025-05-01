@@ -6,6 +6,10 @@ import { LoanNotification } from 'types/Notifications';
 const MAX_RECENT_NOTIFICATIONS = 5;
 
 interface NotificationStore {
+  // Notificaciones no leídas (para el badge)
+  unreadNotifications: LoanNotification[];
+  unreadCount: number;
+
   // Notificaciones recientes (para mostrar en el popover)
   recentNotifications: LoanNotification[];
 
@@ -13,6 +17,7 @@ interface NotificationStore {
   addNotification: (notification: LoanNotification) => void;
   addNotifications: (notifications: LoanNotification[]) => void;
   clearNotifications: () => void;
+  markAsRead: () => void; // Marcar todas como leídas (cuando se abre el popover)
 }
 
 let store: ReturnType<typeof createStore>;
@@ -22,6 +27,8 @@ function createStore() {
     devtools(
       persist(
         (set) => ({
+          unreadNotifications: [],
+          unreadCount: 0,
           recentNotifications: [],
 
           addNotification: (notification) =>
@@ -43,8 +50,16 @@ function createStore() {
                   ...state.recentNotifications
                 ].slice(0, MAX_RECENT_NOTIFICATIONS);
 
+                // Añadir a notificaciones no leídas
+                const updatedUnreadNotifications = [
+                  notification,
+                  ...state.unreadNotifications
+                ];
+
                 return {
-                  recentNotifications: updatedRecentNotifications
+                  recentNotifications: updatedRecentNotifications,
+                  unreadNotifications: updatedUnreadNotifications,
+                  unreadCount: updatedUnreadNotifications.length
                 };
               },
               false,
@@ -73,8 +88,16 @@ function createStore() {
                   ...state.recentNotifications
                 ].slice(0, MAX_RECENT_NOTIFICATIONS);
 
+                // Añadir a notificaciones no leídas
+                const updatedUnreadNotifications = [
+                  ...newNotifications,
+                  ...state.unreadNotifications
+                ];
+
                 return {
-                  recentNotifications: updatedRecentNotifications
+                  recentNotifications: updatedRecentNotifications,
+                  unreadNotifications: updatedUnreadNotifications,
+                  unreadCount: updatedUnreadNotifications.length
                 };
               },
               false,
@@ -84,16 +107,31 @@ function createStore() {
           clearNotifications: () =>
             set(
               {
-                recentNotifications: []
+                recentNotifications: [],
+                unreadNotifications: [],
+                unreadCount: 0
               },
               false,
               'notification/clearNotifications'
+            ),
+
+          markAsRead: () =>
+            set(
+              {
+                unreadNotifications: [],
+                unreadCount: 0
+                // No limpiamos recentNotifications para mantenerlas en el popover
+              },
+              false,
+              'notification/markAsRead'
             )
         }),
         {
           name: 'notification-storage',
           partialize: (state) => ({
-            recentNotifications: state.recentNotifications
+            recentNotifications: state.recentNotifications,
+            unreadNotifications: state.unreadNotifications,
+            unreadCount: state.unreadCount
           })
         }
       ),

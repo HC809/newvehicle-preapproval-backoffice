@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useNotification } from './NotificationContext';
 import { useNotificationStore } from '@/stores/notification-store';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import {
   Popover,
   PopoverContent,
@@ -23,7 +24,8 @@ export default function Notifications() {
   const [refreshing, setRefreshing] = useState(false);
 
   // Estado global de notificaciones con Zustand
-  const { recentNotifications } = useNotificationStore();
+  const { unreadCount, markAsRead, recentNotifications } =
+    useNotificationStore();
 
   // Navegar a la solicitud de préstamo
   const navigateToLoanRequest = (loanRequestId: string) => {
@@ -58,6 +60,11 @@ export default function Notifications() {
   // Manejar apertura/cierre del popover
   const handleOpenChange = (isOpen: boolean) => {
     setOpen(isOpen);
+
+    // Si se abre el popover, marcar notificaciones como leídas
+    if (isOpen && unreadCount > 0) {
+      markAsRead();
+    }
   };
 
   // Redirigir a la página de notificaciones y cerrar el popover
@@ -76,6 +83,14 @@ export default function Notifications() {
           aria-label='Notificaciones'
         >
           <Bell className='h-5 w-5' />
+          {unreadCount > 0 && (
+            <Badge
+              className='absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full p-0 text-xs'
+              variant='destructive'
+            >
+              {unreadCount > 99 ? '99+' : unreadCount}
+            </Badge>
+          )}
         </Button>
       </PopoverTrigger>
       <PopoverContent className='w-80 p-0' align='end'>

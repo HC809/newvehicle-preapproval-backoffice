@@ -63,16 +63,56 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({
             // Mostrar toast según el tipo de notificación
             switch (notification.type) {
               case LoanNotificationType.StatusChanged:
-                toast.info(`${notification.title}: ${notification.message}`);
+                toast.info(notification.title, {
+                  description: notification.message,
+                  duration: 8000, // 8 segundos
+                  className: 'bg-blue-50 border-blue-200',
+                  action: {
+                    label: 'Ver',
+                    onClick: () => {
+                      if (notification.loanRequestId) {
+                        window.location.href = `/dashboard/loan-requests/${notification.loanRequestId}`;
+                      }
+                    }
+                  }
+                });
                 break;
               case LoanNotificationType.Message:
-                toast.success(`${notification.title}: ${notification.message}`);
+                toast.success(notification.title, {
+                  description: notification.message,
+                  duration: 8000,
+                  className: 'bg-green-50 border-green-200',
+                  action: {
+                    label: 'Ver',
+                    onClick: () => {
+                      if (notification.loanRequestId) {
+                        window.location.href = `/dashboard/loan-requests/${notification.loanRequestId}`;
+                      }
+                    }
+                  }
+                });
                 break;
               case LoanNotificationType.System:
-                toast.warning(`${notification.title}: ${notification.message}`);
+                toast.warning(notification.title, {
+                  description: notification.message,
+                  duration: 10000, // 10 segundos para notificaciones del sistema
+                  className: 'bg-yellow-50 border-yellow-200',
+                  action: {
+                    label: 'Ver',
+                    onClick: () => {
+                      if (notification.loanRequestId) {
+                        window.location.href = `/dashboard/loan-requests/${notification.loanRequestId}`;
+                      }
+                    }
+                  }
+                });
                 break;
               default:
-                toast.info(`${notification.title}: ${notification.message}`);
+                toast.info(notification.title, {
+                  description: notification.message,
+                  duration: 8000,
+                  className: 'bg-blue-50 border-blue-200'
+                });
             }
 
             // Actualizar estado global en Zustand - añadir notificación al store
