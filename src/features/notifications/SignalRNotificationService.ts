@@ -17,6 +17,7 @@ class SignalRNotificationService {
   private retryInterval: number = 5000; // 5 segundos
   private apiBaseUrl: string = '';
   private hubUrl: string = '';
+  private reconnectTimeout: NodeJS.Timeout | null = null;
 
   constructor() {
     this.connection = null;
@@ -42,8 +43,16 @@ class SignalRNotificationService {
           HttpTransportType.LongPolling,
         skipNegotiation: false
       })
-      .withAutomaticReconnect([0, 2000, 5000, 10000])
-      .configureLogging(LogLevel.Information)
+      .withAutomaticReconnect({
+        nextRetryDelayInMilliseconds: (retryContext) => {
+          // Aumentar el tiempo entre reintentos
+          const delays = [0, 2000, 5000, 10000, 20000, 30000];
+          return delays[retryContext.previousRetryCount] || 30000;
+        }
+      })
+      .withServerTimeout(60000) // 60 segundos
+      .withKeepAliveInterval(15000) // 15 segundos
+      .configureLogging(LogLevel.Warning)
       .build();
 
     // Exponer la conexión para depuración en desarrollo
@@ -61,14 +70,32 @@ class SignalRNotificationService {
       );
 
       // Manejadores de eventos de cambio de estado
-      this.connection.onreconnecting((error) => {});
+      this.connection.onreconnecting((error) => {
+        console.warn('SignalR reconectando...', error);
+        this.connecting = true;
+      });
 
       this.connection.onreconnected((connectionId) => {
+        console.log('SignalR reconectado con ID:', connectionId);
         this.retryCount = 0;
+        this.connecting = false;
       });
 
       this.connection.onclose((error) => {
+        console.warn('SignalR desconectado', error);
         this.connecting = false;
+        this.connection = null;
+        this.connectionPromise = null;
+
+        // Intentar reconectar si no hemos alcanzado el máximo de intentos
+        if (this.retryCount < this.maxRetryCount) {
+          this.retryCount++;
+          this.reconnectTimeout = setTimeout(() => {
+            if (accessToken) {
+              this.start(accessToken).catch(console.error);
+            }
+          }, this.retryInterval * this.retryCount);
+        }
       });
     }
   }
@@ -119,14 +146,21 @@ class SignalRNotificationService {
 
   // Detener la conexión con el hub
   async stop(): Promise<void> {
+    if (this.reconnectTimeout) {
+      clearTimeout(this.reconnectTimeout);
+      this.reconnectTimeout = null;
+    }
+
     if (this.connection) {
       try {
         await this.connection.stop();
       } catch (error) {
+        console.error('Error stopping SignalR connection:', error);
       } finally {
         this.connection = null;
         this.connectionPromise = null;
         this.connecting = false;
+        this.retryCount = 0;
       }
     }
   }
@@ -145,7 +179,9 @@ class SignalRNotificationService {
     this.callbacks.forEach((callback) => {
       try {
         callback(notification);
-      } catch (error) {}
+      } catch (error) {
+        console.error('Error in notification callback:', error);
+      }
     });
   }
 

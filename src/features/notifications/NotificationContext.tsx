@@ -8,6 +8,7 @@ import { LoanNotification, LoanNotificationType } from 'types/Notifications';
 import { useNotificationStore } from '@/stores/notification-store';
 import { useNotifications } from './api/notification-service';
 import useAxios from '@/hooks/use-axios';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface NotificationContextProps {
   notifications: LoanNotification[];
@@ -30,6 +31,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({
   const apiClient = useAxios();
   const { addNotification } = useNotificationStore();
   const [hasError, setHasError] = useState(false);
+  const queryClient = useQueryClient();
 
   // Usar el hook de React Query para obtener notificaciones
   const {
@@ -118,6 +120,16 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({
             // Actualizar estado global en Zustand - añadir notificación al store
             addNotification(notification);
 
+            // Invalidar la caché de solicitudes de préstamo para forzar una actualización
+            queryClient.invalidateQueries({ queryKey: ['loanRequests'] });
+
+            // Si la notificación está relacionada con una solicitud específica, invalidar también esa solicitud
+            if (notification.loanRequestId) {
+              queryClient.invalidateQueries({
+                queryKey: ['loanRequests', 'detail', notification.loanRequestId]
+              });
+            }
+
             // Recargar notificaciones para asegurar sincronización
             refetch();
           }
@@ -155,7 +167,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({
       notificationService.stop();
       clearTimeout(retryTimeout);
     };
-  }, [accessToken, refetch, addNotification]);
+  }, [accessToken, refetch, addNotification, queryClient]);
 
   return (
     <NotificationContext.Provider
