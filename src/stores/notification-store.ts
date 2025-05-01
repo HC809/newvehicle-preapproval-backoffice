@@ -6,10 +6,6 @@ import { LoanNotification } from 'types/Notifications';
 const MAX_RECENT_NOTIFICATIONS = 5;
 
 interface NotificationStore {
-  // Notificaciones no leídas (para el badge)
-  notifications: LoanNotification[];
-  count: number;
-
   // Notificaciones recientes (para mostrar en el popover)
   recentNotifications: LoanNotification[];
 
@@ -17,7 +13,6 @@ interface NotificationStore {
   addNotification: (notification: LoanNotification) => void;
   addNotifications: (notifications: LoanNotification[]) => void;
   clearNotifications: () => void;
-  clearBadgeOnly: () => void;
 }
 
 let store: ReturnType<typeof createStore>;
@@ -26,24 +21,20 @@ function createStore() {
   return create<NotificationStore>()(
     devtools(
       persist(
-        (set, get) => ({
-          notifications: [],
-          count: 0,
+        (set) => ({
           recentNotifications: [],
 
           addNotification: (notification) =>
             set(
               (state) => {
-                // Verificar si la notificación ya existe por ID en las no leídas
-                if (state.notifications.some((n) => n.id === notification.id)) {
+                // Verificar si la notificación ya existe por ID
+                if (
+                  state.recentNotifications.some(
+                    (n) => n.id === notification.id
+                  )
+                ) {
                   return state;
                 }
-
-                // Actualizar notificaciones no leídas
-                const updatedNotifications = [
-                  ...state.notifications,
-                  notification
-                ];
 
                 // Actualizar notificaciones recientes
                 // Añadir la nueva notificación al principio y limitar a MAX_RECENT_NOTIFICATIONS
@@ -53,8 +44,6 @@ function createStore() {
                 ].slice(0, MAX_RECENT_NOTIFICATIONS);
 
                 return {
-                  notifications: updatedNotifications,
-                  count: updatedNotifications.length,
                   recentNotifications: updatedRecentNotifications
                 };
               },
@@ -68,7 +57,7 @@ function createStore() {
                 // Filtrar notificaciones que ya existen en el estado
                 const newNotifications = notifications.filter(
                   (newNotif) =>
-                    !state.notifications.some(
+                    !state.recentNotifications.some(
                       (existing) => existing.id === newNotif.id
                     )
                 );
@@ -76,12 +65,6 @@ function createStore() {
                 if (newNotifications.length === 0) {
                   return state;
                 }
-
-                // Actualizar notificaciones no leídas
-                const updatedNotifications = [
-                  ...state.notifications,
-                  ...newNotifications
-                ];
 
                 // Actualizar notificaciones recientes
                 // Añadir las nuevas notificaciones al principio y limitar a MAX_RECENT_NOTIFICATIONS
@@ -91,8 +74,6 @@ function createStore() {
                 ].slice(0, MAX_RECENT_NOTIFICATIONS);
 
                 return {
-                  notifications: updatedNotifications,
-                  count: updatedNotifications.length,
                   recentNotifications: updatedRecentNotifications
                 };
               },
@@ -103,30 +84,15 @@ function createStore() {
           clearNotifications: () =>
             set(
               {
-                notifications: [],
-                count: 0
-                // No limpiamos recentNotifications para mantenerlas en el popover
+                recentNotifications: []
               },
               false,
               'notification/clearNotifications'
-            ),
-
-          clearBadgeOnly: () =>
-            set(
-              {
-                notifications: [],
-                count: 0
-                // No limpiamos recentNotifications
-              },
-              false,
-              'notification/clearBadgeOnly'
             )
         }),
         {
           name: 'notification-storage',
           partialize: (state) => ({
-            notifications: state.notifications,
-            count: state.count,
             recentNotifications: state.recentNotifications
           })
         }

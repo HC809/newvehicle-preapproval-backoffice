@@ -1,20 +1,15 @@
 'use client';
 
-import React, {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  useCallback
-} from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useToken } from '@/features/auth/TokenContext';
 import notificationService from './SignalRNotificationService';
 import { toast } from 'sonner';
 import { LoanNotification, LoanNotificationType } from 'types/Notifications';
 import { useNotificationStore } from '@/stores/notification-store';
+import { useNotifications } from './api/notification-service';
+import useAxios from '@/hooks/use-axios';
 
 interface NotificationContextProps {
-  unreadCount: number;
   notifications: LoanNotification[];
   refreshNotifications: () => Promise<void>;
   isLoading: boolean;
@@ -22,103 +17,32 @@ interface NotificationContextProps {
 }
 
 const NotificationContext = createContext<NotificationContextProps>({
-  unreadCount: 0,
   notifications: [],
   refreshNotifications: async () => {},
   isLoading: false,
   hasError: false
 });
 
-// Endpoints de la API de notificaciones
-// NOTA: Asegúrese de que estas rutas coincidan con las de su backend
-const API_NOTIFICATION_ENDPOINTS = {
-  unread: '/api/notifications/unread'
-};
-
-// Función para verificar y componer la URL completa de la API
-const getFullApiUrl = (endpoint: string) => {
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-  if (!apiUrl) {
-    throw new Error(
-      'NEXT_PUBLIC_API_URL is not defined in environment variables'
-    );
-  }
-
-  // Asegurar que no haya doble slash entre la base y el endpoint
-  return `${apiUrl.replace(/\/$/, '')}${endpoint}`;
-};
-
 export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({
   children
 }) => {
   const { accessToken } = useToken();
-  const [notifications, setNotifications] = useState<LoanNotification[]>([]);
-  const [unreadCount, setUnreadCount] = useState(0);
-  const [isLoading, setIsLoading] = useState(false);
-  const [hasError, setHasError] = useState(false);
+  const apiClient = useAxios();
   const { addNotification } = useNotificationStore();
+  const [hasError, setHasError] = useState(false);
 
-  // Cargar notificaciones no leídas
-  const fetchUnreadNotifications = useCallback(async () => {
-    if (!accessToken) return;
-    setIsLoading(true);
-    setHasError(false);
+  // Usar el hook de React Query para obtener notificaciones
+  const {
+    data: notifications = [],
+    isLoading,
+    refetch,
+    isError
+  } = useNotifications(apiClient, !!accessToken);
 
-    try {
-      const endpoint = API_NOTIFICATION_ENDPOINTS.unread;
-      const fullUrl = getFullApiUrl(endpoint);
-
-      const response = await fetch(fullUrl, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-
-        // Si data no es un array, manejarlo apropiadamente
-        if (!Array.isArray(data)) {
-          setNotifications([]);
-          setUnreadCount(0);
-          return;
-        }
-
-        const formattedData = data.map((notification: any) => ({
-          ...notification,
-          type: notification.type as LoanNotificationType
-        }));
-
-        // Filtrar notificaciones expiradas
-        const nonExpiredNotifications = formattedData.filter(
-          (notification: LoanNotification) => {
-            if (!notification.expiredAt) return true;
-            return new Date(notification.expiredAt) > new Date();
-          }
-        );
-
-        setNotifications(nonExpiredNotifications);
-        setUnreadCount(nonExpiredNotifications.length);
-      } else {
-        setHasError(true);
-      }
-    } catch (error) {
-      setHasError(true);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [accessToken]);
-
-  // Inicializar con el token
+  // Actualizar estado de error cuando hay un error en la query
   useEffect(() => {
-    if (accessToken) {
-      fetchUnreadNotifications();
-    } else {
-      setNotifications([]);
-      setUnreadCount(0);
-    }
-  }, [accessToken, fetchUnreadNotifications]);
+    setHasError(isError);
+  }, [isError]);
 
   // Configurar SignalR
   useEffect(() => {
@@ -136,14 +60,6 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({
         // Suscribirse a notificaciones
         const unsubscribe = notificationService.onNotification(
           (notification) => {
-            // Verificar si la notificación está expirada
-            if (
-              notification.expiredAt &&
-              new Date(notification.expiredAt) <= new Date()
-            ) {
-              return; // Ignorar notificaciones expiradas
-            }
-
             // Mostrar toast según el tipo de notificación
             switch (notification.type) {
               case LoanNotificationType.StatusChanged:
@@ -159,15 +75,11 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({
                 toast.info(`${notification.title}: ${notification.message}`);
             }
 
-            // Actualizar estado local
-            setNotifications((prev) => [notification, ...prev]);
-            setUnreadCount((prev) => prev + 1);
-
             // Actualizar estado global en Zustand - añadir notificación al store
             addNotification(notification);
 
             // Recargar notificaciones para asegurar sincronización
-            fetchUnreadNotifications();
+            refetch();
           }
         );
 
@@ -203,14 +115,15 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({
       notificationService.stop();
       clearTimeout(retryTimeout);
     };
-  }, [accessToken, fetchUnreadNotifications, addNotification]);
+  }, [accessToken, refetch, addNotification]);
 
   return (
     <NotificationContext.Provider
       value={{
-        unreadCount,
         notifications,
-        refreshNotifications: fetchUnreadNotifications,
+        refreshNotifications: async () => {
+          await refetch();
+        },
         isLoading,
         hasError
       }}
