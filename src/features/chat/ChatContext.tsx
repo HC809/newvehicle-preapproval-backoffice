@@ -13,11 +13,7 @@ import { useToken } from '@/features/auth/TokenContext';
 import chatService from './SignalRChatService';
 import { toast } from 'sonner';
 import { useChatStore } from '@/stores/chat-store';
-import {
-  useChatRooms,
-  useMarkAllAsRead,
-  useSendMessage
-} from './api/chat-service';
+import { useSendMessage } from './api/chat-service';
 import { useQueryClient } from '@tanstack/react-query';
 
 // Tipo para el estado de conexión
@@ -47,7 +43,7 @@ const ChatContext = createContext<ChatContextProps>({
 
 export function ChatProvider({ children }: { children: ReactNode }) {
   const { accessToken } = useToken();
-  const { addMessage } = useChatStore();
+  const { addMessage, markRoomAsRead: markAsRead } = useChatStore();
   const [hasError, setHasError] = useState(false);
   const [connectionStatus, setConnectionStatus] =
     useState<ConnectionStatus>('disconnected');
@@ -56,16 +52,17 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   // Mutation para enviar mensajes
   const sendMessageMutation = useSendMessage();
 
-  // Mutation para marcar mensajes como leídos
-  const markAsReadMutation = useMarkAllAsRead();
+  // Estado local para las salas en lugar de usar useChatRooms
+  const [chatRooms, setChatRooms] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isError, setIsError] = useState(false);
 
-  // Usar el hook de React Query para obtener salas de chat
-  const {
-    data: chatRooms = [],
-    isLoading,
-    refetch,
-    isError
-  } = useChatRooms(!!accessToken);
+  // Función para refrescar las salas de chat
+  const refreshChatRooms = useCallback(async () => {
+    // En lugar de refetch, ahora actualizamos el estado local
+    // Aquí podrías implementar una lógica para obtener las salas si es necesario
+    console.log('Refresh de salas de chat solicitado');
+  }, []);
 
   // Actualizar estado de error cuando hay un error en la query
   useEffect(() => {
@@ -207,18 +204,22 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       if (!roomId) return;
 
       try {
-        await markAsReadMutation.mutateAsync(roomId);
+        // Usar directamente el store para marcar como leído
+        markAsRead(roomId);
+
+        // Invalidar consultas relacionadas
+        queryClient.invalidateQueries({
+          queryKey: ['chats', 'messages', roomId]
+        });
+        queryClient.invalidateQueries({
+          queryKey: ['chats', 'rooms']
+        });
       } catch (error) {
         console.error('Error al marcar como leído:', error);
       }
     },
-    [markAsReadMutation]
+    [queryClient, markAsRead]
   );
-
-  // Función para refrescar las salas de chat
-  const refreshChatRooms = useCallback(async () => {
-    await refetch();
-  }, [refetch]);
 
   // Obtener contador total de mensajes no leídos
   const { unreadCountByRoom } = useChatStore();

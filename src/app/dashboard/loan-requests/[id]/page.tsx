@@ -375,14 +375,10 @@ export default function LoanRequestDetailPage() {
     // Obtener las salas de chat existentes
     const existingChatRooms = loanRequestDetail.chatRooms || [];
 
-    // Buscar salas existentes por tipo
-    const findChatRoomByType = (type: string) => {
-      return existingChatRooms.find((room) => room.type === type);
-    };
-
     // Asegurarse de que el loanRequestId sea un Guid válido en formato string
     const loanRequestGuid = loanRequestDetail.loanRequest.id;
 
+    // BusinessDevelopment_User puede ver chats con administrador y concesionario
     if (userRole === UserRole.BusinessDevelopment_User) {
       return (
         <div className='flex flex-row space-x-2'>
@@ -392,6 +388,7 @@ export default function LoanRequestDetailPage() {
             loanRequestId={loanRequestGuid}
             variant='outline'
             buttonText='Chat con Administrador'
+            existingChatRooms={existingChatRooms}
           />
           <ChatButton
             key='creator-chat'
@@ -399,10 +396,13 @@ export default function LoanRequestDetailPage() {
             loanRequestId={loanRequestGuid}
             variant='outline'
             buttonText='Chat con Concesionario'
+            existingChatRooms={existingChatRooms}
           />
         </div>
       );
-    } else if (userRole === UserRole.BusinessDevelopment_Admin) {
+    }
+    // BusinessDevelopment_Admin solo ve chat con gestor
+    else if (userRole === UserRole.BusinessDevelopment_Admin) {
       return (
         <div className='flex flex-row space-x-2'>
           <ChatButton
@@ -411,6 +411,64 @@ export default function LoanRequestDetailPage() {
             loanRequestId={loanRequestGuid}
             variant='outline'
             buttonText='Chat con Gestor'
+            existingChatRooms={existingChatRooms}
+          />
+        </div>
+      );
+    }
+    // Otros roles según estado de la solicitud
+    else if (
+      userRole === UserRole.Dealership_Admin &&
+      loanRequestDetail.loanRequest.status !==
+        LoanRequestStatus.RejectedByAgent &&
+      loanRequestDetail.loanRequest.status !==
+        LoanRequestStatus.RejectedByManager
+    ) {
+      return (
+        <div className='flex flex-row space-x-2'>
+          <ChatButton
+            key='agent-chat'
+            type={ChatRoomType.Agent_Creator}
+            loanRequestId={loanRequestGuid}
+            variant='outline'
+            buttonText='Chat con Oficial de Negocios'
+            existingChatRooms={existingChatRooms}
+          />
+        </div>
+      );
+    } else if (
+      userRole === UserRole.PYMEAdvisor &&
+      loanRequestDetail.loanRequest.status ===
+        LoanRequestStatus.VisitAssigned &&
+      loanRequestDetail.visit?.pymeAdvisorId
+    ) {
+      return (
+        <div className='flex flex-row space-x-2'>
+          <ChatButton
+            key='agent-chat'
+            type={ChatRoomType.Agent_PYMEAdvisor}
+            loanRequestId={loanRequestGuid}
+            variant='outline'
+            buttonText='Chat con Oficial de Negocios'
+            existingChatRooms={existingChatRooms}
+          />
+        </div>
+      );
+    } else if (
+      userRole === UserRole.BranchManager &&
+      loanRequestDetail.loanRequest.status ===
+        LoanRequestStatus.VisitAssigned &&
+      loanRequestDetail.visit?.branchManagerId
+    ) {
+      return (
+        <div className='flex flex-row space-x-2'>
+          <ChatButton
+            key='agent-chat'
+            type={ChatRoomType.Agent_BranchManager}
+            loanRequestId={loanRequestGuid}
+            variant='outline'
+            buttonText='Chat con Oficial de Negocios'
+            existingChatRooms={existingChatRooms}
           />
         </div>
       );

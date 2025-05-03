@@ -7,11 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import {
-  useChatMessages,
-  useSendMessage,
-  useMarkAllAsRead
-} from './api/chat-service';
+import { useChatMessages, useSendMessage } from './api/chat-service';
 import { useToken } from '@/features/auth/TokenContext';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -36,14 +32,6 @@ export function ChatInterface({
 
   // Mutación para enviar mensaje
   const sendMessage = useSendMessage();
-  const markAsRead = useMarkAllAsRead();
-
-  // Marcar mensajes como leídos cuando se abre el chat
-  useEffect(() => {
-    if (roomId) {
-      markAsRead.mutate(roomId);
-    }
-  }, [roomId, markAsRead]);
 
   // Desplazarse al último mensaje cuando se cargan nuevos mensajes
   useEffect(() => {

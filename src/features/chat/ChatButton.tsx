@@ -1,6 +1,12 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  useRef,
+  useMemo
+} from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -8,12 +14,12 @@ import {
   PopoverContent,
   PopoverTrigger
 } from '@/components/ui/popover';
-import { MessageCircle, Users, Building2, User2 } from 'lucide-react';
+import { MessageCircle, Users, Building2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ChatInterface } from './ChatInterface';
 import { useToken } from '@/features/auth/TokenContext';
 import { ChatRoomType } from './SignalRChatService';
-import { generateChatRoomId, useGetOrCreateChatRoom } from './api/chat-service';
+import { useCreateChatRoom } from './api/chat-service';
 import { useChatStore } from '@/stores/chat-store';
 
 interface ChatButtonProps {
@@ -29,6 +35,10 @@ interface ChatButtonProps {
     | 'outline'
     | 'secondary';
   disabled?: boolean;
+  existingChatRooms?: Array<{
+    id: string;
+    type: string;
+  }>;
 }
 
 // Constantes para roles - usar los valores exactos del enum UserRole
@@ -41,9 +51,10 @@ export function ChatButton({
   buttonText,
   fullWidth = false,
   variant = 'default',
-  disabled = false
+  disabled = false,
+  existingChatRooms = []
 }: ChatButtonProps) {
-  const { accessToken, userRole, hasRole } = useToken();
+  const { accessToken, userRole } = useToken();
   const { unreadCountByRoom } = useChatStore();
   const [open, setOpen] = useState(false);
   const [roomId, setRoomId] = useState<string | null>(null);
@@ -51,8 +62,13 @@ export function ChatButton({
   const [error, setError] = useState<string | null>(null);
   const hasTriedCreatingRoom = useRef(false);
 
-  // Mutation para obtener o crear una sala de chat
-  const getOrCreateChatRoom = useGetOrCreateChatRoom();
+  // Mutation para crear una sala de chat
+  const createChatRoom = useCreateChatRoom();
+
+  // Buscar sala existente por tipo
+  const existingChatRoom = useMemo(() => {
+    return existingChatRooms.find((room) => room.type === type);
+  }, [existingChatRooms, type]);
 
   // No necesitamos verificar múltiples roles, solo 2 específicos para chats
   const canViewChat = useCallback(() => {
@@ -77,9 +93,16 @@ export function ChatButton({
     return false;
   }, [userRole, type]);
 
-  // Función para obtener o crear la sala de chat
+  // Función para obtener o crear la sala de chat según sea necesario
   const createChatRoomIfNeeded = useCallback(() => {
     if (!accessToken || isCreatingRoom || hasTriedCreatingRoom.current) {
+      return;
+    }
+
+    // Si ya existe una sala de chat, usarla
+    if (existingChatRoom) {
+      console.log('Usando sala de chat existente:', existingChatRoom.id);
+      setRoomId(existingChatRoom.id);
       return;
     }
 
@@ -89,31 +112,36 @@ export function ChatButton({
       return;
     }
 
+    // Crear una nueva sala solo si no existe
     setIsCreatingRoom(true);
     setError(null);
     hasTriedCreatingRoom.current = true;
 
-    getOrCreateChatRoom.mutate(
+    createChatRoom.mutate(
       { loanRequestId, type },
       {
         onSuccess: (chatRoom) => {
           if (chatRoom && chatRoom.id) {
-            console.log(
-              'Chat room obtenido o creado exitosamente:',
-              chatRoom.id
-            );
+            console.log('Nueva sala de chat creada:', chatRoom.id);
             setRoomId(chatRoom.id);
           }
           setIsCreatingRoom(false);
         },
         onError: (error: any) => {
-          console.error('Error al obtener/crear sala de chat:', error);
+          console.error('Error al crear sala de chat:', error);
           setError(error?.message || 'Error al crear la sala de chat');
           setIsCreatingRoom(false);
         }
       }
     );
-  }, [accessToken, isCreatingRoom, loanRequestId, type, getOrCreateChatRoom]);
+  }, [
+    accessToken,
+    isCreatingRoom,
+    loanRequestId,
+    type,
+    createChatRoom,
+    existingChatRoom
+  ]);
 
   // Obtener o crear la sala cuando se abre el popover por primera vez
   useEffect(() => {
@@ -211,7 +239,7 @@ export function ChatButton({
               title={getChatTitle()}
               className='h-full'
             />
-          ) : error || getOrCreateChatRoom.isError ? (
+          ) : error || createChatRoom.isError ? (
             <div className='flex h-full flex-col items-center justify-center p-8'>
               <p className='mb-4 text-center text-red-500'>
                 {error || 'No se pudo cargar la sala de chat.'}
