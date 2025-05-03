@@ -71,6 +71,10 @@ export interface LoanRequestDetail {
   loanCalculation?: LoanCalculation;
   events?: LoanRequestEvent[];
   visit?: Visit;
+  chatRooms?: Array<{
+    id: string;
+    type: string;
+  }>;
 }
 
 export interface LoanRequestListingParams {

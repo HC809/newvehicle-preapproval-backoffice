@@ -49,6 +49,8 @@ import { RejectionModal } from '@/features/loan-requests/components/rejection-mo
 import { LoanRequestEditForm } from '@/features/loan-requests/components';
 import { UploadDocumentButton } from '@/features/loan-documents/components';
 import AssignVisitForm from '@/features/loan-requests/components/assign-visit-form';
+import { ChatButton } from '@/features/chat/ChatButton';
+import { ChatRoomType } from '@/features/chat/SignalRChatService';
 
 export default function LoanRequestDetailPage() {
   const router = useRouter();
@@ -334,6 +336,89 @@ export default function LoanRequestDetailPage() {
     );
   };
 
+  // Función para validar si un chat específico debe mostrarse según el estado de la solicitud
+  function shouldShowChatType(
+    type: ChatRoomType,
+    status: string,
+    hasPymeAdvisor: boolean,
+    hasBranchManager: boolean
+  ): boolean {
+    // Los chats con Administrador y Concesionario siempre están disponibles en estados iniciales
+    if (
+      type === ChatRoomType.Agent_Manager ||
+      type === ChatRoomType.Agent_Creator
+    ) {
+      return [
+        'Pending',
+        'ApprovedByAgent',
+        'ApprovedByManager',
+        'AcceptedByCustomer'
+      ].includes(status);
+    }
+
+    // Los chats con Asesor PYME y Gerente solo están disponibles tras asignación de visita
+    if (type === ChatRoomType.Agent_PYMEAdvisor) {
+      return status === 'VisitAssigned' && hasPymeAdvisor;
+    }
+
+    if (type === ChatRoomType.Agent_BranchManager) {
+      return status === 'VisitAssigned' && hasBranchManager;
+    }
+
+    return false;
+  }
+
+  // Renderizar los botones de chat según el rol del usuario
+  const renderChatButtons = () => {
+    if (!loanRequestDetail) return null;
+
+    // Obtener las salas de chat existentes
+    const existingChatRooms = loanRequestDetail.chatRooms || [];
+
+    // Buscar salas existentes por tipo
+    const findChatRoomByType = (type: string) => {
+      return existingChatRooms.find((room) => room.type === type);
+    };
+
+    // Asegurarse de que el loanRequestId sea un Guid válido en formato string
+    const loanRequestGuid = loanRequestDetail.loanRequest.id;
+
+    if (userRole === UserRole.BusinessDevelopment_User) {
+      return (
+        <div className='flex flex-row space-x-2'>
+          <ChatButton
+            key='manager-chat'
+            type={ChatRoomType.Agent_Manager}
+            loanRequestId={loanRequestGuid}
+            variant='outline'
+            buttonText='Chat con Administrador'
+          />
+          <ChatButton
+            key='creator-chat'
+            type={ChatRoomType.Agent_Creator}
+            loanRequestId={loanRequestGuid}
+            variant='outline'
+            buttonText='Chat con Concesionario'
+          />
+        </div>
+      );
+    } else if (userRole === UserRole.BusinessDevelopment_Admin) {
+      return (
+        <div className='flex flex-row space-x-2'>
+          <ChatButton
+            key='agent-chat'
+            type={ChatRoomType.Agent_Manager}
+            loanRequestId={loanRequestGuid}
+            variant='outline'
+            buttonText='Chat con Gestor'
+          />
+        </div>
+      );
+    }
+
+    return null;
+  };
+
   // Loading state
   if (isLoading) {
     return (
@@ -370,275 +455,226 @@ export default function LoanRequestDetailPage() {
 
   return (
     <PageContainer>
-      {showFullPageLoader && (
-        <FullPageLoader
-          message={fullPageLoaderMessage}
-          subMessage={fullPageLoaderSubMessage}
-          error={loaderError}
-          onRetry={handleRetry}
-          onClose={handleCloseLoader}
-        />
-      )}
-      <div className='flex flex-1 flex-col space-y-6'>
-        <div className='flex items-center justify-between'>
-          <div className='flex items-center gap-4'>
-            <Button
-              variant='outline'
-              size='icon'
-              onClick={handleBack}
-              className='border-primary/30 text-primary hover:bg-primary/10 hover:text-primary dark:border-primary/30 dark:hover:bg-primary/20'
-            >
-              <ArrowLeft className='h-4 w-4' />
-            </Button>
-            <Heading
-              title='Detalle de Solicitud de Préstamo'
-              description='Información completa sobre la solicitud'
-            />
-          </div>
-
-          {loanRequestDetail && (
-            <div className='flex gap-2'>
-              {loanRequestDetail.loanRequest.equifaxChecked &&
-                loanRequestDetail.loanRequest.bantotalChecked &&
-                loanRequestDetail.loanRequest.financingCalculated && (
-                  <Button
-                    variant='outline'
-                    onClick={() => setShowEditModal(true)}
-                    className='gap-2'
-                  >
-                    <Pencil className='h-4 w-4' />
-                    Editar
-                  </Button>
-                )}
-              {canAssignVisit(loanRequestDetail.loanRequest.status) && (
-                <Button
-                  variant='outline'
-                  onClick={() => setShowAssignVisitModal(true)}
-                  className='gap-2'
-                >
-                  <Building className='h-4 w-4' />
-                  Asignar Visita
-                </Button>
-              )}
+      <div className='flex flex-col gap-6'>
+        {/* Encabezado con título y botones de acción */}
+        <div className='flex flex-col gap-3'>
+          <div className='flex items-center justify-between'>
+            <div className='flex items-center'>
+              <Button
+                variant='ghost'
+                size='icon'
+                onClick={handleBack}
+                className='mr-2'
+              >
+                <ArrowLeft className='h-5 w-5' />
+              </Button>
+              <Heading
+                title='Detalle de Solicitud'
+                description='Información detallada de la solicitud de préstamo'
+              />
+            </div>
+            <div className='flex items-center gap-2'>
               <Button
                 variant='outline'
                 onClick={() => setShowTimeline(true)}
-                className='gap-2'
+                title='Ver historial de cambios'
               >
-                <History className='h-4 w-4' />
-                Ver Historial
+                <History className='mr-2 h-4 w-4' />
+                Historial
               </Button>
-              {canApproveReject(
-                loanRequestDetail.loanRequest.status,
-                loanRequestDetail.loanRequest
-              ) && (
-                <>
-                  <Button
-                    variant='default'
-                    onClick={handleApproveLoan}
-                    disabled={
-                      approveByAgentMutation.isPending ||
-                      approveByManagerMutation.isPending
-                    }
-                    className='gap-2 bg-green-600 hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-700'
-                  >
-                    {approveByAgentMutation.isPending ||
-                    approveByManagerMutation.isPending ? (
-                      'Aprobando...'
-                    ) : (
-                      <>
-                        <CheckCircle className='h-4 w-4' />
-                        Aprobar
-                      </>
-                    )}
-                  </Button>
-                  <Button
-                    variant='destructive'
-                    onClick={handleRejectLoan}
-                    className='gap-2'
-                  >
-                    <XCircle className='h-4 w-4' />
-                    Rechazar
-                  </Button>
-                </>
-              )}
+              {renderChatButtons()}
+              <Button variant='outline' onClick={handleGoToList}>
+                Volver a la Lista
+              </Button>
             </div>
-          )}
+          </div>
+          <Separator />
         </div>
 
-        <Separator />
-
-        {error ? (
-          <div className='space-y-4'>
-            <Alert variant='destructive'>
-              <AlertTitle>No se encontraron datos</AlertTitle>
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-            <div className='flex justify-center'>
-              <Button onClick={handleGoToList} variant='default'>
-                Volver a la lista de solicitudes
-              </Button>
+        {showFullPageLoader && (
+          <FullPageLoader
+            message={fullPageLoaderMessage}
+            subMessage={fullPageLoaderSubMessage}
+            error={loaderError}
+            onRetry={handleRetry}
+            onClose={handleCloseLoader}
+          />
+        )}
+        <div className='flex flex-1 flex-col space-y-6'>
+          {error ? (
+            <div className='space-y-4'>
+              <Alert variant='destructive'>
+                <AlertTitle>No se encontraron datos</AlertTitle>
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+              <div className='flex justify-center'>
+                <Button onClick={handleGoToList} variant='default'>
+                  Volver a la lista de solicitudes
+                </Button>
+              </div>
             </div>
-          </div>
-        ) : loanRequestDetail ? (
-          <div className='grid grid-cols-1 gap-6 lg:grid-cols-3'>
-            {/* Columna izquierda - Información principal */}
-            <div className='space-y-6 lg:col-span-2'>
-              <MainInfoCard
-                loanRequest={loanRequestDetail.loanRequest}
-                client={loanRequestDetail.client}
-                visit={loanRequestDetail.visit}
-              />
-              <RejectionAlert
-                rejectionReason={loanRequestDetail.loanRequest.rejectionReason}
-              />
+          ) : loanRequestDetail ? (
+            <div className='grid grid-cols-1 gap-6 lg:grid-cols-3'>
+              {/* Columna izquierda - Información principal */}
+              <div className='space-y-6 lg:col-span-2'>
+                <MainInfoCard
+                  loanRequest={loanRequestDetail.loanRequest}
+                  client={loanRequestDetail.client}
+                  visit={loanRequestDetail.visit}
+                />
+                <RejectionAlert
+                  rejectionReason={
+                    loanRequestDetail.loanRequest.rejectionReason
+                  }
+                />
 
-              {/* Mostrar documentos si existen */}
-              {loanRequestDetail.documents &&
-                loanRequestDetail.documents.length > 0 && (
-                  <div className='flex h-[300px] flex-col rounded-lg border border-l-4 border-l-primary p-4 shadow-sm'>
-                    <div className='mb-4 flex items-center justify-between'>
-                      <h3 className='flex items-center gap-2 text-lg font-semibold'>
-                        <FileText className='h-5 w-5 text-primary dark:text-primary' />
-                        <span>
-                          Documentos ({loanRequestDetail.documents.length})
-                        </span>
-                      </h3>
-                      <UploadDocumentButton
-                        loanRequestId={loanRequestDetail.loanRequest.id}
-                        clientId={loanRequestDetail.client?.id}
-                        variant='outline'
-                        size='sm'
-                        onDocumentUploaded={() => refetch()}
-                      />
+                {/* Mostrar documentos si existen */}
+                {loanRequestDetail.documents &&
+                  loanRequestDetail.documents.length > 0 && (
+                    <div className='flex h-[300px] flex-col rounded-lg border border-l-4 border-l-primary p-4 shadow-sm'>
+                      <div className='mb-4 flex items-center justify-between'>
+                        <h3 className='flex items-center gap-2 text-lg font-semibold'>
+                          <FileText className='h-5 w-5 text-primary dark:text-primary' />
+                          <span>
+                            Documentos ({loanRequestDetail.documents.length})
+                          </span>
+                        </h3>
+                        <UploadDocumentButton
+                          loanRequestId={loanRequestDetail.loanRequest.id}
+                          clientId={loanRequestDetail.client?.id}
+                          variant='outline'
+                          size='sm'
+                          onDocumentUploaded={() => refetch()}
+                        />
+                      </div>
+                      <div className='grid flex-1 grid-cols-1 gap-4 overflow-y-auto sm:grid-cols-2 md:grid-cols-3'>
+                        {loanRequestDetail.documents
+                          .slice()
+                          .sort(
+                            (a, b) =>
+                              new Date(b.uploadedAt).getTime() -
+                              new Date(a.uploadedAt).getTime()
+                          )
+                          .map((doc) => (
+                            <DocumentViewer
+                              key={doc.id}
+                              document={doc}
+                              onDocumentDeleted={() => refetch()}
+                            />
+                          ))}
+                      </div>
                     </div>
-                    <div className='grid flex-1 grid-cols-1 gap-4 overflow-y-auto sm:grid-cols-2 md:grid-cols-3'>
-                      {loanRequestDetail.documents
-                        .slice()
-                        .sort(
-                          (a, b) =>
-                            new Date(b.uploadedAt).getTime() -
-                            new Date(a.uploadedAt).getTime()
-                        )
-                        .map((doc) => (
-                          <DocumentViewer
-                            key={doc.id}
-                            document={doc}
-                            onDocumentDeleted={() => refetch()}
-                          />
-                        ))}
-                    </div>
+                  )}
+
+                {/* Mostrar botón de subida cuando no hay documentos */}
+                {(!loanRequestDetail.documents ||
+                  loanRequestDetail.documents.length === 0) && (
+                  <div className='flex flex-col items-center justify-center rounded-lg border border-dashed border-muted-foreground/25 p-8 text-center'>
+                    <FileText className='mb-2 h-10 w-10 text-muted-foreground/70' />
+                    <h3 className='mb-2 text-lg font-semibold'>
+                      No hay documentos
+                    </h3>
+                    <p className='mb-6 text-muted-foreground'>
+                      No se han cargado documentos para esta solicitud.
+                    </p>
+                    <UploadDocumentButton
+                      loanRequestId={loanRequestDetail.loanRequest.id}
+                      clientId={loanRequestDetail.client?.id}
+                      onDocumentUploaded={() => refetch()}
+                    />
                   </div>
                 )}
+              </div>
 
-              {/* Mostrar botón de subida cuando no hay documentos */}
-              {(!loanRequestDetail.documents ||
-                loanRequestDetail.documents.length === 0) && (
-                <div className='flex flex-col items-center justify-center rounded-lg border border-dashed border-muted-foreground/25 p-8 text-center'>
-                  <FileText className='mb-2 h-10 w-10 text-muted-foreground/70' />
-                  <h3 className='mb-2 text-lg font-semibold'>
-                    No hay documentos
-                  </h3>
-                  <p className='mb-6 text-muted-foreground'>
-                    No se han cargado documentos para esta solicitud.
-                  </p>
-                  <UploadDocumentButton
-                    loanRequestId={loanRequestDetail.loanRequest.id}
-                    clientId={loanRequestDetail.client?.id}
-                    onDocumentUploaded={() => refetch()}
+              <div className='space-y-6'>
+                <FinancialSummaryCard
+                  loanRequest={loanRequestDetail.loanRequest}
+                  loanCalculation={loanRequestDetail.loanCalculation}
+                  client={loanRequestDetail.client}
+                />
+
+                {!isAdmin ? (
+                  <VerificationChecklistCard
+                    loanRequest={loanRequestDetail.loanRequest}
+                    onCheckEquifax={handleCheckEquifax}
+                    onCheckBantotal={handleCheckBantotal}
+                    onCalculateLoan={handleCalculateLoan}
+                    isCheckingEquifax={equifaxMutation.isPending}
+                    isCheckingBantotal={bantotalMutation.isPending}
+                    isCalculatingLoan={loanCalculationMutation.isPending}
                   />
-                </div>
-              )}
+                ) : (
+                  <ResponsiblePersonsCard
+                    loanRequest={loanRequestDetail.loanRequest}
+                  />
+                )}
+              </div>
             </div>
+          ) : (
+            <Alert>
+              <AlertTitle>Solicitud no encontrada</AlertTitle>
+              <AlertDescription>
+                No se pudo encontrar la solicitud de préstamo con el ID
+                especificado.
+              </AlertDescription>
+            </Alert>
+          )}
 
-            <div className='space-y-6'>
-              <FinancialSummaryCard
-                loanRequest={loanRequestDetail.loanRequest}
-                loanCalculation={loanRequestDetail.loanCalculation}
-                client={loanRequestDetail.client}
+          {loanRequestDetail && (
+            <>
+              <LoanRequestTimeline
+                isOpen={showTimeline}
+                onClose={() => setShowTimeline(false)}
+                events={loanRequestDetail.events || []}
               />
 
-              {!isAdmin ? (
-                <VerificationChecklistCard
-                  loanRequest={loanRequestDetail.loanRequest}
-                  onCheckEquifax={handleCheckEquifax}
-                  onCheckBantotal={handleCheckBantotal}
-                  onCalculateLoan={handleCalculateLoan}
-                  isCheckingEquifax={equifaxMutation.isPending}
-                  isCheckingBantotal={bantotalMutation.isPending}
-                  isCalculatingLoan={loanCalculationMutation.isPending}
-                />
-              ) : (
-                <ResponsiblePersonsCard
-                  loanRequest={loanRequestDetail.loanRequest}
-                />
-              )}
-            </div>
-          </div>
-        ) : (
-          <Alert>
-            <AlertTitle>Solicitud no encontrada</AlertTitle>
-            <AlertDescription>
-              No se pudo encontrar la solicitud de préstamo con el ID
-              especificado.
-            </AlertDescription>
-          </Alert>
-        )}
-
-        {loanRequestDetail && (
-          <>
-            <LoanRequestTimeline
-              isOpen={showTimeline}
-              onClose={() => setShowTimeline(false)}
-              events={loanRequestDetail.events || []}
-            />
-
-            <RejectionModal
-              isOpen={showRejectionModal}
-              onClose={() => {
-                if (
-                  !rejectByAgentMutation.isPending &&
-                  !rejectByManagerMutation.isPending
-                ) {
-                  setShowRejectionModal(false);
+              <RejectionModal
+                isOpen={showRejectionModal}
+                onClose={() => {
+                  if (
+                    !rejectByAgentMutation.isPending &&
+                    !rejectByManagerMutation.isPending
+                  ) {
+                    setShowRejectionModal(false);
+                  }
+                }}
+                onSubmit={handleRejectionSubmit}
+                title={
+                  isManagerRejection
+                    ? 'Rechazar Solicitud (Gerente de Oficial de Negocios)'
+                    : 'Rechazar Solicitud (Oficial de Negocios)'
                 }
-              }}
-              onSubmit={handleRejectionSubmit}
-              title={
-                isManagerRejection
-                  ? 'Rechazar Solicitud (Gerente de Oficial de Negocios)'
-                  : 'Rechazar Solicitud (Oficial de Negocios)'
-              }
-              description={
-                isManagerRejection
-                  ? 'Por favor, ingrese la razón del rechazo de la solicitud como Gerente de Oficial de Negocios.'
-                  : 'Por favor, ingrese la razón del rechazo de la solicitud como Oficial de Negocios.'
-              }
-              isSubmitting={
-                rejectByAgentMutation.isPending ||
-                rejectByManagerMutation.isPending
-              }
-            />
+                description={
+                  isManagerRejection
+                    ? 'Por favor, ingrese la razón del rechazo de la solicitud como Gerente de Oficial de Negocios.'
+                    : 'Por favor, ingrese la razón del rechazo de la solicitud como Oficial de Negocios.'
+                }
+                isSubmitting={
+                  rejectByAgentMutation.isPending ||
+                  rejectByManagerMutation.isPending
+                }
+              />
 
-            <LoanRequestEditForm
-              open={showEditModal}
-              onOpenChange={setShowEditModal}
-              loanRequest={loanRequestDetail.loanRequest}
-              onSuccess={() => {
-                refetch();
-              }}
-            />
+              <LoanRequestEditForm
+                open={showEditModal}
+                onOpenChange={setShowEditModal}
+                loanRequest={loanRequestDetail.loanRequest}
+                onSuccess={() => {
+                  refetch();
+                }}
+              />
 
-            <AssignVisitForm
-              open={showAssignVisitModal}
-              onOpenChange={setShowAssignVisitModal}
-              loanRequestId={loanRequestDetail.loanRequest.id}
-              onSuccess={() => {
-                refetch();
-              }}
-            />
-          </>
-        )}
+              <AssignVisitForm
+                open={showAssignVisitModal}
+                onOpenChange={setShowAssignVisitModal}
+                loanRequestId={loanRequestDetail.loanRequest.id}
+                onSuccess={() => {
+                  refetch();
+                }}
+              />
+            </>
+          )}
+        </div>
       </div>
     </PageContainer>
   );
