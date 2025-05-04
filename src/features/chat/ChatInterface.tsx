@@ -93,6 +93,7 @@ export function ChatInterface({
   // Manejar el keydown para detectar @ para menciones
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === '@' && !selectedParticipant) {
+      e.preventDefault(); // Prevenir que el @ se escriba en el input
       setMentionOpen(true);
       setMentionText('');
     }
@@ -294,13 +295,14 @@ export function ChatInterface({
           onOpenChange={setMentionOpen}
         >
           <PopoverTrigger asChild>
-            <div className='hidden' />
+            <div className='h-0 w-0' aria-hidden='true' />
           </PopoverTrigger>
           <PopoverContent
             className='w-[200px] p-0'
             align='start'
             side='top'
-            sideOffset={5}
+            alignOffset={40}
+            sideOffset={10}
           >
             <Command>
               <CommandInput
@@ -308,6 +310,7 @@ export function ChatInterface({
                 className='h-9'
                 value={mentionText}
                 onValueChange={setMentionText}
+                autoFocus
               />
               <CommandList>
                 <CommandEmpty>No se encontraron personas</CommandEmpty>
