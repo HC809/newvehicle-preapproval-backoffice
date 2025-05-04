@@ -441,9 +441,9 @@ export default function LoanRequestDetailPage() {
                 Historial
               </Button>
               {renderChatButton()}
-              <Button variant='outline' onClick={handleGoToList}>
+              {/* <Button variant='outline' onClick={handleGoToList}>
                 Volver a la Lista
-              </Button>
+              </Button> */}
             </div>
           </div>
           <Separator />

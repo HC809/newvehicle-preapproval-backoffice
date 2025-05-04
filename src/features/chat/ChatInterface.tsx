@@ -208,9 +208,9 @@ export function ChatInterface({
   return (
     <div className={cn('flex h-full flex-col', className)}>
       {/* Encabezado del chat */}
-      <div className='border-b p-3'>
+      {/* <div className='border-b p-3'>
         <h3 className='font-medium'>{title || 'Chat grupal'}</h3>
-      </div>
+      </div> */}
 
       {/* Área de mensajes */}
       <div ref={scrollRef} className='flex-1 overflow-y-auto p-4'>
