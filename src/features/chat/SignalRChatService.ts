@@ -8,21 +8,13 @@ import {
 
 export interface ChatMessage {
   id: string;
-  chatRoomId: string;
+  content: string;
+  loanRequestId: string;
   senderId: string;
   senderName: string;
-  content: string;
-  sentAt: string;
-  isRead: boolean;
-}
-
-export enum ChatRoomType {
-  Agent_Creator = 'Agent_Creator',
-  Agent_Manager = 'Agent_Manager',
-  Agent_PYMEAdvisor = 'Agent_PYMEAdvisor',
-  Agent_BranchManager = 'Agent_BranchManager',
-  Creator_PYMEAdvisor = 'Creator_PYMEAdvisor',
-  All_Participants = 'All_Participants'
+  receiverId: string;
+  receiverName: string;
+  createdAt: string;
 }
 
 class SignalRChatService {
@@ -30,15 +22,12 @@ class SignalRChatService {
   private callbacks: Map<string, (message: ChatMessage) => void>;
   private connectionPromise: Promise<void> | null = null;
   private connecting: boolean = false;
-  private currentRoomId: string | null = null;
   private retryCount: number = 0;
   private maxRetryCount: number = 3;
   private retryInterval: number = 5000; // 5 segundos
   private apiBaseUrl: string = '';
   private hubUrl: string = '';
   private reconnectTimeout: NodeJS.Timeout | null = null;
-  private serverErrorDetected: boolean = false;
-  private isInitialized: boolean = false;
 
   constructor() {
     this.connection = null;
@@ -47,18 +36,14 @@ class SignalRChatService {
 
   // Inicializar el servicio con la URL base y el token de acceso
   init(apiBaseUrl: string, accessToken?: string) {
-    if (!apiBaseUrl || this.isInitialized) {
+    if (!apiBaseUrl) {
       return;
     }
 
     this.apiBaseUrl = apiBaseUrl;
-    this.hubUrl = `${apiBaseUrl}/notification-hub`; // Usar el mismo notification-hub como solución temporal
+    this.hubUrl = `${apiBaseUrl}/chat-hub`;
 
-    // Resetear la bandera de error del servidor al inicializar
-    this.serverErrorDetected = false;
-    this.isInitialized = true;
-
-    // Crear la conexión con SignalR - usar exactamente la misma configuración que en notificaciones
+    // Crear la conexión con SignalR - USAR EXACTAMENTE LA MISMA CONFIGURACIÓN QUE notification-hub
     this.connection = new HubConnectionBuilder()
       .withUrl(this.hubUrl, {
         accessTokenFactory: () => accessToken || '',
@@ -87,21 +72,12 @@ class SignalRChatService {
 
     // Configurar el manejador de eventos de recepción de mensajes
     if (this.connection) {
-      this.connection.on('ReceiveNotification', (data: any) => {
-        // Simulamos un mensaje de chat a partir de una notificación
+      this.connection.on('ReceiveMessage', (message: ChatMessage) => {
         try {
-          const simulatedMessage: ChatMessage = {
-            id: data.id || `sim-${Date.now()}`,
-            chatRoomId: this.currentRoomId || 'general',
-            senderId: data.userToNotifyId || 'system',
-            senderName: 'Sistema',
-            content: data.message || 'Mensaje del sistema',
-            sentAt: data.createdAt || new Date().toISOString(),
-            isRead: false
-          };
-          this.handleMessage(simulatedMessage);
+          // Procesar mensaje recibido directamente
+          this.handleMessage(message);
         } catch (error) {
-          console.error('Error al procesar notificación como mensaje:', error);
+          console.error('Error al procesar mensaje de chat:', error);
         }
       });
 
@@ -115,16 +91,6 @@ class SignalRChatService {
         console.log('Chat SignalR reconectado con ID:', connectionId);
         this.retryCount = 0;
         this.connecting = false;
-        this.serverErrorDetected = false;
-
-        // Si estábamos en una sala, volver a unirse automáticamente
-        if (this.currentRoomId) {
-          this.joinRoom(this.currentRoomId).catch(() => {
-            console.log(
-              'No se pudo volver a unir a la sala después de reconectar'
-            );
-          });
-        }
       });
 
       this.connection.onclose((error) => {
@@ -138,9 +104,7 @@ class SignalRChatService {
           this.retryCount++;
           this.reconnectTimeout = setTimeout(() => {
             if (accessToken) {
-              this.start(accessToken).catch(() => {
-                console.log('No se pudo reconectar al chat');
-              });
+              this.start(accessToken).catch(console.error);
             }
           }, this.retryInterval * this.retryCount);
         }
@@ -182,10 +146,12 @@ class SignalRChatService {
       const promise = this.connection.start();
       this.connectionPromise = promise;
       await promise;
+      console.log('Chat SignalR connection started successfully');
       return promise;
     } catch (error) {
       this.connecting = false;
       this.connectionPromise = null;
+      console.error('Error starting SignalR connection:', error);
       throw error;
     } finally {
       this.connecting = false;
@@ -209,78 +175,31 @@ class SignalRChatService {
         this.connectionPromise = null;
         this.connecting = false;
         this.retryCount = 0;
-        this.serverErrorDetected = false;
-        this.isInitialized = false;
       }
     }
   }
 
-  // Ya no simulamos el unirse a salas, esto se maneja a través de la API
-  async joinRoom(roomId: string): Promise<void> {
-    return Promise.resolve();
-  }
-
-  // Ya no simulamos el salir de salas, esto se maneja a través de la API
-  async leaveRoom(roomId: string): Promise<void> {
-    return Promise.resolve();
-  }
-
-  // El envío de mensajes ahora se maneja a través de la API
-  async sendMessage(roomId: string, message: string): Promise<void> {
-    return Promise.resolve();
-  }
-
-  // Obtener userId del token JWT
-  private getUserIdFromToken(): string | null {
-    try {
-      const token = localStorage.getItem('auth_token');
-      if (!token) return null;
-
-      const tokenParts = token.split('.');
-      if (tokenParts.length !== 3) return null;
-
-      const payload = JSON.parse(atob(tokenParts[1]));
-      return payload.sub || payload.UserId || payload.nameid || null;
-    } catch (e) {
-      return null;
-    }
-  }
-
-  // Obtener nombre de usuario del token JWT
-  private getUserNameFromToken(): string | null {
-    try {
-      const token = localStorage.getItem('auth_token');
-      if (!token) return null;
-
-      const tokenParts = token.split('.');
-      if (tokenParts.length !== 3) return null;
-
-      const payload = JSON.parse(atob(tokenParts[1]));
-      return payload.unique_name || payload.name || 'Usuario';
-    } catch (e) {
-      return null;
-    }
-  }
-
-  // Suscribirse a mensajes de chat nuevos
+  // Registrar callback para recibir mensajes
   onMessage(callback: (message: ChatMessage) => void): () => void {
-    const callbackId = Date.now().toString();
-    this.callbacks.set(callbackId, callback);
-
-    // Retornar función para anular la suscripción
-    return () => {
-      this.callbacks.delete(callbackId);
-    };
+    const id = Date.now().toString();
+    this.callbacks.set(id, callback);
+    return () => this.callbacks.delete(id);
   }
 
-  // Manejar un mensaje recibido
+  // Manejar mensaje recibido
   private handleMessage(message: ChatMessage): void {
-    // Notificar a todos los oyentes
+    console.log(
+      `Received message: ID=${message.id}, From=${message.senderName}, To=${message.receiverName || 'Group'}`
+    );
+    console.log(
+      `Message content: "${message.content.substring(0, 50)}${message.content.length > 50 ? '...' : ''}"`
+    );
+
     this.callbacks.forEach((callback) => {
       try {
         callback(message);
       } catch (error) {
-        console.error('Error en callback de mensaje:', error);
+        console.error('Error in callback:', error);
       }
     });
   }
@@ -293,37 +212,23 @@ class SignalRChatService {
     );
   }
 
-  // Obtener el estado actual de la conexión
+  // Obtener estado actual de la conexión
   getConnectionState(): string {
-    return this.connection?.state.toString() || 'Disconnected';
+    if (!this.connection) return 'Disconnected';
+    return this.connection.state;
   }
 
-  // Obtener el ID de la conexión actual
+  // Obtener ID de la conexión
   getConnectionId(): string | null {
-    return this.connection?.connectionId || null;
+    if (!this.connection) return null;
+    return this.connection.connectionId;
   }
 
-  // Obtener el ID de la sala actual
-  getCurrentRoomId(): string | null {
-    return this.currentRoomId;
-  }
-
-  // Obtener la URL base de la API
+  // Obtener URL base de la API
   getApiUrl(): string {
-    return this.apiBaseUrl || '';
-  }
-
-  // Verificar si se ha detectado un error del servidor
-  hasServerError(): boolean {
-    return this.serverErrorDetected;
-  }
-
-  // Restablecer el estado de error del servidor
-  resetServerError(): void {
-    this.serverErrorDetected = false;
+    return this.apiBaseUrl || process.env.NEXT_PUBLIC_API_URL || '';
   }
 }
 
 const chatService = new SignalRChatService();
-
 export default chatService;

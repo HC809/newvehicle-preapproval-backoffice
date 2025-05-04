@@ -2,18 +2,23 @@ import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { ChatMessage } from '@/features/chat/SignalRChatService';
 
-interface ChatStore {
-  // Mensajes por sala de chat
+// Interfaz para el store de chat
+export interface ChatStore {
+  // Mensajes por sala
   messagesByRoom: Record<string, ChatMessage[]>;
 
   // Contadores de mensajes no leídos por sala
   unreadCountByRoom: Record<string, number>;
 
+  // Contadores antiguos (mantener para compatibilidad)
+  messages: Record<string, ChatMessage[]>;
+  unreadCountByLoanRequest: Record<string, number>;
+
   // Contadores totales
   totalUnreadCount: number;
 
   // Acciones
-  addMessage: (message: ChatMessage) => void;
+  addMessage: (roomId: string, message: ChatMessage) => void;
   addMessages: (roomId: string, messages: ChatMessage[]) => void;
   markRoomAsRead: (roomId: string) => void;
   clearChat: (roomId: string) => void;
@@ -27,14 +32,15 @@ function createStore() {
     devtools(
       persist(
         (set) => ({
+          messages: {},
+          unreadCountByLoanRequest: {},
+          totalUnreadCount: 0,
           messagesByRoom: {},
           unreadCountByRoom: {},
-          totalUnreadCount: 0,
 
-          addMessage: (message) =>
+          addMessage: (roomId, message) =>
             set(
               (state) => {
-                const roomId = message.chatRoomId;
                 const currentMessages = state.messagesByRoom[roomId] || [];
 
                 // Verificar si el mensaje ya existe
@@ -45,11 +51,9 @@ function createStore() {
                 // Añadir el mensaje a la sala correspondiente
                 const updatedMessages = [...currentMessages, message];
 
-                // Actualizar contadores de no leídos
+                // Actualizar contadores de no leídos - considera todos los mensajes nuevos como no leídos
                 const currentUnreadCount = state.unreadCountByRoom[roomId] || 0;
-                const newUnreadCount = message.isRead
-                  ? currentUnreadCount
-                  : currentUnreadCount + 1;
+                const newUnreadCount = currentUnreadCount + 1;
 
                 // Calcular total de no leídos
                 let totalUnread = 0;
@@ -69,7 +73,9 @@ function createStore() {
                     [roomId]: updatedMessages
                   },
                   unreadCountByRoom: updatedUnreadCountByRoom,
-                  totalUnreadCount: totalUnread
+                  totalUnreadCount: totalUnread,
+                  messages: state.messages,
+                  unreadCountByLoanRequest: state.unreadCountByLoanRequest
                 };
               },
               false,
@@ -99,16 +105,12 @@ function createStore() {
                   ...newMessages
                 ].sort(
                   (a, b) =>
-                    new Date(a.sentAt).getTime() - new Date(b.sentAt).getTime()
+                    new Date(a.createdAt).getTime() -
+                    new Date(b.createdAt).getTime()
                 );
 
-                // Contar mensajes no leídos en los nuevos mensajes
-                let newUnreadCount = 0;
-                newMessages.forEach((msg) => {
-                  if (!msg.isRead) {
-                    newUnreadCount++;
-                  }
-                });
+                // Todos los mensajes nuevos se consideran no leídos
+                const newUnreadCount = newMessages.length;
 
                 // Actualizar contador de no leídos para esta sala
                 const currentUnreadCount = state.unreadCountByRoom[roomId] || 0;
@@ -131,7 +133,9 @@ function createStore() {
                     [roomId]: updatedMessages
                   },
                   unreadCountByRoom: updatedUnreadCountByRoom,
-                  totalUnreadCount: totalUnread
+                  totalUnreadCount: totalUnread,
+                  messages: state.messages,
+                  unreadCountByLoanRequest: state.unreadCountByLoanRequest
                 };
               },
               false,
@@ -149,13 +153,6 @@ function createStore() {
                   return state;
                 }
 
-                // Actualizar mensajes como leídos
-                const currentMessages = state.messagesByRoom[roomId] || [];
-                const updatedMessages = currentMessages.map((msg) => ({
-                  ...msg,
-                  isRead: true
-                }));
-
                 // Calcular nuevo total de no leídos
                 const oldRoomUnreadCount = state.unreadCountByRoom[roomId] || 0;
                 const newTotalUnread =
@@ -168,12 +165,11 @@ function createStore() {
                 };
 
                 return {
-                  messagesByRoom: {
-                    ...state.messagesByRoom,
-                    [roomId]: updatedMessages
-                  },
+                  messagesByRoom: state.messagesByRoom,
                   unreadCountByRoom: updatedUnreadCountByRoom,
-                  totalUnreadCount: newTotalUnread
+                  totalUnreadCount: newTotalUnread,
+                  messages: state.messages,
+                  unreadCountByLoanRequest: state.unreadCountByLoanRequest
                 };
               },
               false,
@@ -197,7 +193,9 @@ function createStore() {
                 return {
                   messagesByRoom: restMessages,
                   unreadCountByRoom: restUnreadCounts,
-                  totalUnreadCount: newTotalUnread
+                  totalUnreadCount: newTotalUnread,
+                  messages: state.messages,
+                  unreadCountByLoanRequest: state.unreadCountByLoanRequest
                 };
               },
               false,
@@ -209,16 +207,27 @@ function createStore() {
               {
                 messagesByRoom: {},
                 unreadCountByRoom: {},
-                totalUnreadCount: 0
+                totalUnreadCount: 0,
+                messages: {},
+                unreadCountByLoanRequest: {}
               },
               false,
               'chat/clearAllChats'
             )
         }),
         {
-          name: 'chat-storage',
+          name: 'chat-store',
           partialize: (state) => ({
-            // Solo guardar los mensajes más recientes por sala para evitar almacenar demasiados datos
+            messages: Object.entries(state.messages).reduce(
+              (acc, [loanRequestId, messages]) => {
+                // Guardar solo los últimos 50 mensajes
+                acc[loanRequestId] = messages.slice(-50);
+                return acc;
+              },
+              {} as Record<string, ChatMessage[]>
+            ),
+            unreadCountByLoanRequest: state.unreadCountByLoanRequest,
+            totalUnreadCount: state.totalUnreadCount,
             messagesByRoom: Object.entries(state.messagesByRoom).reduce(
               (acc, [roomId, messages]) => {
                 // Guardar solo los últimos 50 mensajes por sala
@@ -227,8 +236,7 @@ function createStore() {
               },
               {} as Record<string, ChatMessage[]>
             ),
-            unreadCountByRoom: state.unreadCountByRoom,
-            totalUnreadCount: state.totalUnreadCount
+            unreadCountByRoom: state.unreadCountByRoom
           })
         }
       ),

@@ -1,75 +1,38 @@
 'use client';
 
-import React, {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  useCallback,
-  useMemo,
-  ReactNode
-} from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useToken } from '@/features/auth/TokenContext';
-import chatService from './SignalRChatService';
-import { toast } from 'sonner';
-import { useChatStore } from '@/stores/chat-store';
+import chatService, { ChatMessage } from './SignalRChatService';
 import { useSendMessage } from './api/chat-service';
 import { useQueryClient } from '@tanstack/react-query';
 
-// Tipo para el estado de conexión
-type ConnectionStatus = 'connected' | 'disconnected' | 'connecting' | 'error';
-
 interface ChatContextProps {
-  chatRooms: any[];
-  isLoading: boolean;
-  hasError: boolean;
-  unreadCount: number;
-  sendMessage: (roomId: string, content: string) => Promise<void>;
-  markRoomAsRead: (roomId: string) => Promise<void>;
-  refreshChatRooms: () => Promise<void>;
-  connectionStatus: ConnectionStatus;
+  sendMessage: (messageData: {
+    loanRequestId: string;
+    content: string;
+    receiverUserId: string;
+    receiverUserName: string;
+  }) => Promise<void>;
+  isConnected: boolean;
+  connectionId: string | null;
 }
 
 const ChatContext = createContext<ChatContextProps>({
-  chatRooms: [],
-  isLoading: false,
-  hasError: false,
-  unreadCount: 0,
   sendMessage: async () => {},
-  markRoomAsRead: async () => {},
-  refreshChatRooms: async () => {},
-  connectionStatus: 'disconnected'
+  isConnected: false,
+  connectionId: null
 });
 
-export function ChatProvider({ children }: { children: ReactNode }) {
+export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
+  children
+}) => {
   const { accessToken } = useToken();
-  const { addMessage, markRoomAsRead: markAsRead } = useChatStore();
-  const [hasError, setHasError] = useState(false);
-  const [connectionStatus, setConnectionStatus] =
-    useState<ConnectionStatus>('disconnected');
+  const [isConnected, setIsConnected] = useState(false);
+  const [connectionId, setConnectionId] = useState<string | null>(null);
   const queryClient = useQueryClient();
-
-  // Mutation para enviar mensajes
   const sendMessageMutation = useSendMessage();
 
-  // Estado local para las salas en lugar de usar useChatRooms
-  const [chatRooms, setChatRooms] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isError, setIsError] = useState(false);
-
-  // Función para refrescar las salas de chat
-  const refreshChatRooms = useCallback(async () => {
-    // En lugar de refetch, ahora actualizamos el estado local
-    // Aquí podrías implementar una lógica para obtener las salas si es necesario
-    console.log('Refresh de salas de chat solicitado');
-  }, []);
-
-  // Actualizar estado de error cuando hay un error en la query
-  useEffect(() => {
-    setHasError(isError);
-  }, [isError]);
-
-  // Configurar SignalR
+  // Configurar SignalR para el chat
   useEffect(() => {
     if (!accessToken) return;
 
@@ -77,82 +40,39 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     const maxRetries = 3;
     let retryTimeout: NodeJS.Timeout;
 
-    const initializeSignalR = async () => {
+    const initializeChatSignalR = async () => {
       try {
-        setConnectionStatus('connecting');
-
-        // Iniciar conexión (con URL de la API)
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-        if (!apiUrl) {
-          throw new Error('API URL no definida');
-        }
-
-        chatService.init(apiUrl, accessToken);
+        // Iniciar conexión
         await chatService.start(accessToken);
-        setConnectionStatus('connected');
 
-        // Suscribirse a mensajes
+        // Actualizar estado de conexión
+        setIsConnected(chatService.isConnected());
+        setConnectionId(chatService.getConnectionId());
+
+        // Suscribirse a mensajes de chat
         const unsubscribe = chatService.onMessage((message) => {
-          console.log('Mensaje recibido en el chat:', message);
+          console.log('Chat message received:', message.content);
 
-          // Añadir mensaje al store
-          addMessage(message);
-
-          // Extraer el userId del token para comparar
-          let currentUserId: string | null = null;
-          try {
-            const tokenParts = accessToken.split('.');
-            if (tokenParts.length === 3) {
-              const payload = JSON.parse(atob(tokenParts[1]));
-              currentUserId = payload.UserId || payload.sub || payload.nameid;
-            }
-          } catch (e) {
-            console.error('Error al extraer userId del token', e);
-          }
-
-          // Mostrar notificación si el mensaje no es propio
-          if (message.senderId !== currentUserId) {
-            toast.info(`Nuevo mensaje de ${message.senderName}`, {
-              description:
-                message.content.length > 50
-                  ? `${message.content.substring(0, 50)}...`
-                  : message.content,
-              duration: 5000,
-              action: {
-                label: 'Ver',
-                onClick: () => {
-                  // Navegar a la sala de chat o abrir el popover
-                  queryClient.invalidateQueries({
-                    queryKey: ['chats', 'messages', message.chatRoomId]
-                  });
-                }
-              }
-            });
-          }
-
-          // Invalidar consultas relacionadas
+          // Invalidar la caché de mensajes para esta solicitud
           queryClient.invalidateQueries({
-            queryKey: ['chats', 'messages', message.chatRoomId]
-          });
-          queryClient.invalidateQueries({
-            queryKey: ['chats', 'rooms']
+            queryKey: ['chats', 'messages', message.loanRequestId]
           });
         });
 
         return unsubscribe;
       } catch (error) {
-        console.error('Error al inicializar SignalR:', error);
-        setConnectionStatus('error');
+        console.error('Error initializing chat SignalR:', error);
 
-        // Reintentar
+        // Reintentar un número limitado de veces
         if (retryCount < maxRetries) {
           retryCount++;
 
+          // Esperar antes de reintentar (con backoff exponencial)
           return new Promise<() => void>((resolve) => {
             retryTimeout = setTimeout(async () => {
-              const unsubscribe = await initializeSignalR();
+              const unsubscribe = await initializeChatSignalR();
               resolve(unsubscribe);
-            }, 2000 * retryCount);
+            }, retryCount * 3000);
           });
         }
 
@@ -160,101 +80,58 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       }
     };
 
+    // Iniciar SignalR y obtener la función de limpieza
     let unsubscribeFunc: (() => void) | undefined;
 
-    initializeSignalR()
-      .then((unsubscribe) => {
-        unsubscribeFunc = unsubscribe;
-      })
-      .catch((error) => {
-        console.error('Error durante la inicialización de SignalR:', error);
-        setConnectionStatus('error');
-      });
+    initializeChatSignalR().then((unsubscribe) => {
+      unsubscribeFunc = unsubscribe;
 
+      // Verificar y actualizar estado de conexión
+      setIsConnected(chatService.isConnected());
+      setConnectionId(chatService.getConnectionId());
+    });
+
+    // Comprobación periódica del estado de conexión
+    const connectionCheckInterval = setInterval(() => {
+      setIsConnected(chatService.isConnected());
+      setConnectionId(chatService.getConnectionId());
+    }, 10000);
+
+    // Limpiar al desmontar
     return () => {
       if (unsubscribeFunc) unsubscribeFunc();
-      chatService.stop().catch(() => {});
+      chatService.stop();
       clearTimeout(retryTimeout);
-      setConnectionStatus('disconnected');
+      clearInterval(connectionCheckInterval);
     };
-  }, [accessToken, addMessage, queryClient]);
+  }, [accessToken, queryClient]);
 
-  // Función para enviar un mensaje
-  const sendMessage = useCallback(
-    async (roomId: string, content: string) => {
-      if (!roomId || !content.trim()) {
-        throw new Error(
-          'Se requiere un ID de sala y contenido para enviar un mensaje'
-        );
-      }
-
-      try {
-        await sendMessageMutation.mutateAsync({ roomId, content });
-      } catch (error) {
-        console.error('Error al enviar mensaje:', error);
-        throw error;
-      }
-    },
-    [sendMessageMutation]
-  );
-
-  // Función para marcar un chat como leído
-  const markRoomAsRead = useCallback(
-    async (roomId: string) => {
-      if (!roomId) return;
-
-      try {
-        // Usar directamente el store para marcar como leído
-        markAsRead(roomId);
-
-        // Invalidar consultas relacionadas
-        queryClient.invalidateQueries({
-          queryKey: ['chats', 'messages', roomId]
-        });
-        queryClient.invalidateQueries({
-          queryKey: ['chats', 'rooms']
-        });
-      } catch (error) {
-        console.error('Error al marcar como leído:', error);
-      }
-    },
-    [queryClient, markAsRead]
-  );
-
-  // Obtener contador total de mensajes no leídos
-  const { unreadCountByRoom } = useChatStore();
-  const totalUnreadCount = Object.values(unreadCountByRoom).reduce(
-    (acc, count) => acc + count,
-    0
-  );
-
-  // Memoizar el valor del contexto
-  const contextValue = useMemo(
-    () => ({
-      chatRooms,
-      isLoading,
-      hasError,
-      unreadCount: totalUnreadCount,
-      sendMessage,
-      markRoomAsRead,
-      refreshChatRooms,
-      connectionStatus
-    }),
-    [
-      chatRooms,
-      isLoading,
-      hasError,
-      totalUnreadCount,
-      sendMessage,
-      markRoomAsRead,
-      refreshChatRooms,
-      connectionStatus
-    ]
-  );
+  // Función para enviar mensajes
+  const sendMessage = async (messageData: {
+    loanRequestId: string;
+    content: string;
+    receiverUserId: string;
+    receiverUserName: string;
+  }) => {
+    try {
+      await sendMessageMutation.mutateAsync(messageData);
+    } catch (error) {
+      console.error('Error sending chat message:', error);
+      throw error;
+    }
+  };
 
   return (
-    <ChatContext.Provider value={contextValue}>{children}</ChatContext.Provider>
+    <ChatContext.Provider
+      value={{
+        sendMessage,
+        isConnected,
+        connectionId
+      }}
+    >
+      {children}
+    </ChatContext.Provider>
   );
-}
+};
 
 export const useChat = () => useContext(ChatContext);

@@ -5,6 +5,7 @@ import { Lato } from 'next/font/google';
 import NextTopLoader from 'nextjs-toploader';
 import ThemeProvider from '@/components/layout/ThemeToggle/theme-provider';
 import './globals.css';
+// El NotificationProvider y ChatProvider ya están en client-providers.tsx
 
 export const metadata: Metadata = {
   title: 'COFISA',

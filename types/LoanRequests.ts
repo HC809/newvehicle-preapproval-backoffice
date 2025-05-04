@@ -71,9 +71,9 @@ export interface LoanRequestDetail {
   loanCalculation?: LoanCalculation;
   events?: LoanRequestEvent[];
   visit?: Visit;
-  chatRooms?: Array<{
+  participants?: Array<{
     id: string;
-    type: string;
+    name: string;
   }>;
 }
 

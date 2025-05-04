@@ -50,7 +50,6 @@ import { LoanRequestEditForm } from '@/features/loan-requests/components';
 import { UploadDocumentButton } from '@/features/loan-documents/components';
 import AssignVisitForm from '@/features/loan-requests/components/assign-visit-form';
 import { ChatButton } from '@/features/chat/ChatButton';
-import { ChatRoomType } from '@/features/chat/SignalRChatService';
 
 export default function LoanRequestDetailPage() {
   const router = useRouter();
@@ -336,145 +335,46 @@ export default function LoanRequestDetailPage() {
     );
   };
 
-  // Función para validar si un chat específico debe mostrarse según el estado de la solicitud
-  function shouldShowChatType(
-    type: ChatRoomType,
-    status: string,
-    hasPymeAdvisor: boolean,
-    hasBranchManager: boolean
-  ): boolean {
-    // Los chats con Administrador y Concesionario siempre están disponibles en estados iniciales
-    if (
-      type === ChatRoomType.Agent_Manager ||
-      type === ChatRoomType.Agent_Creator
-    ) {
-      return [
-        'Pending',
-        'ApprovedByAgent',
-        'ApprovedByManager',
-        'AcceptedByCustomer'
-      ].includes(status);
-    }
-
-    // Los chats con Asesor PYME y Gerente solo están disponibles tras asignación de visita
-    if (type === ChatRoomType.Agent_PYMEAdvisor) {
-      return status === 'VisitAssigned' && hasPymeAdvisor;
-    }
-
-    if (type === ChatRoomType.Agent_BranchManager) {
-      return status === 'VisitAssigned' && hasBranchManager;
-    }
-
-    return false;
-  }
-
-  // Renderizar los botones de chat según el rol del usuario
-  const renderChatButtons = () => {
+  // Renderizar el botón de chat para la solicitud de préstamo
+  const renderChatButton = () => {
     if (!loanRequestDetail) return null;
 
-    // Obtener las salas de chat existentes
-    const existingChatRooms = loanRequestDetail.chatRooms || [];
-
-    // Asegurarse de que el loanRequestId sea un Guid válido en formato string
+    // Obtener el ID de la solicitud
     const loanRequestGuid = loanRequestDetail.loanRequest.id;
 
-    // BusinessDevelopment_User puede ver chats con administrador y concesionario
-    if (userRole === UserRole.BusinessDevelopment_User) {
-      return (
-        <div className='flex flex-row space-x-2'>
-          <ChatButton
-            key='manager-chat'
-            type={ChatRoomType.Agent_Manager}
-            loanRequestId={loanRequestGuid}
-            variant='outline'
-            buttonText='Chat con Administrador'
-            existingChatRooms={existingChatRooms}
-          />
-          <ChatButton
-            key='creator-chat'
-            type={ChatRoomType.Agent_Creator}
-            loanRequestId={loanRequestGuid}
-            variant='outline'
-            buttonText='Chat con Concesionario'
-            existingChatRooms={existingChatRooms}
-          />
-        </div>
-      );
-    }
-    // BusinessDevelopment_Admin solo ve chat con gestor
-    else if (userRole === UserRole.BusinessDevelopment_Admin) {
-      return (
-        <div className='flex flex-row space-x-2'>
-          <ChatButton
-            key='agent-chat'
-            type={ChatRoomType.Agent_Manager}
-            loanRequestId={loanRequestGuid}
-            variant='outline'
-            buttonText='Chat con Gestor'
-            existingChatRooms={existingChatRooms}
-          />
-        </div>
-      );
-    }
-    // Otros roles según estado de la solicitud
-    else if (
-      userRole === UserRole.Dealership_Admin &&
-      loanRequestDetail.loanRequest.status !==
-        LoanRequestStatus.RejectedByAgent &&
-      loanRequestDetail.loanRequest.status !==
-        LoanRequestStatus.RejectedByManager
-    ) {
-      return (
-        <div className='flex flex-row space-x-2'>
-          <ChatButton
-            key='agent-chat'
-            type={ChatRoomType.Agent_Creator}
-            loanRequestId={loanRequestGuid}
-            variant='outline'
-            buttonText='Chat con Oficial de Negocios'
-            existingChatRooms={existingChatRooms}
-          />
-        </div>
-      );
-    } else if (
-      userRole === UserRole.PYMEAdvisor &&
-      loanRequestDetail.loanRequest.status ===
-        LoanRequestStatus.VisitAssigned &&
-      loanRequestDetail.visit?.pymeAdvisorId
-    ) {
-      return (
-        <div className='flex flex-row space-x-2'>
-          <ChatButton
-            key='agent-chat'
-            type={ChatRoomType.Agent_PYMEAdvisor}
-            loanRequestId={loanRequestGuid}
-            variant='outline'
-            buttonText='Chat con Oficial de Negocios'
-            existingChatRooms={existingChatRooms}
-          />
-        </div>
-      );
-    } else if (
-      userRole === UserRole.BranchManager &&
-      loanRequestDetail.loanRequest.status ===
-        LoanRequestStatus.VisitAssigned &&
-      loanRequestDetail.visit?.branchManagerId
-    ) {
-      return (
-        <div className='flex flex-row space-x-2'>
-          <ChatButton
-            key='agent-chat'
-            type={ChatRoomType.Agent_BranchManager}
-            loanRequestId={loanRequestGuid}
-            variant='outline'
-            buttonText='Chat con Oficial de Negocios'
-            existingChatRooms={existingChatRooms}
-          />
-        </div>
-      );
+    // Verificar si el usuario tiene permiso para ver el chat basado en su rol
+    const canViewChat = () => {
+      // Si no hay rol definido
+      if (!userRole) return false;
+
+      // Solo mostrar el chat para las solicitudes que no estén rechazadas o canceladas
+      const status = loanRequestDetail.loanRequest.status;
+      return ![
+        LoanRequestStatus.RejectedByAgent,
+        LoanRequestStatus.RejectedByManager,
+        LoanRequestStatus.Cancelled,
+        LoanRequestStatus.DeclinedByCustomer
+      ].includes(status);
+    };
+
+    // Si el usuario no puede ver el chat, no mostrar nada
+    if (!canViewChat()) {
+      return null;
     }
 
-    return null;
+    // Usar directamente los participantes del loanRequestDetail si existen
+    // Si no existe, usar un array vacío
+    const chatParticipants = loanRequestDetail.participants || [];
+
+    // Renderizar un único botón de chat grupal
+    return (
+      <ChatButton
+        loanRequestId={String(id)}
+        participants={chatParticipants}
+        className='w-full'
+        variant='default'
+      />
+    );
   };
 
   // Loading state
@@ -540,7 +440,7 @@ export default function LoanRequestDetailPage() {
                 <History className='mr-2 h-4 w-4' />
                 Historial
               </Button>
-              {renderChatButtons()}
+              {renderChatButton()}
               <Button variant='outline' onClick={handleGoToList}>
                 Volver a la Lista
               </Button>
