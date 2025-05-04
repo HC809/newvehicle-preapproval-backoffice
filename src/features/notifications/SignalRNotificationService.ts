@@ -7,9 +7,53 @@ import {
 } from '@microsoft/signalr';
 import { LoanNotification } from 'types/Notifications';
 
+// Helper functions for logging
+const logDev = (message: string, ...args: any[]) => {
+  if (process.env.NODE_ENV === 'development') {
+    console.log(message, ...args);
+  }
+};
+
+const logDevError = (message: string, error: any) => {
+  if (process.env.NODE_ENV === 'development') {
+    console.error(message, error);
+  }
+};
+
+const logDevWarn = (message: string, ...args: any[]) => {
+  if (process.env.NODE_ENV === 'development') {
+    console.warn(message, ...args);
+  }
+};
+
+export interface ChatMessage {
+  id: string;
+  content: string;
+  loanRequestId: string;
+  senderId: string;
+  senderName: string;
+  receiverId: string;
+  receiverName: string;
+  createdAt: string;
+}
+
+// Interface for chat message notifications
+export interface ChatNotification {
+  id: string;
+  senderId: string;
+  type: string;
+}
+
 class SignalRNotificationService {
   private connection: HubConnection | null;
-  private callbacks: Map<string, (notification: LoanNotification) => void>;
+  private notificationCallbacks: Map<
+    string,
+    (notification: LoanNotification) => void
+  >;
+  private chatCallbacks: Map<
+    string,
+    (notification: ChatNotification | ChatMessage) => void
+  >;
   private connectionPromise: Promise<void> | null = null;
   private connecting: boolean = false;
   private retryCount: number = 0;
@@ -21,7 +65,8 @@ class SignalRNotificationService {
 
   constructor() {
     this.connection = null;
-    this.callbacks = new Map();
+    this.notificationCallbacks = new Map();
+    this.chatCallbacks = new Map();
   }
 
   // Inicializar el servicio con la URL base y el token de acceso
@@ -60,8 +105,9 @@ class SignalRNotificationService {
       (window as any).__signalrConnection = this.connection;
     }
 
-    // Configurar el manejador de eventos de recepción de mensajes
+    // Configurar los manejadores de eventos
     if (this.connection) {
+      // Para notificaciones generales
       this.connection.on(
         'ReceiveNotification',
         (notification: LoanNotification) => {
@@ -69,20 +115,40 @@ class SignalRNotificationService {
         }
       );
 
+      // Para mensajes de chat
+      this.connection.on(
+        'NewChatMessage',
+        (senderId: string, messageId: string) => {
+          try {
+            logDev(
+              `Received chat message notification. SenderId: ${senderId}, MessageId: ${messageId}`
+            );
+            this.handleNewChatMessageEvent(senderId, messageId);
+          } catch (error) {
+            logDevError('Error processing chat message notification:', error);
+          }
+        }
+      );
+
+      // Para mensajes de prueba
+      this.connection.on('ReceiveMessage', (message: string) => {
+        logDev('Test message received:', message);
+      });
+
       // Manejadores de eventos de cambio de estado
       this.connection.onreconnecting((error) => {
-        console.warn('SignalR reconectando...', error);
+        logDevWarn('SignalR reconectando...', error);
         this.connecting = true;
       });
 
       this.connection.onreconnected((connectionId) => {
-        console.log('SignalR reconectado con ID:', connectionId);
+        logDev('SignalR reconectado con ID:', connectionId);
         this.retryCount = 0;
         this.connecting = false;
       });
 
       this.connection.onclose((error) => {
-        console.warn('SignalR desconectado', error);
+        logDevWarn('SignalR desconectado', error);
         this.connecting = false;
         this.connection = null;
         this.connectionPromise = null;
@@ -92,7 +158,9 @@ class SignalRNotificationService {
           this.retryCount++;
           this.reconnectTimeout = setTimeout(() => {
             if (accessToken) {
-              this.start(accessToken).catch(console.error);
+              this.start(accessToken).catch((err) =>
+                logDevError('Error reconnecting:', err)
+              );
             }
           }, this.retryInterval * this.retryCount);
         }
@@ -134,10 +202,20 @@ class SignalRNotificationService {
       const promise = this.connection.start();
       this.connectionPromise = promise;
       await promise;
+      logDev(
+        `SignalR connected successfully with ID: ${this.connection.connectionId}`
+      );
+
+      // Send a test message to verify connection
+      this.sendTestMessage('SignalR service connected').catch((err) =>
+        logDevWarn('Failed to send test message', err)
+      );
+
       return promise;
     } catch (error) {
       this.connecting = false;
       this.connectionPromise = null;
+      logDevError('Error starting SignalR connection:', error);
       throw error;
     } finally {
       this.connecting = false;
@@ -155,7 +233,7 @@ class SignalRNotificationService {
       try {
         await this.connection.stop();
       } catch (error) {
-        console.error('Error stopping SignalR connection:', error);
+        logDevError('Error stopping SignalR connection:', error);
       } finally {
         this.connection = null;
         this.connectionPromise = null;
@@ -165,24 +243,104 @@ class SignalRNotificationService {
     }
   }
 
-  // Registrar callback para notificaciones
+  // Registrar callback para notificaciones generales
   onNotification(
     callback: (notification: LoanNotification) => void
   ): () => void {
     const id = Date.now().toString();
-    this.callbacks.set(id, callback);
-    return () => this.callbacks.delete(id);
+    this.notificationCallbacks.set(id, callback);
+    return () => this.notificationCallbacks.delete(id);
+  }
+
+  // Registrar callback para mensajes de chat
+  onChatMessage(
+    callback: (notification: ChatNotification | ChatMessage) => void
+  ): () => void {
+    const id = Date.now().toString();
+    this.chatCallbacks.set(id, callback);
+    return () => this.chatCallbacks.delete(id);
   }
 
   // Manejar notificación recibida
   private handleNotification(notification: LoanNotification): void {
-    this.callbacks.forEach((callback) => {
+    this.notificationCallbacks.forEach((callback) => {
       try {
         callback(notification);
       } catch (error) {
-        console.error('Error in notification callback:', error);
+        logDevError('Error in notification callback:', error);
       }
     });
+  }
+
+  // Notificar a todos los callbacks registrados sobre un nuevo mensaje de chat
+  private handleNewChatMessageEvent(senderId: string, messageId: string): void {
+    if (this.chatCallbacks.size === 0) {
+      logDevWarn('No callbacks registered to handle chat messages');
+      return;
+    }
+
+    logDev(
+      `Notifying ${this.chatCallbacks.size} callbacks about new message ${messageId} from ${senderId}`
+    );
+
+    // Creamos un objeto de notificación temporal
+    const notification: ChatNotification = {
+      id: messageId,
+      senderId,
+      type: 'NEW_CHAT_MESSAGE'
+    };
+
+    // Pasamos la notificación a todos los callbacks registrados
+    this.chatCallbacks.forEach((callback) => {
+      try {
+        callback(notification);
+      } catch (error) {
+        logDevError('Error in chat message callback:', error);
+      }
+    });
+  }
+
+  // Enviar un mensaje de prueba para confirmar que la conexión funciona
+  async sendTestMessage(message: string): Promise<void> {
+    if (
+      !this.connection ||
+      this.connection.state !== HubConnectionState.Connected
+    ) {
+      return Promise.reject('Not connected to SignalR hub');
+    }
+
+    try {
+      await this.connection.invoke('SendTestMessage', message);
+      logDev('Test message sent:', message);
+    } catch (error) {
+      logDevError('Error sending test message:', error);
+      throw error;
+    }
+  }
+
+  // Notificar sobre un nuevo mensaje de chat a un usuario específico
+  async notifyNewChatMessage(
+    receiverId: string,
+    messageId: string
+  ): Promise<void> {
+    if (
+      !this.connection ||
+      this.connection.state !== HubConnectionState.Connected
+    ) {
+      return Promise.reject('Not connected to SignalR hub');
+    }
+
+    try {
+      await this.connection.invoke(
+        'NotifyNewChatMessage',
+        receiverId,
+        messageId
+      );
+      logDev(`Notified user ${receiverId} about message ${messageId}`);
+    } catch (error) {
+      logDevError('Error notifying about new chat message:', error);
+      throw error;
+    }
   }
 
   // Verificar si hay conexión activa

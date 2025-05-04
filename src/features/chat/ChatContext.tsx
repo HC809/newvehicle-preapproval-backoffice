@@ -2,9 +2,26 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useToken } from '@/features/auth/TokenContext';
-import chatService, { ChatMessage } from './SignalRChatService';
-import { useSendMessage } from './api/chat-service';
+import notificationService, {
+  ChatMessage,
+  ChatNotification
+} from '../notifications/SignalRNotificationService';
+import { useSendMessage, useGetMessage } from './api/chat-service';
 import { useQueryClient } from '@tanstack/react-query';
+
+// Helper function for development logging
+const logDev = (message: string, ...args: any[]) => {
+  if (process.env.NODE_ENV === 'development') {
+    console.log(message, ...args);
+  }
+};
+
+// Helper function for development error logging
+const logDevError = (message: string, error: any) => {
+  if (process.env.NODE_ENV === 'development') {
+    console.error(message, error);
+  }
+};
 
 interface ChatContextProps {
   sendMessage: (messageData: {
@@ -12,7 +29,7 @@ interface ChatContextProps {
     content: string;
     receiverUserId: string;
     receiverUserName: string;
-  }) => Promise<void>;
+  }) => Promise<ChatMessage | void>;
   isConnected: boolean;
   connectionId: string | null;
 }
@@ -31,92 +48,98 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
   const [connectionId, setConnectionId] = useState<string | null>(null);
   const queryClient = useQueryClient();
   const sendMessageMutation = useSendMessage();
+  const getMessage = useGetMessage();
 
-  // Configurar SignalR para el chat
+  // Set up for chat using the unified notification service
   useEffect(() => {
     if (!accessToken) return;
 
-    let retryCount = 0;
-    const maxRetries = 3;
-    let retryTimeout: NodeJS.Timeout;
+    // Subscribe to chat message notifications from the unified service
+    const unsubscribe = notificationService.onChatMessage(
+      (notification: ChatNotification | ChatMessage) => {
+        // Handle the notification about a new message
+        if (
+          'type' in notification &&
+          notification.type === 'NEW_CHAT_MESSAGE'
+        ) {
+          logDev('New chat message notification received:', notification);
 
-    const initializeChatSignalR = async () => {
-      try {
-        // Iniciar conexión
-        await chatService.start(accessToken);
+          // Fetch the actual message using the message ID
+          getMessage.mutate(
+            { messageId: notification.id },
+            {
+              onSuccess: (message: ChatMessage) => {
+                logDev('Retrieved chat message:', message);
 
-        // Actualizar estado de conexión
-        setIsConnected(chatService.isConnected());
-        setConnectionId(chatService.getConnectionId());
+                // Invalidate the cache for this loan request's messages
+                if (message && message.loanRequestId) {
+                  queryClient.invalidateQueries({
+                    queryKey: ['chats', 'messages', message.loanRequestId]
+                  });
+                }
+              },
+              onError: (error: any) => {
+                logDevError('Error fetching message details:', error);
+              }
+            }
+          );
+        } else if ('content' in notification) {
+          // Handle direct message object (for backward compatibility)
+          logDev('Chat message received directly:', notification.content);
 
-        // Suscribirse a mensajes de chat
-        const unsubscribe = chatService.onMessage((message) => {
-          console.log('Chat message received:', message.content);
-
-          // Invalidar la caché de mensajes para esta solicitud
-          queryClient.invalidateQueries({
-            queryKey: ['chats', 'messages', message.loanRequestId]
-          });
-        });
-
-        return unsubscribe;
-      } catch (error) {
-        console.error('Error initializing chat SignalR:', error);
-
-        // Reintentar un número limitado de veces
-        if (retryCount < maxRetries) {
-          retryCount++;
-
-          // Esperar antes de reintentar (con backoff exponencial)
-          return new Promise<() => void>((resolve) => {
-            retryTimeout = setTimeout(async () => {
-              const unsubscribe = await initializeChatSignalR();
-              resolve(unsubscribe);
-            }, retryCount * 3000);
-          });
+          // Invalidate the cache for this loan request's messages
+          if (notification.loanRequestId) {
+            queryClient.invalidateQueries({
+              queryKey: ['chats', 'messages', notification.loanRequestId]
+            });
+          }
         }
-
-        return () => {};
       }
-    };
+    );
 
-    // Iniciar SignalR y obtener la función de limpieza
-    let unsubscribeFunc: (() => void) | undefined;
-
-    initializeChatSignalR().then((unsubscribe) => {
-      unsubscribeFunc = unsubscribe;
-
-      // Verificar y actualizar estado de conexión
-      setIsConnected(chatService.isConnected());
-      setConnectionId(chatService.getConnectionId());
-    });
-
-    // Comprobación periódica del estado de conexión
+    // Periodic check of connection status without excessive logs
     const connectionCheckInterval = setInterval(() => {
-      setIsConnected(chatService.isConnected());
-      setConnectionId(chatService.getConnectionId());
+      const connected = notificationService.isConnected();
+      setIsConnected(connected);
+      setConnectionId(notificationService.getConnectionId());
+
+      // Only log state changes, not every check
+      if (connected !== isConnected) {
+        logDev(
+          `Chat connection status changed to: ${connected ? 'Connected' : 'Disconnected'}`
+        );
+      }
     }, 10000);
 
-    // Limpiar al desmontar
+    // Cleanup on unmount
     return () => {
-      if (unsubscribeFunc) unsubscribeFunc();
-      chatService.stop();
-      clearTimeout(retryTimeout);
+      unsubscribe();
       clearInterval(connectionCheckInterval);
     };
-  }, [accessToken, queryClient]);
+  }, [accessToken, queryClient, isConnected, getMessage]);
 
-  // Función para enviar mensajes
+  // Function to send messages
   const sendMessage = async (messageData: {
     loanRequestId: string;
     content: string;
     receiverUserId: string;
     receiverUserName: string;
-  }) => {
+  }): Promise<ChatMessage | void> => {
     try {
-      await sendMessageMutation.mutateAsync(messageData);
+      const result = await sendMessageMutation.mutateAsync(messageData);
+
+      // Notify the receiver about the new message via SignalR
+      if (notificationService.isConnected() && result && result.id) {
+        await notificationService
+          .notifyNewChatMessage(messageData.receiverUserId, result.id)
+          .catch((err) =>
+            logDevError('Error notifying about new message:', err)
+          );
+      }
+
+      return result;
     } catch (error) {
-      console.error('Error sending chat message:', error);
+      logDevError('Error sending chat message:', error);
       throw error;
     }
   };
