@@ -57,6 +57,7 @@ export function ChatInterface({
   // Obtener datos de sesión del usuario
   const { data: session } = useSession();
   const userId = session?.user?.id;
+  const userName = session?.user?.name;
 
   // Cargar mensajes para este loanRequest
   const {
@@ -64,6 +65,22 @@ export function ChatInterface({
     isLoading,
     isError
   } = useChatMessages(loanRequestId);
+
+  // Log extremadamente claro para entender qué está pasando
+  useEffect(() => {
+    if (messages.length > 0) {
+      console.log('====== DEBUGGING CHAT INTERFACE ======');
+      console.log('Current user ID from session:', userId);
+      console.log('Current user NAME from session:', userName);
+      console.log('Message IDs and their senders:');
+      messages.forEach((msg) => {
+        console.log(
+          `Message: ${msg.id} | SenderUserId: ${msg.senderUserId} | SenderUserName: ${msg.senderUserName} | Match by name: ${msg.senderUserName === userName}`
+        );
+      });
+      console.log('======================================');
+    }
+  }, [messages, userId, userName]);
 
   // Obtener función para enviar mensajes del contexto
   const { sendMessage, isConnected } = useChat();
@@ -164,6 +181,30 @@ export function ChatInterface({
       .substring(0, 2);
   };
 
+  // Generar color de fondo basado en el ID del usuario
+  const getParticipantColor = (userId: string) => {
+    // Crear un hash simple del userId para obtener un número
+    let hash = 0;
+    for (let i = 0; i < userId.length; i++) {
+      hash = userId.charCodeAt(i) + ((hash << 5) - hash);
+    }
+
+    // Colores predefinidos para usar (colores pastel/suaves)
+    const colors = [
+      'bg-blue-100 text-blue-900',
+      'bg-green-100 text-green-900',
+      'bg-yellow-100 text-yellow-900',
+      'bg-purple-100 text-purple-900',
+      'bg-pink-100 text-pink-900',
+      'bg-indigo-100 text-indigo-900',
+      'bg-teal-100 text-teal-900'
+    ];
+
+    // Usar el hash para seleccionar un color
+    const colorIndex = Math.abs(hash) % colors.length;
+    return colors[colorIndex];
+  };
+
   return (
     <div className={cn('flex h-full flex-col', className)}>
       {/* Encabezado del chat */}
@@ -172,7 +213,7 @@ export function ChatInterface({
       </div>
 
       {/* Área de mensajes */}
-      <div ref={scrollRef} className='flex-1 space-y-4 overflow-y-auto p-4'>
+      <div ref={scrollRef} className='flex-1 overflow-y-auto p-4'>
         {isLoading ? (
           <div className='flex h-full items-center justify-center'>
             <p className='text-muted-foreground'>Cargando mensajes...</p>
@@ -186,53 +227,107 @@ export function ChatInterface({
             <p className='text-muted-foreground'>No hay mensajes aún</p>
           </div>
         ) : (
-          messages.map((message) => {
-            const isOwnMessage = message.senderUserId === userId;
+          // Contenedor principal de mensajes
+          <div className='flex w-full flex-col space-y-4'>
+            {messages.map((message) => {
+              // Determinar si el mensaje es del usuario actual comparando por NOMBRE
+              const isMyMessage = userName === message.senderUserName;
+              console.log('userName', userName);
+              console.log('message.senderUserName', message.senderUserName);
+              console.log('isMyMessage', isMyMessage);
 
-            return (
-              <div
-                key={message.id}
-                className={cn(
-                  'flex gap-2',
-                  isOwnMessage ? 'flex-row-reverse' : 'flex-row'
-                )}
-              >
-                <Avatar className='h-8 w-8'>
-                  <AvatarFallback>
-                    {getInitials(message.senderUserName)}
-                  </AvatarFallback>
-                </Avatar>
+              return (
                 <div
-                  className={cn(
-                    'max-w-[80%] rounded-lg px-3 py-2',
-                    isOwnMessage
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-muted'
-                  )}
+                  key={message.id}
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'row',
+                    justifyContent: isMyMessage ? 'flex-end' : 'flex-start',
+                    width: '100%',
+                    marginBottom: '12px'
+                  }}
                 >
-                  <div className='flex flex-col gap-1'>
-                    <div className='flex justify-between text-xs font-medium'>
-                      <span>
-                        {isOwnMessage ? 'Tú' : message.senderUserName}
-                      </span>
-                      {message.receiverUserId && !isOwnMessage && (
-                        <span className='ml-2 opacity-70'>
-                          para{' '}
-                          {message.receiverUserId === userId
-                            ? 'ti'
-                            : message.receiverUserName || 'Alguien'}
-                        </span>
-                      )}
+                  {/* Bloque de mensaje con estilos fijos */}
+                  <div
+                    style={{
+                      display: 'flex',
+                      flexDirection: isMyMessage ? 'row-reverse' : 'row',
+                      alignItems: 'flex-start',
+                      gap: '8px',
+                      maxWidth: '80%'
+                    }}
+                  >
+                    {/* Avatar */}
+                    <div className='flex-shrink-0'>
+                      <Avatar className='h-8 w-8'>
+                        <AvatarFallback>
+                          {getInitials(message.senderUserName)}
+                        </AvatarFallback>
+                      </Avatar>
                     </div>
-                    <p className='break-words'>{message.content}</p>
-                    <p className='text-right text-[10px] opacity-70'>
-                      {formatMessageDate(message.createdAt)}
-                    </p>
+
+                    {/* Contenido del mensaje */}
+                    <div
+                      style={{
+                        backgroundColor: isMyMessage
+                          ? 'hsl(var(--primary))'
+                          : message.senderUserId === 'system'
+                            ? '#f5f5f5'
+                            : `hsl(${Math.abs(message.senderUserId.charCodeAt(0) * 10) % 360}, 70%, 95%)`,
+                        color: isMyMessage ? 'white' : 'black',
+                        borderRadius: '8px',
+                        padding: '8px 12px',
+                        marginLeft: isMyMessage ? '0' : '0',
+                        marginRight: isMyMessage ? '0' : '0'
+                      }}
+                    >
+                      {/* Nombre del remitente */}
+                      <div
+                        style={{
+                          fontSize: '0.75rem',
+                          fontWeight: '500',
+                          marginBottom: '4px',
+                          textAlign: isMyMessage ? 'right' : 'left'
+                        }}
+                      >
+                        {isMyMessage ? 'Tú' : message.senderUserName}
+                        {message.receiverUserId && !isMyMessage && (
+                          <span style={{ marginLeft: '6px', opacity: '0.7' }}>
+                            para{' '}
+                            {message.receiverUserId === userId
+                              ? 'ti'
+                              : message.receiverUserName || 'Alguien'}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Contenido del mensaje */}
+                      <div
+                        style={{
+                          wordBreak: 'break-word',
+                          textAlign: isMyMessage ? 'right' : 'left'
+                        }}
+                      >
+                        {message.content}
+                      </div>
+
+                      {/* Fecha/hora */}
+                      <div
+                        style={{
+                          fontSize: '0.625rem',
+                          textAlign: 'right',
+                          marginTop: '4px',
+                          opacity: '0.7'
+                        }}
+                      >
+                        {formatMessageDate(message.createdAt)}
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            );
-          })
+              );
+            })}
+          </div>
         )}
       </div>
 
