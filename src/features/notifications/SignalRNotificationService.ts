@@ -30,17 +30,17 @@ export interface ChatMessage {
   id: string;
   content: string;
   loanRequestId: string;
-  senderId: string;
-  senderName: string;
-  receiverId: string;
-  receiverName: string;
+  senderUserId: string;
+  senderUserName: string;
+  receiverUserId: string;
+  receiverUserName: string;
   createdAt: string;
 }
 
 // Interface for chat message notifications
 export interface ChatNotification {
   id: string;
-  senderId: string;
+  senderUserId: string;
   type: string;
 }
 
@@ -286,7 +286,7 @@ class SignalRNotificationService {
     // Creamos un objeto de notificación temporal
     const notification: ChatNotification = {
       id: messageId,
-      senderId,
+      senderUserId: senderId,
       type: 'NEW_CHAT_MESSAGE'
     };
 

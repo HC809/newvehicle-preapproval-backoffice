@@ -11,7 +11,6 @@ export interface ChatParticipant {
 const CHAT_KEY = 'chats';
 const CHAT_MESSAGES_ENDPOINT = '/chat/messages';
 const CHAT_SEND_ENDPOINT = '/chat/send';
-const CHAT_MESSAGE_ENDPOINT = '/chat/message';
 
 // Hook to get messages for a loanRequest
 export const useChatMessages = (
@@ -42,29 +41,6 @@ export const useChatMessages = (
   });
 };
 
-// Hook to get a single message by ID
-export const useGetMessage = () => {
-  const apiClient = useAxios();
-
-  return useMutation({
-    mutationFn: async ({
-      messageId
-    }: {
-      messageId: string;
-    }): Promise<ChatMessage> => {
-      if (!apiClient) throw new Error('API client not initialized');
-      if (!messageId) throw new Error('Message ID is required');
-
-      console.log(`Fetching message with ID: ${messageId}`);
-      const response = await apiClient.get<ChatMessage>(
-        `${CHAT_MESSAGE_ENDPOINT}/${messageId}`
-      );
-
-      return response.data;
-    }
-  });
-};
-
 // Hook to send a message to a specific participant
 export const useSendMessage = () => {
   const apiClient = useAxios();
@@ -87,6 +63,8 @@ export const useSendMessage = () => {
       console.log(
         `Sending message to ${receiverUserName} for loan request: ${loanRequestId}`
       );
+
+      // Enviar solo las propiedades requeridas
       const response = await apiClient.post<ChatMessage>(CHAT_SEND_ENDPOINT, {
         loanRequestId,
         content,

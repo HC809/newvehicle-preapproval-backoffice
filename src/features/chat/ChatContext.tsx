@@ -6,7 +6,7 @@ import notificationService, {
   ChatMessage,
   ChatNotification
 } from '../notifications/SignalRNotificationService';
-import { useSendMessage, useGetMessage } from './api/chat-service';
+import { useSendMessage } from './api/chat-service';
 import { useQueryClient } from '@tanstack/react-query';
 
 // Helper function for development logging
@@ -48,7 +48,6 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
   const [connectionId, setConnectionId] = useState<string | null>(null);
   const queryClient = useQueryClient();
   const sendMessageMutation = useSendMessage();
-  const getMessage = useGetMessage();
 
   // Set up for chat using the unified notification service
   useEffect(() => {
@@ -64,25 +63,11 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
         ) {
           logDev('New chat message notification received:', notification);
 
-          // Fetch the actual message using the message ID
-          getMessage.mutate(
-            { messageId: notification.id },
-            {
-              onSuccess: (message: ChatMessage) => {
-                logDev('Retrieved chat message:', message);
-
-                // Invalidate the cache for this loan request's messages
-                if (message && message.loanRequestId) {
-                  queryClient.invalidateQueries({
-                    queryKey: ['chats', 'messages', message.loanRequestId]
-                  });
-                }
-              },
-              onError: (error: any) => {
-                logDevError('Error fetching message details:', error);
-              }
-            }
-          );
+          // Cuando recibimos una notificación de nuevo mensaje, invalida la caché
+          // para que la UI se actualice y recupere el mensaje del backend
+          queryClient.invalidateQueries({
+            queryKey: ['chats', 'messages']
+          });
         } else if ('content' in notification) {
           // Handle direct message object (for backward compatibility)
           logDev('Chat message received directly:', notification.content);
@@ -116,7 +101,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
       unsubscribe();
       clearInterval(connectionCheckInterval);
     };
-  }, [accessToken, queryClient, isConnected, getMessage]);
+  }, [accessToken, queryClient, isConnected]);
 
   // Function to send messages
   const sendMessage = async (messageData: {

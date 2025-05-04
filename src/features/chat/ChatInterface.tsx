@@ -187,7 +187,7 @@ export function ChatInterface({
           </div>
         ) : (
           messages.map((message) => {
-            const isOwnMessage = message.senderId === userId;
+            const isOwnMessage = message.senderUserId === userId;
 
             return (
               <div
@@ -199,7 +199,7 @@ export function ChatInterface({
               >
                 <Avatar className='h-8 w-8'>
                   <AvatarFallback>
-                    {getInitials(message.senderName)}
+                    {getInitials(message.senderUserName)}
                   </AvatarFallback>
                 </Avatar>
                 <div
@@ -212,13 +212,15 @@ export function ChatInterface({
                 >
                   <div className='flex flex-col gap-1'>
                     <div className='flex justify-between text-xs font-medium'>
-                      <span>{isOwnMessage ? 'Tú' : message.senderName}</span>
-                      {message.receiverId && !isOwnMessage && (
+                      <span>
+                        {isOwnMessage ? 'Tú' : message.senderUserName}
+                      </span>
+                      {message.receiverUserId && !isOwnMessage && (
                         <span className='ml-2 opacity-70'>
                           para{' '}
-                          {message.receiverId === userId
+                          {message.receiverUserId === userId
                             ? 'ti'
-                            : message.receiverName || 'Alguien'}
+                            : message.receiverUserName || 'Alguien'}
                         </span>
                       )}
                     </div>
