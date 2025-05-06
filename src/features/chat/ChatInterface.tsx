@@ -48,6 +48,7 @@ export function ChatInterface({
   // Referencias y estado
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
   const [newMessage, setNewMessage] = useState('');
   const [mentionOpen, setMentionOpen] = useState(false);
   const [mentionText, setMentionText] = useState('');
@@ -94,6 +95,34 @@ export function ChatInterface({
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages]);
+
+  // Enfocar el input y asegurar visibilidad cuando se abre el chat
+  useEffect(() => {
+    // Pequeño retraso para asegurar que todo está renderizado
+    const timer = setTimeout(() => {
+      if (inputRef.current) {
+        inputRef.current.focus();
+        // Scroll hacia el input cuando el componente se monta
+        inputRef.current.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center'
+        });
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Si hay cambios en los mensajes, también aseguramos que el área de entrada sea visible
+  useEffect(() => {
+    if (chatContainerRef.current && messages.length > 0) {
+      // Scroll hacia el área de entrada después de que se cargan los mensajes
+      chatContainerRef.current.scrollIntoView({
+        behavior: 'smooth',
+        block: 'end'
+      });
+    }
+  }, [messages.length]);
 
   // Manejar la selección de un participante para mencionar
   const handleSelectParticipant = (participant: ChatParticipant) => {
@@ -212,227 +241,232 @@ export function ChatInterface({
         <h3 className='font-medium'>{title || 'Chat grupal'}</h3>
       </div> */}
 
-      {/* Área de mensajes */}
-      <div ref={scrollRef} className='flex-1 overflow-y-auto p-4'>
-        {isLoading ? (
-          <div className='flex h-full items-center justify-center'>
-            <p className='text-muted-foreground'>Cargando mensajes...</p>
-          </div>
-        ) : isError ? (
-          <div className='flex h-full items-center justify-center'>
-            <p className='text-destructive'>Error al cargar los mensajes</p>
-          </div>
-        ) : messages.length === 0 ? (
-          <div className='flex h-full items-center justify-center'>
-            <p className='text-muted-foreground'>No hay mensajes aún</p>
-          </div>
-        ) : (
-          // Contenedor principal de mensajes
-          <div className='flex w-full flex-col space-y-4'>
-            {messages.map((message) => {
-              // Determinar si el mensaje es del usuario actual comparando por NOMBRE
-              const isMyMessage = userName === message.senderUserName;
-              console.log('userName', userName);
-              console.log('message.senderUserName', message.senderUserName);
-              console.log('isMyMessage', isMyMessage);
+      {/* Container principal para el contenido del chat - restringido en altura */}
+      <div className='flex flex-1 flex-col overflow-hidden'>
+        {/* Área de mensajes con scroll */}
+        <div ref={scrollRef} className='flex-1 overflow-y-auto p-4 pb-5'>
+          {isLoading ? (
+            <div className='flex h-full items-center justify-center'>
+              <p className='text-muted-foreground'>Cargando mensajes...</p>
+            </div>
+          ) : isError ? (
+            <div className='flex h-full items-center justify-center'>
+              <p className='text-destructive'>Error al cargar los mensajes</p>
+            </div>
+          ) : messages.length === 0 ? (
+            <div className='flex h-full items-center justify-center'>
+              <p className='text-muted-foreground'>No hay mensajes aún</p>
+            </div>
+          ) : (
+            // Contenedor principal de mensajes
+            <div className='flex w-full flex-col space-y-4'>
+              {messages.map((message) => {
+                // Determinar si el mensaje es del usuario actual comparando por NOMBRE
+                const isMyMessage = userName === message.senderUserName;
+                console.log('userName', userName);
+                console.log('message.senderUserName', message.senderUserName);
+                console.log('isMyMessage', isMyMessage);
 
-              return (
-                <div
-                  key={message.id}
-                  style={{
-                    display: 'flex',
-                    flexDirection: 'row',
-                    justifyContent: isMyMessage ? 'flex-end' : 'flex-start',
-                    width: '100%',
-                    marginBottom: '12px'
-                  }}
-                >
-                  {/* Bloque de mensaje con estilos fijos */}
+                return (
                   <div
+                    key={message.id}
                     style={{
                       display: 'flex',
-                      flexDirection: isMyMessage ? 'row-reverse' : 'row',
-                      alignItems: 'flex-start',
-                      gap: '8px',
-                      maxWidth: '80%'
+                      flexDirection: 'row',
+                      justifyContent: isMyMessage ? 'flex-end' : 'flex-start',
+                      width: '100%',
+                      marginBottom: '12px'
                     }}
                   >
-                    {/* Avatar */}
-                    <div className='flex-shrink-0'>
-                      <Avatar className='h-8 w-8'>
-                        <AvatarFallback>
-                          {getInitials(message.senderUserName)}
-                        </AvatarFallback>
-                      </Avatar>
-                    </div>
-
-                    {/* Contenido del mensaje */}
+                    {/* Bloque de mensaje con estilos fijos */}
                     <div
                       style={{
-                        backgroundColor: isMyMessage
-                          ? 'hsl(var(--primary))'
-                          : message.senderUserId === 'system'
-                            ? '#f5f5f5'
-                            : `hsl(${Math.abs(message.senderUserId.charCodeAt(0) * 10) % 360}, 70%, 95%)`,
-                        color: isMyMessage ? 'white' : 'black',
-                        borderRadius: '8px',
-                        padding: '8px 12px',
-                        marginLeft: isMyMessage ? '0' : '0',
-                        marginRight: isMyMessage ? '0' : '0'
+                        display: 'flex',
+                        flexDirection: isMyMessage ? 'row-reverse' : 'row',
+                        alignItems: 'flex-start',
+                        gap: '8px',
+                        maxWidth: '80%'
                       }}
                     >
-                      {/* Nombre del remitente */}
-                      <div
-                        style={{
-                          fontSize: '0.75rem',
-                          fontWeight: '500',
-                          marginBottom: '4px',
-                          textAlign: isMyMessage ? 'right' : 'left'
-                        }}
-                      >
-                        {isMyMessage ? 'Tú' : message.senderUserName}
-                        {message.receiverUserId && !isMyMessage && (
-                          <span style={{ marginLeft: '6px', opacity: '0.7' }}>
-                            para{' '}
-                            {message.receiverUserId === userId
-                              ? 'ti'
-                              : message.receiverUserName || 'Alguien'}
-                          </span>
-                        )}
+                      {/* Avatar */}
+                      <div className='flex-shrink-0'>
+                        <Avatar className='h-8 w-8'>
+                          <AvatarFallback>
+                            {getInitials(message.senderUserName)}
+                          </AvatarFallback>
+                        </Avatar>
                       </div>
 
                       {/* Contenido del mensaje */}
                       <div
                         style={{
-                          wordBreak: 'break-word',
-                          textAlign: isMyMessage ? 'right' : 'left'
+                          backgroundColor: isMyMessage
+                            ? 'hsl(var(--primary))'
+                            : message.senderUserId === 'system'
+                              ? '#f5f5f5'
+                              : `hsl(${Math.abs(message.senderUserId.charCodeAt(0) * 10) % 360}, 70%, 95%)`,
+                          color: isMyMessage ? 'white' : 'black',
+                          borderRadius: '8px',
+                          padding: '8px 12px',
+                          marginLeft: isMyMessage ? '0' : '0',
+                          marginRight: isMyMessage ? '0' : '0'
                         }}
                       >
-                        {message.content}
-                      </div>
+                        {/* Nombre del remitente */}
+                        <div
+                          style={{
+                            fontSize: '0.75rem',
+                            fontWeight: '500',
+                            marginBottom: '4px',
+                            textAlign: isMyMessage ? 'right' : 'left'
+                          }}
+                        >
+                          {isMyMessage ? 'Tú' : message.senderUserName}
+                          {message.receiverUserId && !isMyMessage && (
+                            <span style={{ marginLeft: '6px', opacity: '0.7' }}>
+                              para{' '}
+                              {message.receiverUserId === userId
+                                ? 'ti'
+                                : message.receiverUserName || 'Alguien'}
+                            </span>
+                          )}
+                        </div>
 
-                      {/* Fecha/hora */}
-                      <div
-                        style={{
-                          fontSize: '0.625rem',
-                          textAlign: 'right',
-                          marginTop: '4px',
-                          opacity: '0.7'
-                        }}
-                      >
-                        {formatMessageDate(message.createdAt)}
+                        {/* Contenido del mensaje */}
+                        <div
+                          style={{
+                            wordBreak: 'break-word',
+                            textAlign: isMyMessage ? 'right' : 'left'
+                          }}
+                        >
+                          {message.content}
+                        </div>
+
+                        {/* Fecha/hora */}
+                        <div
+                          style={{
+                            fontSize: '0.625rem',
+                            textAlign: 'right',
+                            marginTop: '4px',
+                            opacity: '0.7'
+                          }}
+                        >
+                          {formatMessageDate(message.createdAt)}
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
-
-      <Separator />
-
-      {/* Área de entrada de mensaje */}
-      <form onSubmit={handleSendMessage} className='flex flex-col gap-2 p-3'>
-        {/* Mostrar el destinatario seleccionado */}
-        {selectedParticipant && (
-          <div className='mb-2 flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-sm'>
-            <span>Para: {selectedParticipant.name}</span>
-            <Button
-              variant='ghost'
-              size='sm'
-              className='h-5 w-5 rounded-full p-0'
-              onClick={clearSelectedParticipant}
-              type='button'
-            >
-              <X className='h-3 w-3' />
-            </Button>
-          </div>
-        )}
-
-        <div className='flex gap-2'>
-          <Input
-            ref={inputRef}
-            placeholder={
-              !hasParticipants
-                ? 'No hay participantes disponibles para chatear'
-                : selectedParticipant
-                  ? `Escribe un mensaje para ${selectedParticipant.name}...`
-                  : 'Usa @ para seleccionar un destinatario...'
-            }
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            onKeyDown={handleKeyDown}
-            className='flex-1'
-            disabled={!hasParticipants}
-          />
-
-          <Button
-            type='submit'
-            size='icon'
-            disabled={
-              !newMessage.trim() || !selectedParticipant || !hasParticipants
-            }
-          >
-            <SendHorizontal className='h-4 w-4' />
-          </Button>
+                );
+              })}
+            </div>
+          )}
         </div>
 
-        {!hasParticipants && (
-          <p className='mt-2 text-center text-sm text-muted-foreground'>
-            No hay participantes disponibles. Para chatear, debe haber un gestor
-            o asesor asignado a esta solicitud.
-          </p>
-        )}
+        <Separator />
 
-        {/* Dropdown para menciones */}
-        <Popover
-          open={mentionOpen && hasParticipants}
-          onOpenChange={setMentionOpen}
-        >
-          <PopoverTrigger asChild>
-            <div className='h-0 w-0' aria-hidden='true' />
-          </PopoverTrigger>
-          <PopoverContent
-            className='w-[200px] p-0'
-            align='start'
-            side='top'
-            alignOffset={40}
-            sideOffset={10}
-          >
-            <Command>
-              <CommandInput
-                placeholder='Buscar persona...'
-                className='h-9'
-                value={mentionText}
-                onValueChange={setMentionText}
-                autoFocus
+        {/* Área de entrada de mensaje - siempre visible */}
+        <div ref={chatContainerRef} className='flex-shrink-0 p-3'>
+          <form onSubmit={handleSendMessage} className='flex flex-col gap-2'>
+            {/* Mostrar el destinatario seleccionado */}
+            {selectedParticipant && (
+              <div className='mb-2 flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-sm'>
+                <span>Para: {selectedParticipant.name}</span>
+                <Button
+                  variant='ghost'
+                  size='sm'
+                  className='h-5 w-5 rounded-full p-0'
+                  onClick={clearSelectedParticipant}
+                  type='button'
+                >
+                  <X className='h-3 w-3' />
+                </Button>
+              </div>
+            )}
+
+            <div className='flex gap-2'>
+              <Input
+                ref={inputRef}
+                placeholder={
+                  !hasParticipants
+                    ? 'No hay participantes disponibles para chatear'
+                    : selectedParticipant
+                      ? `Escribe un mensaje para ${selectedParticipant.name}...`
+                      : 'Usa @ para seleccionar un destinatario...'
+                }
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+                onKeyDown={handleKeyDown}
+                className='flex-1'
+                disabled={!hasParticipants}
               />
-              <CommandList>
-                <CommandEmpty>No se encontraron personas</CommandEmpty>
-                <CommandGroup>
-                  {participants
-                    .filter((p) =>
-                      p.name.toLowerCase().includes(mentionText.toLowerCase())
-                    )
-                    .map((participant) => (
-                      <CommandItem
-                        key={participant.id}
-                        value={participant.name}
-                        className='cursor-pointer'
-                        onSelect={() => handleSelectParticipant(participant)}
-                      >
-                        <User className='mr-2 h-4 w-4' />
-                        <span>{participant.name}</span>
-                      </CommandItem>
-                    ))}
-                </CommandGroup>
-              </CommandList>
-            </Command>
-          </PopoverContent>
-        </Popover>
-      </form>
+
+              <Button
+                type='submit'
+                size='icon'
+                disabled={
+                  !newMessage.trim() || !selectedParticipant || !hasParticipants
+                }
+              >
+                <SendHorizontal className='h-4 w-4' />
+              </Button>
+            </div>
+
+            {!hasParticipants && (
+              <p className='mt-2 text-center text-sm text-muted-foreground'>
+                No hay participantes disponibles. Para chatear, debe haber un
+                gestor o asesor asignado a esta solicitud.
+              </p>
+            )}
+          </form>
+        </div>
+      </div>
+
+      {/* Dropdown para menciones */}
+      <Popover
+        open={mentionOpen && hasParticipants}
+        onOpenChange={setMentionOpen}
+      >
+        <PopoverTrigger asChild>
+          <div className='h-0 w-0' aria-hidden='true' />
+        </PopoverTrigger>
+        <PopoverContent
+          className='w-[200px] p-0'
+          align='start'
+          side='top'
+          alignOffset={40}
+          sideOffset={10}
+        >
+          <Command>
+            <CommandInput
+              placeholder='Buscar persona...'
+              className='h-9'
+              value={mentionText}
+              onValueChange={setMentionText}
+              autoFocus
+            />
+            <CommandList>
+              <CommandEmpty>No se encontraron personas</CommandEmpty>
+              <CommandGroup>
+                {participants
+                  .filter((p) =>
+                    p.name.toLowerCase().includes(mentionText.toLowerCase())
+                  )
+                  .map((participant) => (
+                    <CommandItem
+                      key={participant.id}
+                      value={participant.name}
+                      className='cursor-pointer'
+                      onSelect={() => handleSelectParticipant(participant)}
+                    >
+                      <User className='mr-2 h-4 w-4' />
+                      <span>{participant.name}</span>
+                    </CommandItem>
+                  ))}
+              </CommandGroup>
+            </CommandList>
+          </Command>
+        </PopoverContent>
+      </Popover>
     </div>
   );
 }

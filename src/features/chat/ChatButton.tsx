@@ -54,8 +54,12 @@ export function ChatButton({
         )}
       </Button>
 
-      <Sheet open={open} onOpenChange={setOpen}>
-        <SheetContent className='flex w-full max-w-md flex-col p-0 sm:max-w-lg md:max-w-xl'>
+      <Sheet open={open} onOpenChange={setOpen} modal={true}>
+        <SheetContent
+          className='flex w-full max-w-md flex-col overflow-hidden p-0 sm:max-w-lg md:max-w-xl lg:max-w-xl'
+          side='right'
+          onInteractOutside={(e) => e.preventDefault()}
+        >
           <SheetHeader className='border-b px-4 py-2'>
             <SheetTitle>Chat de Solicitud</SheetTitle>
           </SheetHeader>

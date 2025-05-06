@@ -368,12 +368,13 @@ export default function LoanRequestDetailPage() {
 
     // Renderizar un único botón de chat grupal
     return (
-      <ChatButton
-        loanRequestId={String(id)}
-        participants={chatParticipants}
-        className='w-full'
-        variant='default'
-      />
+      <div className='inline-block'>
+        <ChatButton
+          loanRequestId={String(id)}
+          participants={chatParticipants}
+          variant='default'
+        />
+      </div>
     );
   };
 

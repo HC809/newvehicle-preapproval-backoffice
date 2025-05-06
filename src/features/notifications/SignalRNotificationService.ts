@@ -111,6 +111,7 @@ class SignalRNotificationService {
       this.connection.on(
         'ReceiveNotification',
         (notification: LoanNotification) => {
+          console.log('Received notification:', notification);
           this.handleNotification(notification);
         }
       );
@@ -119,6 +120,11 @@ class SignalRNotificationService {
       this.connection.on(
         'NewChatMessage',
         (senderId: string, messageId: string) => {
+          console.log(
+            'Received chat message notification:',
+            senderId,
+            messageId
+          );
           try {
             logDev(
               `Received chat message notification. SenderId: ${senderId}, MessageId: ${messageId}`
