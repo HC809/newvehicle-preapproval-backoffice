@@ -37,22 +37,14 @@ export interface ChatMessage {
   createdAt: string;
 }
 
-// Interface for chat message notifications
-export interface ChatNotification {
-  id: string;
-  senderUserId: string;
-  type: string;
-}
+// Tipo unificado para cualquier tipo de notificación
+export type UnifiedNotification = LoanNotification | ChatMessage;
 
 class SignalRNotificationService {
   private connection: HubConnection | null;
   private notificationCallbacks: Map<
     string,
-    (notification: LoanNotification) => void
-  >;
-  private chatCallbacks: Map<
-    string,
-    (notification: ChatNotification | ChatMessage) => void
+    (notification: UnifiedNotification) => void
   >;
   private connectionPromise: Promise<void> | null = null;
   private connecting: boolean = false;
@@ -66,7 +58,6 @@ class SignalRNotificationService {
   constructor() {
     this.connection = null;
     this.notificationCallbacks = new Map();
-    this.chatCallbacks = new Map();
   }
 
   // Inicializar el servicio con la URL base y el token de acceso
@@ -107,32 +98,12 @@ class SignalRNotificationService {
 
     // Configurar los manejadores de eventos
     if (this.connection) {
-      // Para notificaciones generales
+      // Para todo tipo de notificaciones (unificado)
       this.connection.on(
         'ReceiveNotification',
-        (notification: LoanNotification) => {
+        (notification: UnifiedNotification) => {
           console.log('Received notification:', notification);
           this.handleNotification(notification);
-        }
-      );
-
-      // Para mensajes de chat
-      this.connection.on(
-        'NewChatMessage',
-        (senderId: string, messageId: string) => {
-          console.log(
-            'Received chat message notification:',
-            senderId,
-            messageId
-          );
-          try {
-            logDev(
-              `Received chat message notification. SenderId: ${senderId}, MessageId: ${messageId}`
-            );
-            this.handleNewChatMessageEvent(senderId, messageId);
-          } catch (error) {
-            logDevError('Error processing chat message notification:', error);
-          }
         }
       );
 
@@ -249,59 +220,22 @@ class SignalRNotificationService {
     }
   }
 
-  // Registrar callback para notificaciones generales
+  // Registrar callback para todos los tipos de notificaciones
   onNotification(
-    callback: (notification: LoanNotification) => void
+    callback: (notification: UnifiedNotification) => void
   ): () => void {
     const id = Date.now().toString();
     this.notificationCallbacks.set(id, callback);
     return () => this.notificationCallbacks.delete(id);
   }
 
-  // Registrar callback para mensajes de chat
-  onChatMessage(
-    callback: (notification: ChatNotification | ChatMessage) => void
-  ): () => void {
-    const id = Date.now().toString();
-    this.chatCallbacks.set(id, callback);
-    return () => this.chatCallbacks.delete(id);
-  }
-
-  // Manejar notificación recibida
-  private handleNotification(notification: LoanNotification): void {
+  // Manejar notificación recibida (cualquier tipo)
+  private handleNotification(notification: UnifiedNotification): void {
     this.notificationCallbacks.forEach((callback) => {
       try {
         callback(notification);
       } catch (error) {
         logDevError('Error in notification callback:', error);
-      }
-    });
-  }
-
-  // Notificar a todos los callbacks registrados sobre un nuevo mensaje de chat
-  private handleNewChatMessageEvent(senderId: string, messageId: string): void {
-    if (this.chatCallbacks.size === 0) {
-      logDevWarn('No callbacks registered to handle chat messages');
-      return;
-    }
-
-    logDev(
-      `Notifying ${this.chatCallbacks.size} callbacks about new message ${messageId} from ${senderId}`
-    );
-
-    // Creamos un objeto de notificación temporal
-    const notification: ChatNotification = {
-      id: messageId,
-      senderUserId: senderId,
-      type: 'NEW_CHAT_MESSAGE'
-    };
-
-    // Pasamos la notificación a todos los callbacks registrados
-    this.chatCallbacks.forEach((callback) => {
-      try {
-        callback(notification);
-      } catch (error) {
-        logDevError('Error in chat message callback:', error);
       }
     });
   }
@@ -324,11 +258,8 @@ class SignalRNotificationService {
     }
   }
 
-  // Notificar sobre un nuevo mensaje de chat a un usuario específico
-  async notifyNewChatMessage(
-    receiverId: string,
-    messageId: string
-  ): Promise<void> {
+  // Notificar sobre un nuevo mensaje a través del método unificado
+  async notifyNewMessage(notificationData: any): Promise<void> {
     if (
       !this.connection ||
       this.connection.state !== HubConnectionState.Connected
@@ -337,14 +268,10 @@ class SignalRNotificationService {
     }
 
     try {
-      await this.connection.invoke(
-        'NotifyNewChatMessage',
-        receiverId,
-        messageId
-      );
-      logDev(`Notified user ${receiverId} about message ${messageId}`);
+      await this.connection.invoke('SendNotification', notificationData);
+      logDev(`Sent notification:`, notificationData);
     } catch (error) {
-      logDevError('Error notifying about new chat message:', error);
+      logDevError('Error sending notification:', error);
       throw error;
     }
   }

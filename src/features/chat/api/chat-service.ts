@@ -7,8 +7,9 @@ export interface ChatParticipant {
   name: string;
 }
 
-// Query key constants
-const CHAT_KEY = 'chats';
+// Query key constants - exportados para ser usados en otros archivos
+export const CHAT_KEY = 'chats';
+export const CHAT_MESSAGES_KEY = 'messages';
 const CHAT_MESSAGES_ENDPOINT = '/chat/messages';
 const CHAT_SEND_ENDPOINT = '/chat/send';
 
@@ -20,7 +21,7 @@ export const useChatMessages = (
   const apiClient = useAxios();
 
   return useQuery({
-    queryKey: [CHAT_KEY, 'messages', loanRequestId],
+    queryKey: [CHAT_KEY, CHAT_MESSAGES_KEY, loanRequestId],
     queryFn: async (): Promise<ChatMessage[]> => {
       if (!apiClient) throw new Error('API client not initialized');
       if (!loanRequestId) throw new Error('LoanRequest ID is required');
@@ -36,8 +37,7 @@ export const useChatMessages = (
     enabled: !!apiClient && enabled && !!loanRequestId,
     staleTime: 10000, // 10 seconds
     refetchOnWindowFocus: true,
-    refetchOnMount: true,
-    refetchInterval: 15000 // refresh every 15 seconds like notifications
+    refetchOnMount: true
   });
 };
 
@@ -77,7 +77,8 @@ export const useSendMessage = () => {
     onSuccess: (data, variables) => {
       // Invalidate related queries
       queryClient.invalidateQueries({
-        queryKey: [CHAT_KEY, 'messages', variables.loanRequestId]
+        queryKey: [CHAT_KEY, CHAT_MESSAGES_KEY, variables.loanRequestId],
+        exact: true
       });
     }
   });

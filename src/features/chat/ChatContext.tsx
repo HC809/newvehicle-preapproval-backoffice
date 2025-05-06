@@ -4,10 +4,15 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useToken } from '@/features/auth/TokenContext';
 import notificationService, {
   ChatMessage,
-  ChatNotification
+  UnifiedNotification
 } from '../notifications/SignalRNotificationService';
-import { useSendMessage } from './api/chat-service';
+import {
+  useSendMessage,
+  CHAT_KEY,
+  CHAT_MESSAGES_KEY
+} from './api/chat-service';
 import { useQueryClient } from '@tanstack/react-query';
+import { LoanNotificationType } from 'types/Notifications';
 
 // Helper function for development logging
 const logDev = (message: string, ...args: any[]) => {
@@ -21,6 +26,17 @@ const logDevError = (message: string, error: any) => {
   if (process.env.NODE_ENV === 'development') {
     console.error(message, error);
   }
+};
+
+// Función para determinar si una notificación es un mensaje de chat
+const isChatMessage = (
+  notification: UnifiedNotification
+): notification is ChatMessage => {
+  return (
+    'content' in notification &&
+    'senderUserId' in notification &&
+    'receiverUserId' in notification
+  );
 };
 
 interface ChatContextProps {
@@ -53,29 +69,56 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
   useEffect(() => {
     if (!accessToken) return;
 
-    // Subscribe to chat message notifications from the unified service
-    const unsubscribe = notificationService.onChatMessage(
-      (notification: ChatNotification | ChatMessage) => {
-        // Handle the notification about a new message
+    // Subscribe to notifications from the unified service and filter for chat messages
+    const unsubscribe = notificationService.onNotification(
+      (notification: UnifiedNotification) => {
+        console.log('Notification received in ChatContext:', notification);
+
+        // Caso 1: Verificar si es una notificación de tipo Message
         if (
           'type' in notification &&
-          notification.type === 'NEW_CHAT_MESSAGE'
+          notification.type === LoanNotificationType.Message
         ) {
-          logDev('New chat message notification received:', notification);
+          logDev(
+            'Chat LoanNotificationType.Message notification received:',
+            notification
+          );
 
-          // Cuando recibimos una notificación de nuevo mensaje, invalida la caché
-          // para que la UI se actualice y recupere el mensaje del backend
-          queryClient.invalidateQueries({
-            queryKey: ['chats', 'messages']
-          });
-        } else if ('content' in notification) {
-          // Handle direct message object (for backward compatibility)
-          logDev('Chat message received directly:', notification.content);
-
-          // Invalidate the cache for this loan request's messages
+          // Si tiene loanRequestId, invalidar la consulta específica
           if (notification.loanRequestId) {
+            logDev(
+              `Invalidating cache for loan request from Message notification: ${notification.loanRequestId}`
+            );
+
+            // Invalidar inmediatamente para que la UI se actualice
             queryClient.invalidateQueries({
-              queryKey: ['chats', 'messages', notification.loanRequestId]
+              queryKey: [
+                CHAT_KEY,
+                CHAT_MESSAGES_KEY,
+                notification.loanRequestId
+              ],
+              exact: true
+            });
+          }
+        }
+        // Caso 2: Verificar si es un mensaje de chat directo (tiene la estructura de ChatMessage)
+        else if (isChatMessage(notification)) {
+          logDev('Direct chat message notification received:', notification);
+
+          // Solo invalidar si tenemos un loanRequestId específico
+          if (notification.loanRequestId) {
+            logDev(
+              `Invalidating cache for specific loan request from direct message: ${notification.loanRequestId}`
+            );
+
+            // Invalidar solo la consulta para este loanRequestId específico
+            queryClient.invalidateQueries({
+              queryKey: [
+                CHAT_KEY,
+                CHAT_MESSAGES_KEY,
+                notification.loanRequestId
+              ],
+              exact: true // Asegurarse de que solo se invalida esta consulta exacta
             });
           }
         }
@@ -113,14 +156,12 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
     try {
       const result = await sendMessageMutation.mutateAsync(messageData);
 
-      // Notify the receiver about the new message via SignalR
-      if (notificationService.isConnected() && result && result.id) {
-        await notificationService
-          .notifyNewChatMessage(messageData.receiverUserId, result.id)
-          .catch((err) =>
-            logDevError('Error notifying about new message:', err)
-          );
-      }
+      // Invalidar la caché inmediatamente después de enviar un mensaje
+      // para que la UI se actualice sin esperar la notificación del servidor
+      queryClient.invalidateQueries({
+        queryKey: [CHAT_KEY, CHAT_MESSAGES_KEY, messageData.loanRequestId],
+        exact: true
+      });
 
       return result;
     } catch (error) {

@@ -2,13 +2,28 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useToken } from '@/features/auth/TokenContext';
-import notificationService from './SignalRNotificationService';
+import notificationService, {
+  UnifiedNotification
+} from './SignalRNotificationService';
 import { toast } from 'sonner';
 import { LoanNotification, LoanNotificationType } from 'types/Notifications';
 import { useNotificationStore } from '@/stores/notification-store';
 import { useNotifications } from './api/notification-service';
 import useAxios from '@/hooks/use-axios';
 import { useQueryClient } from '@tanstack/react-query';
+
+// Función para determinar si una notificación es del sistema (no es un chat message)
+const isSystemNotification = (
+  notification: UnifiedNotification
+): notification is LoanNotification => {
+  // Verificamos que sea una notificación del sistema Y que NO sea un mensaje de chat
+  // Las notificaciones LoanNotificationType.Message deben ser manejadas por ChatContext
+  return (
+    'type' in notification &&
+    notification.type !== LoanNotificationType.Message &&
+    !('content' in notification)
+  );
+};
 
 interface NotificationContextProps {
   notifications: LoanNotification[];
@@ -59,9 +74,14 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({
         // Iniciar conexión
         await notificationService.start(accessToken);
 
-        // Suscribirse a notificaciones
+        // Suscribirse a notificaciones y filtrar solo las del sistema (no chat)
         const unsubscribe = notificationService.onNotification(
-          (notification) => {
+          (notification: UnifiedNotification) => {
+            // Solo procesar notificaciones del sistema, no mensajes de chat
+            if (!isSystemNotification(notification)) {
+              return; // Ignorar mensajes de chat, los maneja ChatContext
+            }
+
             // Mostrar toast según el tipo de notificación
             switch (notification.type) {
               case LoanNotificationType.StatusChanged:
