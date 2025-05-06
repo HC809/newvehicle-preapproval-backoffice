@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Button, ButtonProps } from '@/components/ui/button';
-import { MessageSquare } from 'lucide-react';
+import { MessageSquare, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useChat } from './ChatContext';
 import {
@@ -56,18 +56,32 @@ export function ChatButton({
 
       <Sheet open={open} onOpenChange={setOpen} modal={true}>
         <SheetContent
-          className='flex w-full max-w-md flex-col overflow-hidden p-0 sm:max-w-lg md:max-w-xl lg:max-w-xl'
+          className='flex w-full max-w-md flex-col p-0 sm:max-w-lg md:max-w-xl lg:max-w-xl'
+          style={{ height: '100vh' }}
           side='right'
           onInteractOutside={(e) => e.preventDefault()}
         >
-          <SheetHeader className='border-b px-4 py-2'>
+          <SheetHeader className='sticky top-0 z-10 flex flex-row items-center justify-between border-b bg-background px-4 py-2'>
             <SheetTitle>Chat de Solicitud</SheetTitle>
+            <Button
+              variant='ghost'
+              size='icon'
+              onClick={() => setOpen(false)}
+              className='h-8 w-8'
+            >
+              <X className='h-4 w-4' />
+            </Button>
           </SheetHeader>
-          <ChatInterface
-            loanRequestId={loanRequestId}
-            participants={participants}
-            onClose={() => setOpen(false)}
-          />
+
+          {/* Contenedor principal que ocupa todo el alto disponible restante */}
+          <div className='flex min-h-0 flex-1 flex-col overflow-hidden'>
+            <ChatInterface
+              loanRequestId={loanRequestId}
+              participants={participants}
+              onClose={() => setOpen(false)}
+              className='h-full'
+            />
+          </div>
         </SheetContent>
       </Sheet>
     </>

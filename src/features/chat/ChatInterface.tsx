@@ -92,7 +92,12 @@ export function ChatInterface({
   // Desplazarse al último mensaje cuando se cargan nuevos mensajes
   useEffect(() => {
     if (scrollRef.current && messages.length > 0) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+      // Pequeña pausa para asegurar que el contenido se ha renderizado
+      setTimeout(() => {
+        if (scrollRef.current) {
+          scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+        }
+      }, 100);
     }
   }, [messages]);
 
@@ -102,27 +107,38 @@ export function ChatInterface({
     const timer = setTimeout(() => {
       if (inputRef.current) {
         inputRef.current.focus();
-        // Scroll hacia el input cuando el componente se monta
-        inputRef.current.scrollIntoView({
-          behavior: 'smooth',
-          block: 'center'
-        });
+      }
+
+      // Scroll hacia el último mensaje
+      if (scrollRef.current && messages.length > 0) {
+        scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
       }
     }, 300);
 
     return () => clearTimeout(timer);
+  }, [messages.length]);
+
+  // Asegurar que el área de entrada sea visible cuando cambia el contenido
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (scrollRef.current && messages.length === 0) {
+        // Si no hay mensajes, asegurar que el área de entrada sea visible
+        if (chatContainerRef.current) {
+          chatContainerRef.current.scrollIntoView({ behavior: 'auto' });
+        }
+      }
+    }, 200);
+
+    return () => clearTimeout(timer);
   }, []);
 
-  // Si hay cambios en los mensajes, también aseguramos que el área de entrada sea visible
+  // Efecto adicional para manejar cuando el chat se abre por primera vez
   useEffect(() => {
-    if (chatContainerRef.current && messages.length > 0) {
-      // Scroll hacia el área de entrada después de que se cargan los mensajes
-      chatContainerRef.current.scrollIntoView({
-        behavior: 'smooth',
-        block: 'end'
-      });
+    // Scroll al final cuando el componente se monta
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [messages.length]);
+  }, []);
 
   // Manejar la selección de un participante para mencionar
   const handleSelectParticipant = (participant: ChatParticipant) => {
@@ -235,16 +251,20 @@ export function ChatInterface({
   };
 
   return (
-    <div className={cn('flex h-full flex-col', className)}>
+    <div className={cn('flex h-full w-full flex-col', className)}>
       {/* Encabezado del chat */}
       {/* <div className='border-b p-3'>
         <h3 className='font-medium'>{title || 'Chat grupal'}</h3>
       </div> */}
 
-      {/* Container principal para el contenido del chat - restringido en altura */}
-      <div className='flex flex-1 flex-col overflow-hidden'>
-        {/* Área de mensajes con scroll */}
-        <div ref={scrollRef} className='flex-1 overflow-y-auto p-4 pb-5'>
+      {/* Container principal para el contenido del chat con flexbox que empuja el input al final */}
+      <div className='flex h-full w-full flex-col overflow-hidden'>
+        {/* Área de mensajes con scroll, debe expandirse para llenar el espacio disponible */}
+        <div
+          ref={scrollRef}
+          className='flex flex-1 flex-col overflow-y-auto p-4 pb-5'
+          style={{ minHeight: '100px' }}
+        >
           {isLoading ? (
             <div className='flex h-full items-center justify-center'>
               <p className='text-muted-foreground'>Cargando mensajes...</p>
@@ -258,8 +278,8 @@ export function ChatInterface({
               <p className='text-muted-foreground'>No hay mensajes aún</p>
             </div>
           ) : (
-            // Contenedor principal de mensajes
-            <div className='flex w-full flex-col space-y-4'>
+            // Contenedor principal de mensajes con margen auto arriba para empujar todo hacia abajo
+            <div className='mt-auto flex w-full flex-col space-y-4'>
               {messages.map((message) => {
                 // Determinar si el mensaje es del usuario actual comparando por NOMBRE
                 const isMyMessage = userName === message.senderUserName;
@@ -364,8 +384,11 @@ export function ChatInterface({
 
         <Separator />
 
-        {/* Área de entrada de mensaje - siempre visible */}
-        <div ref={chatContainerRef} className='flex-shrink-0 p-3'>
+        {/* Área de entrada de mensaje - fijada al fondo con flex-shrink-0 */}
+        <div
+          ref={chatContainerRef}
+          className='sticky bottom-0 flex-shrink-0 bg-background p-3'
+        >
           <form onSubmit={handleSendMessage} className='flex flex-col gap-2'>
             {/* Mostrar el destinatario seleccionado */}
             {selectedParticipant && (
