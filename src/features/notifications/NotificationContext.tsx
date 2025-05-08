@@ -16,12 +16,13 @@ import { useQueryClient } from '@tanstack/react-query';
 const isSystemNotification = (
   notification: UnifiedNotification
 ): notification is LoanNotification => {
-  // Verificamos que sea una notificación del sistema Y que NO sea un mensaje de chat
-  // Las notificaciones LoanNotificationType.Message deben ser manejadas por ChatContext
+  // Verificamos que sea una notificación del sistema
+  // Las notificaciones con estructura de ChatMessage (content, senderId, etc) son manejadas por ChatContext
+  // Pero las notificaciones de tipo LoanNotificationType.Message aún deben ser mostradas como toasts
   return (
     'type' in notification &&
-    notification.type !== LoanNotificationType.Message &&
-    !('content' in notification)
+    // Ya no excluimos LoanNotificationType.Message para permitir que se muestren los toasts
+    !('content' in notification && 'senderUserId' in notification)
   );
 };
 
@@ -77,9 +78,12 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({
         // Suscribirse a notificaciones y filtrar solo las del sistema (no chat)
         const unsubscribe = notificationService.onNotification(
           (notification: UnifiedNotification) => {
-            // Solo procesar notificaciones del sistema, no mensajes de chat
-            if (!isSystemNotification(notification)) {
-              return; // Ignorar mensajes de chat, los maneja ChatContext
+            // Primero determinamos si es una notificación del sistema
+            const isSystem = isSystemNotification(notification);
+
+            // Si no es una notificación del sistema (es un mensaje de chat directo), ignoramos
+            if (!isSystem) {
+              return; // Ignorar mensajes de chat directos, los maneja ChatContext
             }
 
             // Mostrar toast según el tipo de notificación

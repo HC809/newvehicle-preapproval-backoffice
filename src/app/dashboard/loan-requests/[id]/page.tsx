@@ -339,9 +339,6 @@ export default function LoanRequestDetailPage() {
   const renderChatButton = () => {
     if (!loanRequestDetail) return null;
 
-    // Obtener el ID de la solicitud
-    const loanRequestGuid = loanRequestDetail.loanRequest.id;
-
     // Verificar si el usuario tiene permiso para ver el chat basado en su rol
     const canViewChat = () => {
       // Si no hay rol definido

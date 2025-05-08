@@ -13,13 +13,11 @@ import { useLoanRequestDetail } from '@/features/loan-requests/api/loan-request-
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useChat } from '@/features/chat/ChatContext';
 
 export default function ChatPage() {
   const router = useRouter();
   const { loanRequestId } = useParams();
   const apiClient = useAxios();
-  const { markMessagesAsRead } = useChat();
 
   const {
     data: loanRequestDetail,
@@ -38,13 +36,6 @@ export default function ChatPage() {
       }
     }
   }, [loanRequestDetail, loanRequestId]);
-
-  useEffect(() => {
-    if (loanRequestId) {
-      console.log('Marking messages as read for loan request:', loanRequestId);
-      markMessagesAsRead(loanRequestId as string);
-    }
-  }, [loanRequestId, markMessagesAsRead]);
 
   const handleBack = () => {
     router.back();
@@ -148,6 +139,7 @@ export default function ChatPage() {
             loanRequestId={loanRequestId as string}
             title={title}
             className='h-full'
+            participants={loanRequestDetail.participants || []}
           />
         </div>
       </div>

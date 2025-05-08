@@ -7,11 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import {
-  useChatMessages,
-  useSendMessage,
-  ChatParticipant
-} from './api/chat-service';
+import { useChatMessages, ChatParticipant } from './api/chat-service';
 import { useChat } from './ChatContext';
 import { useSession } from 'next-auth/react';
 import { formatDistanceToNow } from 'date-fns';
@@ -71,20 +67,17 @@ export function ChatInterface({
   useEffect(() => {
     if (messages.length > 0) {
       console.log('====== DEBUGGING CHAT INTERFACE ======');
-      console.log('Current user ID from session:', userId);
       console.log('Current user NAME from session:', userName);
-      console.log('Message IDs and their senders:');
       messages.forEach((msg) => {
         console.log(
           `Message: ${msg.id} | SenderUserId: ${msg.senderUserId} | SenderUserName: ${msg.senderUserName} | Match by name: ${msg.senderUserName === userName}`
         );
       });
-      console.log('======================================');
     }
   }, [messages, userId, userName]);
 
   // Obtener función para enviar mensajes del contexto
-  const { sendMessage, isConnected } = useChat();
+  const { sendMessage } = useChat();
 
   // Determinar si hay participantes disponibles
   const hasParticipants = participants.length > 0;
@@ -130,7 +123,7 @@ export function ChatInterface({
     }, 200);
 
     return () => clearTimeout(timer);
-  }, []);
+  }, [messages.length]);
 
   // Efecto adicional para manejar cuando el chat se abre por primera vez
   useEffect(() => {
@@ -193,8 +186,6 @@ export function ChatInterface({
         sendingButton.removeAttribute('disabled');
       }
     } catch (error) {
-      console.error('Error al enviar el mensaje:', error);
-
       // Re-habilitar el botón en caso de error
       const sendingButton = document.querySelector('button[type="submit"]');
       if (sendingButton) {
@@ -224,30 +215,6 @@ export function ChatInterface({
       .join('')
       .toUpperCase()
       .substring(0, 2);
-  };
-
-  // Generar color de fondo basado en el ID del usuario
-  const getParticipantColor = (userId: string) => {
-    // Crear un hash simple del userId para obtener un número
-    let hash = 0;
-    for (let i = 0; i < userId.length; i++) {
-      hash = userId.charCodeAt(i) + ((hash << 5) - hash);
-    }
-
-    // Colores predefinidos para usar (colores pastel/suaves)
-    const colors = [
-      'bg-blue-100 text-blue-900',
-      'bg-green-100 text-green-900',
-      'bg-yellow-100 text-yellow-900',
-      'bg-purple-100 text-purple-900',
-      'bg-pink-100 text-pink-900',
-      'bg-indigo-100 text-indigo-900',
-      'bg-teal-100 text-teal-900'
-    ];
-
-    // Usar el hash para seleccionar un color
-    const colorIndex = Math.abs(hash) % colors.length;
-    return colors[colorIndex];
   };
 
   return (
@@ -283,9 +250,6 @@ export function ChatInterface({
               {messages.map((message) => {
                 // Determinar si el mensaje es del usuario actual comparando por NOMBRE
                 const isMyMessage = userName === message.senderUserName;
-                console.log('userName', userName);
-                console.log('message.senderUserName', message.senderUserName);
-                console.log('isMyMessage', isMyMessage);
 
                 return (
                   <div

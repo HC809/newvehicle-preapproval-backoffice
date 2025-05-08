@@ -71,10 +71,7 @@ export interface LoanRequestDetail {
   loanCalculation?: LoanCalculation;
   events?: LoanRequestEvent[];
   visit?: Visit;
-  participants?: Array<{
-    id: string;
-    name: string;
-  }>;
+  participants?: ChatParticipant[];
 }
 
 export interface LoanRequestListingParams {
@@ -96,4 +93,9 @@ export interface UpdateLoanRequestForm {
   approvedDownPaymentPercentage: number;
   vehicleInsuranceRate: number;
   monthlyIncome: number;
+}
+
+export interface ChatParticipant {
+  id: string;
+  name: string;
 }
