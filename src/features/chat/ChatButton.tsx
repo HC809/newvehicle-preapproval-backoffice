@@ -2,15 +2,10 @@
 
 import React, { useEffect, useState } from 'react';
 import { Button, ButtonProps } from '@/components/ui/button';
-import { MessageSquare, X } from 'lucide-react';
+import { MessageSquare } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useChat } from './ChatContext';
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle
-} from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet';
 import { ChatInterface } from './ChatInterface';
 import { ChatParticipant } from 'types/LoanRequests';
 
@@ -56,22 +51,12 @@ export function ChatButton({
 
       <Sheet open={open} onOpenChange={setOpen} modal={true}>
         <SheetContent
-          className='flex w-full max-w-md flex-col p-0 sm:max-w-lg md:max-w-xl lg:max-w-xl'
+          className='flex w-full max-w-md flex-col p-0 sm:max-w-lg md:max-w-xl lg:max-w-xl [&>button]:hidden'
           style={{ height: '100vh' }}
           side='right'
           onInteractOutside={(e) => e.preventDefault()}
         >
-          <SheetHeader className='sticky top-0 z-10 flex flex-row items-center justify-between border-b bg-background px-4 py-2'>
-            <SheetTitle>Chat de Solicitud</SheetTitle>
-            <Button
-              variant='ghost'
-              size='icon'
-              onClick={() => setOpen(false)}
-              className='h-8 w-8'
-            >
-              <X className='h-4 w-4' />
-            </Button>
-          </SheetHeader>
+          <SheetTitle className='sr-only'>Chat de Solicitud</SheetTitle>
 
           {/* Contenedor principal que ocupa todo el alto disponible restante */}
           <div className='flex min-h-0 flex-1 flex-col overflow-hidden'>

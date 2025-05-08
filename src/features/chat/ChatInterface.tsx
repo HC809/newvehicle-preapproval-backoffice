@@ -26,6 +26,7 @@ import {
   PopoverTrigger
 } from '@/components/ui/popover';
 import { ChatParticipant } from 'types/LoanRequests';
+import { formatLoanRequestId } from '@/utils/formatId';
 
 interface ChatInterfaceProps {
   loanRequestId: string;
@@ -51,6 +52,9 @@ export function ChatInterface({
   const [mentionText, setMentionText] = useState('');
   const [selectedParticipant, setSelectedParticipant] =
     useState<ChatParticipant | null>(null);
+  const [filterParticipant, setFilterParticipant] =
+    useState<ChatParticipant | null>(null);
+  const [filterOpen, setFilterOpen] = useState(false);
 
   // Obtener datos de sesión del usuario
   const { data: session } = useSession();
@@ -218,12 +222,81 @@ export function ChatInterface({
       .substring(0, 2);
   };
 
+  // Filtrar mensajes basado en el participante seleccionado
+  const filteredMessages = messages.filter((message) => {
+    if (!filterParticipant) return true;
+
+    const isMessageFromFilteredParticipant =
+      message.senderUserName === filterParticipant.name;
+    const isMessageToFilteredParticipant =
+      message.receiverUserId === filterParticipant.id;
+
+    return isMessageFromFilteredParticipant || isMessageToFilteredParticipant;
+  });
+
   return (
     <div className={cn('flex h-full w-full flex-col', className)}>
-      {/* Encabezado del chat */}
-      {/* <div className='border-b p-3'>
-        <h3 className='font-medium'>{title || 'Chat grupal'}</h3>
-      </div> */}
+      {/* Filtro de participantes */}
+      <div className='border-b p-3'>
+        <div className='flex items-center justify-between'>
+          <h3 className='font-bold'>
+            Chat {formatLoanRequestId(loanRequestId)}
+          </h3>
+          <div className='flex items-center gap-2'>
+            <Popover open={filterOpen} onOpenChange={setFilterOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant='outline'
+                  size='sm'
+                  className='w-[200px] justify-between'
+                >
+                  {filterParticipant
+                    ? `Filtrando: ${filterParticipant.name}`
+                    : 'Filtrar por participante'}
+                  <User className='h-4 w-4' />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className='w-[200px] p-0'>
+                <Command>
+                  <CommandInput placeholder='Buscar participante...' />
+                  <CommandList>
+                    <CommandEmpty>No se encontraron participantes</CommandEmpty>
+                    <CommandGroup>
+                      <CommandItem
+                        onSelect={() => {
+                          setFilterParticipant(null);
+                          setFilterOpen(false);
+                        }}
+                        className='cursor-pointer'
+                      >
+                        <span>Mostrar todos</span>
+                      </CommandItem>
+                      {participants.map((participant) => (
+                        <CommandItem
+                          key={participant.id}
+                          onSelect={() => {
+                            setFilterParticipant(participant);
+                            setFilterOpen(false);
+                          }}
+                          className='cursor-pointer'
+                        >
+                          <User className='mr-2 h-4 w-4' />
+                          <span>{participant.name}</span>
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
+            {onClose && (
+              <Button variant='ghost' size='icon' onClick={onClose}>
+                <X className='h-4 w-4' />
+              </Button>
+            )}
+          </div>
+        </div>
+      </div>
 
       {/* Container principal para el contenido del chat con flexbox que empuja el input al final */}
       <div className='flex h-full w-full flex-col overflow-hidden'>
@@ -241,14 +314,18 @@ export function ChatInterface({
             <div className='flex h-full items-center justify-center'>
               <p className='text-destructive'>Error al cargar los mensajes</p>
             </div>
-          ) : messages.length === 0 ? (
+          ) : filteredMessages.length === 0 ? (
             <div className='flex h-full items-center justify-center'>
-              <p className='text-muted-foreground'>No hay mensajes aún</p>
+              <p className='text-muted-foreground'>
+                {filterParticipant
+                  ? `No hay mensajes con ${filterParticipant.name}`
+                  : 'No hay mensajes aún'}
+              </p>
             </div>
           ) : (
             // Contenedor principal de mensajes con margen auto arriba para empujar todo hacia abajo
             <div className='mt-auto flex w-full flex-col space-y-4'>
-              {messages.map((message) => {
+              {filteredMessages.map((message) => {
                 // Determinar si el mensaje es del usuario actual comparando por NOMBRE
                 const isMyMessage = userName === message.senderUserName;
 
