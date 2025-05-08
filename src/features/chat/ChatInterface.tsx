@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { useChatMessages, ChatParticipant } from './api/chat-service';
+import { useChatMessages } from './api/chat-service';
 import { useChat } from './ChatContext';
 import { useSession } from 'next-auth/react';
 import { formatDistanceToNow } from 'date-fns';
@@ -25,6 +25,7 @@ import {
   PopoverContent,
   PopoverTrigger
 } from '@/components/ui/popover';
+import { ChatParticipant } from 'types/LoanRequests';
 
 interface ChatInterfaceProps {
   loanRequestId: string;

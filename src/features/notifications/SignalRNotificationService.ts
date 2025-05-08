@@ -5,6 +5,7 @@ import {
   HubConnection,
   HubConnectionState
 } from '@microsoft/signalr';
+import { ChatMessage } from 'types/ChatMessage';
 import { LoanNotification } from 'types/Notifications';
 
 // Helper functions for logging
@@ -25,17 +26,6 @@ const logDevWarn = (message: string, ...args: any[]) => {
     console.warn(message, ...args);
   }
 };
-
-export interface ChatMessage {
-  id: string;
-  content: string;
-  loanRequestId: string;
-  senderUserId: string;
-  senderUserName: string;
-  receiverUserId: string;
-  receiverUserName: string;
-  createdAt: string;
-}
 
 // Tipo unificado para cualquier tipo de notificación
 export type UnifiedNotification = LoanNotification | ChatMessage;

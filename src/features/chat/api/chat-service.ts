@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import useAxios from '@/hooks/use-axios';
-import { ChatMessage } from '@/features/notifications/SignalRNotificationService';
+import { ChatMessage } from 'types/ChatMessage';
 
 // Query key constants - exportados para ser usados en otros archivos
 export const CHAT_KEY = 'chats';

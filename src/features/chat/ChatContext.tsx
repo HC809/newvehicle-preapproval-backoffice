@@ -3,7 +3,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useToken } from '@/features/auth/TokenContext';
 import notificationService, {
-  ChatMessage,
   UnifiedNotification
 } from '../notifications/SignalRNotificationService';
 import {
@@ -13,6 +12,7 @@ import {
 } from './api/chat-service';
 import { useQueryClient } from '@tanstack/react-query';
 import { LoanNotificationType } from 'types/Notifications';
+import { ChatMessage } from 'types/ChatMessage';
 
 // Helper function for development logging
 const logDev = (message: string, ...args: any[]) => {

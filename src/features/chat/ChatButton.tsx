@@ -12,7 +12,7 @@ import {
   SheetTitle
 } from '@/components/ui/sheet';
 import { ChatInterface } from './ChatInterface';
-import { ChatParticipant } from './api/chat-service';
+import { ChatParticipant } from 'types/LoanRequests';
 
 export interface ChatButtonProps extends ButtonProps {
   loanRequestId: string;
