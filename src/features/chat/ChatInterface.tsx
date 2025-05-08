@@ -307,7 +307,7 @@ export function ChatInterface({
                           }}
                         >
                           {isMyMessage ? 'Tú' : message.senderUserName}
-                          {message.receiverUserId && !isMyMessage && (
+                          {message.receiverUserId && (
                             <span style={{ marginLeft: '6px', opacity: '0.7' }}>
                               para{' '}
                               {message.receiverUserId === userId
