@@ -2,7 +2,14 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { ArrowLeft, FileText, History } from 'lucide-react';
+import {
+  ArrowLeft,
+  Building,
+  CheckCircle,
+  FileText,
+  History,
+  XCircle
+} from 'lucide-react';
 import { toast } from 'sonner';
 import PageContainer from '@/components/layout/page-container';
 import { Heading } from '@/components/ui/heading';
@@ -421,20 +428,63 @@ export default function LoanRequestDetailPage() {
                 description='Información detallada de la solicitud de préstamo'
               />
             </div>
-            <div className='flex items-center gap-2'>
-              <Button
-                variant='outline'
-                onClick={() => setShowTimeline(true)}
-                title='Ver historial de cambios'
-              >
-                <History className='mr-2 h-4 w-4' />
-                Historial
-              </Button>
-              {renderChatButton()}
-              {/* <Button variant='outline' onClick={handleGoToList}>
-                Volver a la Lista
-              </Button> */}
-            </div>
+            {loanRequestDetail && (
+              <div className='flex items-center gap-2'>
+                <Button
+                  variant='outline'
+                  onClick={() => setShowTimeline(true)}
+                  title='Ver historial de cambios'
+                >
+                  <History className='mr-2 h-4 w-4' />
+                  Historial
+                </Button>
+                {canAssignVisit(loanRequestDetail.loanRequest.status) && (
+                  <Button
+                    variant='outline'
+                    onClick={() => setShowAssignVisitModal(true)}
+                    className='gap-2 bg-purple-700 text-white hover:bg-purple-800'
+                  >
+                    <Building className='h-4 w-4' />
+                    Asignar Visita
+                  </Button>
+                )}
+                {canApproveReject(
+                  loanRequestDetail.loanRequest.status,
+                  loanRequestDetail.loanRequest
+                ) && (
+                  <>
+                    <Button
+                      variant='default'
+                      onClick={handleApproveLoan}
+                      disabled={
+                        approveByAgentMutation.isPending ||
+                        approveByManagerMutation.isPending
+                      }
+                      className='gap-2 bg-green-600 hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-700'
+                    >
+                      {approveByAgentMutation.isPending ||
+                      approveByManagerMutation.isPending ? (
+                        'Aprobando...'
+                      ) : (
+                        <>
+                          <CheckCircle className='h-4 w-4' />
+                          Aprobar
+                        </>
+                      )}
+                    </Button>
+                    <Button
+                      variant='destructive'
+                      onClick={handleRejectLoan}
+                      className='gap-2'
+                    >
+                      <XCircle className='h-4 w-4' />
+                      Rechazar
+                    </Button>
+                  </>
+                )}
+                {renderChatButton()}
+              </div>
+            )}
           </div>
           <Separator />
         </div>
