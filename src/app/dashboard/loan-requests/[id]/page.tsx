@@ -378,7 +378,7 @@ export default function LoanRequestDetailPage() {
   if (isLoading) {
     return (
       <PageContainer>
-        <div className='flex flex-1 flex-col space-y-6'>
+        <div className='flex flex-1 flex-col space-y-4'>
           <div className='flex items-center justify-between'>
             <div className='flex items-center gap-4'>
               <Button variant='outline' size='icon' onClick={handleBack}>
@@ -410,7 +410,7 @@ export default function LoanRequestDetailPage() {
 
   return (
     <PageContainer>
-      <div className='flex flex-col gap-6'>
+      <div className='flex flex-1 flex-col space-y-4'>
         {/* Encabezado con título y botones de acción */}
         <div className='flex flex-col gap-3'>
           <div className='flex items-center justify-between'>
