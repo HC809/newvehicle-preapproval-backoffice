@@ -14,8 +14,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { MoreHorizontal, Building } from 'lucide-react';
 import { User } from 'types/User';
-import { roleTranslations } from '@/utils/roleTranslations';
-import { verificationTypeTranslations } from '@/utils/verificationTypeTranslations';
+import { translateRole } from '@/utils/translateRole';
+import { translateVerificationType } from '@/utils/translateVerificationType';
 
 export const UserColumns = (
   setUserToEdit: (user: User) => void,
@@ -47,7 +47,7 @@ export const UserColumns = (
     header: () => <span className='font-bold'>Rol</span>,
     cell: ({ row }) => {
       const role = row.original.role;
-      return <span>{roleTranslations[role]}</span>;
+      return <span>{translateRole[role]}</span>;
     }
   },
   {
@@ -55,7 +55,7 @@ export const UserColumns = (
     header: () => <span className='font-bold'>Tipo de Verificación</span>,
     cell: ({ row }) => {
       const verificationType = row.original.verificationType;
-      return <span>{verificationTypeTranslations[verificationType]}</span>;
+      return <span>{translateVerificationType[verificationType]}</span>;
     }
   },
   {

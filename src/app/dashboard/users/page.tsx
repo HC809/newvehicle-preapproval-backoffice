@@ -36,7 +36,7 @@ import {
   SelectValue
 } from '@/components/ui/select';
 import { UserRole } from 'types/User';
-import { roleTranslations } from '@/utils/roleTranslations';
+import { translateRole } from '@/utils/translateRole';
 
 function UserContent() {
   const apiClient = useAxios();
@@ -227,7 +227,7 @@ function UserContent() {
                   ) : (
                     <div className='flex items-center gap-2'>
                       <span className='max-w-[250px] truncate'>
-                        {roleTranslations[selectedRole]}
+                        {translateRole[selectedRole]}
                       </span>
                     </div>
                   )}
@@ -242,7 +242,7 @@ function UserContent() {
                 {Object.values(UserRole).map((role) => (
                   <SelectItem key={role} value={role}>
                     <div className='flex items-center gap-2'>
-                      <span className='truncate'>{roleTranslations[role]}</span>
+                      <span className='truncate'>{translateRole[role]}</span>
                     </div>
                   </SelectItem>
                 ))}

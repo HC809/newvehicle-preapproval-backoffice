@@ -35,11 +35,11 @@ import * as z from 'zod';
 import { UserRole } from 'types/User';
 import { useCreateUser, useUpdateUser } from '../api/user-service';
 import useAxios from '@/hooks/use-axios';
-import { roleTranslations } from '@/utils/roleTranslations';
 import { useUserStore } from '@/stores/user-store';
 import { useDealerships } from '@/features/dealerships/api/dealership-service';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
+import { translateRole } from '@/utils/translateRole';
 
 const DEFAULT_DEALERSHIP_NAME = 'COFISA';
 
@@ -310,13 +310,11 @@ export default function UserForm({ open, onOpenChange }: UserFormProps) {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {Object.entries(roleTranslations).map(
-                            ([key, value]) => (
-                              <SelectItem key={key} value={key}>
-                                {value}
-                              </SelectItem>
-                            )
-                          )}
+                          {Object.entries(translateRole).map(([key, value]) => (
+                            <SelectItem key={key} value={key}>
+                              {value}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                       <FormMessage />
