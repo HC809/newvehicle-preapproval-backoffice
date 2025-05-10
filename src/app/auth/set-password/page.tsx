@@ -1,5 +1,5 @@
-import SetPasswordForm from '@/features/auth/components/set-password-form';
 import { Metadata } from 'next';
+import SetPasswordForm from '@/features/auth/components/set-password-form';
 
 export const metadata: Metadata = {
   title: 'Establecer Contraseña',
