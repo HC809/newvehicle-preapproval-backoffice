@@ -8,6 +8,7 @@ import {
   CheckCircle,
   FileText,
   History,
+  Pencil,
   XCircle
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -430,6 +431,18 @@ export default function LoanRequestDetailPage() {
             </div>
             {loanRequestDetail && (
               <div className='flex items-center gap-2'>
+                {loanRequestDetail.loanRequest.equifaxChecked &&
+                  loanRequestDetail.loanRequest.bantotalChecked &&
+                  loanRequestDetail.loanRequest.financingCalculated && (
+                    <Button
+                      variant='outline'
+                      onClick={() => setShowEditModal(true)}
+                      className='gap-2'
+                    >
+                      <Pencil className='h-4 w-4' />
+                      Editar
+                    </Button>
+                  )}
                 <Button
                   variant='outline'
                   onClick={() => setShowTimeline(true)}
