@@ -1,6 +1,6 @@
 import { User } from 'types/User';
 
-type ModalAction = 'delete' | 'restore' | null;
+type ModalAction = 'delete' | 'restore' | 'resendEmail' | null;
 type ModalIntent = 'delete' | 'restore' | 'default';
 
 interface ModalProperties {
@@ -12,7 +12,7 @@ interface ModalProperties {
 
 /**
  * Get modal properties based on the current action and selected user
- * @param action The current modal action ('delete' or 'restore')
+ * @param action The current modal action ('delete', 'restore', or 'resendEmail')
  * @param user The selected user to act upon
  * @returns Modal properties configuration object
  */
@@ -33,6 +33,13 @@ export function getUserModalProps(
       description: `¿Está seguro que desea restaurar al usuario "${user.name}"?`,
       confirmLabel: 'Restaurar',
       intent: 'restore'
+    };
+  } else if (action === 'resendEmail' && user) {
+    return {
+      title: 'Reenviar Enlace de Contraseña',
+      description: `¿Está seguro que desea reenviar el enlace para establecer contraseña al usuario "${user.name}"?`,
+      confirmLabel: 'Reenviar',
+      intent: 'default'
     };
   }
 

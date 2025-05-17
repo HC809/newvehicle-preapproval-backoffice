@@ -12,15 +12,16 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, Building } from 'lucide-react';
-import { User } from 'types/User';
+import { MoreHorizontal, Building, Mail, Pencil, Trash2 } from 'lucide-react';
+import { User, UserRole } from 'types/User';
 import { translateRole } from '@/utils/translateRole';
 import { translateVerificationType } from '@/utils/translateVerificationType';
 
 export const UserColumns = (
   setUserToEdit: (user: User) => void,
   setUserToDelete: (user: User) => void,
-  setUserToRestore: (user: User) => void
+  setUserToRestore: (user: User) => void,
+  setUserToResendEmail: (user: User) => void
 ): ColumnDef<User>[] => [
   {
     accessorKey: 'name',
@@ -92,6 +93,10 @@ export const UserColumns = (
         setUserToRestore(user);
       }
 
+      function handleResendEmailClick() {
+        setUserToResendEmail(user);
+      }
+
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -110,9 +115,17 @@ export const UserColumns = (
             ) : (
               <>
                 <DropdownMenuItem onClick={handleEditClick}>
+                  <Pencil className='mr-2 h-4 w-4' />
                   Editar
                 </DropdownMenuItem>
+                {user.role === UserRole.Dealership_Admin && (
+                  <DropdownMenuItem onClick={handleResendEmailClick}>
+                    <Mail className='mr-2 h-4 w-4' />
+                    Reenviar enlace de contraseña
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuItem onClick={handleDeleteClick}>
+                  <Trash2 className='mr-2 h-4 w-4' />
                   Eliminar
                 </DropdownMenuItem>
               </>

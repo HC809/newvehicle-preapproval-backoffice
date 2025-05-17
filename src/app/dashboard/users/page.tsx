@@ -22,7 +22,8 @@ import {
   useUsers,
   useDeleteUser,
   useRestoreUser,
-  useSyncCofisaUsers
+  useSyncCofisaUsers,
+  useResendSetupEmail
 } from '@/features/users/api/user-service';
 import { getUserModalProps } from '@/features/users/helpers/modal-helpers';
 import KBar from '@/components/kbar';
@@ -54,14 +55,17 @@ function UserContent() {
   const deleteUserMutation = useDeleteUser(apiClient);
   const restoreUserMutation = useRestoreUser(apiClient);
   const syncCofisaUsersMutation = useSyncCofisaUsers(apiClient);
+  const resendEmailMutation = useResendSetupEmail(apiClient);
 
   const {
     userToEdit,
     userToDelete,
     userToRestore,
+    userToResendEmail,
     setUserToDelete,
     setUserToEdit,
-    setUserToRestore
+    setUserToRestore,
+    setUserToResendEmail
   } = useUserStore();
 
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -84,7 +88,9 @@ function UserContent() {
     ? 'delete'
     : userToRestore
       ? 'restore'
-      : null;
+      : userToResendEmail
+        ? 'resendEmail'
+        : null;
 
   // Handle confirmation based on the current action
   const handleConfirmAction = async (): Promise<void> => {
@@ -104,6 +110,14 @@ function UserContent() {
           refetch();
         }
       });
+    } else if (modalAction === 'resendEmail' && userToResendEmail) {
+      resendEmailMutation.mutate(userToResendEmail.id, {
+        onSuccess: () => {
+          setUserToResendEmail(null);
+          toast.success('Enlace de contraseña reenviado correctamente.');
+          refetch();
+        }
+      });
     }
   };
 
@@ -115,6 +129,9 @@ function UserContent() {
     } else if (modalAction === 'restore') {
       setUserToRestore(null);
       restoreUserMutation.reset();
+    } else if (modalAction === 'resendEmail') {
+      setUserToResendEmail(null);
+      resendEmailMutation.reset();
     }
   };
 
@@ -125,23 +142,29 @@ function UserContent() {
     }
   };
 
-  const selectedUser = userToDelete || userToRestore;
+  const selectedUser = userToDelete || userToRestore || userToResendEmail;
 
   const isModalOpen = Boolean(modalAction);
 
   const isModalLoading =
     modalAction === 'delete'
       ? deleteUserMutation.isPending
-      : restoreUserMutation.isPending;
+      : modalAction === 'restore'
+        ? restoreUserMutation.isPending
+        : resendEmailMutation.isPending;
 
   const modalError =
     modalAction === 'delete'
       ? deleteUserMutation.error
         ? String(deleteUserMutation.error)
         : null
-      : restoreUserMutation.error
-        ? String(restoreUserMutation.error)
-        : null;
+      : modalAction === 'restore'
+        ? restoreUserMutation.error
+          ? String(restoreUserMutation.error)
+          : null
+        : resendEmailMutation.error
+          ? String(resendEmailMutation.error)
+          : null;
 
   const modalProps = getUserModalProps(modalAction, selectedUser);
 
@@ -260,6 +283,7 @@ function UserContent() {
                 users={filteredUsers}
                 totalItems={filteredUsers.length}
                 isLoading={isLoading || !users}
+                setUserToResendEmail={setUserToResendEmail}
               />
 
               <UserForm

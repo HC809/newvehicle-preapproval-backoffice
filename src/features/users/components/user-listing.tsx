@@ -11,12 +11,14 @@ interface UserListingPageProps {
   users: User[];
   totalItems: number;
   isLoading?: boolean;
+  setUserToResendEmail: (user: User) => void;
 }
 
 export default function UserListingPage({
   users,
   totalItems,
-  isLoading
+  isLoading,
+  setUserToResendEmail
 }: UserListingPageProps) {
   const { setUserToEdit, setUserToDelete, setUserToRestore } = useUserStore();
 
@@ -30,7 +32,12 @@ export default function UserListingPage({
 
   return (
     <UsersTable
-      columns={UserColumns(setUserToEdit, setUserToDelete, setUserToRestore)}
+      columns={UserColumns(
+        setUserToEdit,
+        setUserToDelete,
+        setUserToRestore,
+        setUserToResendEmail
+      )}
       data={users}
       totalItems={totalItems}
     />

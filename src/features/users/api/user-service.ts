@@ -124,3 +124,20 @@ export const useRestoreUser = (apiClient: AxiosInstance | undefined) => {
     }
   });
 };
+
+export const useResendSetupEmail = (apiClient: AxiosInstance | undefined) => {
+  const queryClient = useQueryClient();
+
+  return useMutation<boolean, Error, string>({
+    mutationFn: async (id: string) => {
+      if (!apiClient) throw new Error('API client not initialized');
+      const response = await apiClient.post<boolean>(
+        `/users/resend-setup-email/${id}`
+      );
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [USERS_KEY] });
+    }
+  });
+};

@@ -9,6 +9,8 @@ interface UserStore {
   setUserToDelete: (user: User | null) => void;
   userToRestore: User | null;
   setUserToRestore: (user: User | null) => void;
+  userToResendEmail: User | null;
+  setUserToResendEmail: (user: User | null) => void;
 }
 
 let store: ReturnType<typeof createStore>;
@@ -25,7 +27,10 @@ function createStore() {
           set({ userToDelete: user }, false, 'user/setUserToDelete'),
         userToRestore: null,
         setUserToRestore: (user) =>
-          set({ userToRestore: user }, false, 'user/setUserToRestore')
+          set({ userToRestore: user }, false, 'user/setUserToRestore'),
+        userToResendEmail: null,
+        setUserToResendEmail: (user) =>
+          set({ userToResendEmail: user }, false, 'user/setUserToResendEmail')
       }),
       {
         name: 'User Store',
