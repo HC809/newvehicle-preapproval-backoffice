@@ -53,7 +53,8 @@ const formSchema = z
     }),
     dealershipId: z.string().nullable(),
     role: z.nativeEnum(UserRole),
-    isActive: z.boolean()
+    isActive: z.boolean(),
+    hasAutomaticApproval: z.boolean()
   })
   .refine(
     (data) => {
@@ -98,7 +99,8 @@ export default function UserForm({ open, onOpenChange }: UserFormProps) {
       email: '',
       role: UserRole.BusinessDevelopment_User,
       dealershipId: null,
-      isActive: true
+      isActive: true,
+      hasAutomaticApproval: false
     },
     mode: 'onChange'
   });
@@ -179,7 +181,8 @@ export default function UserForm({ open, onOpenChange }: UserFormProps) {
           email: '',
           role: UserRole.BusinessDevelopment_User,
           dealershipId: null,
-          isActive: true
+          isActive: true,
+          hasAutomaticApproval: false
         });
       } else {
         // Si estamos editando, establecer los valores del usuario inmediatamente
@@ -189,7 +192,8 @@ export default function UserForm({ open, onOpenChange }: UserFormProps) {
             email: userToEdit.email,
             dealershipId: userToEdit.dealershipId || null,
             role: userToEdit.role,
-            isActive: userToEdit.isActive
+            isActive: userToEdit.isActive,
+            hasAutomaticApproval: userToEdit.hasAutomaticApproval
           },
           {
             keepDefaultValues: true
@@ -355,6 +359,30 @@ export default function UserForm({ open, onOpenChange }: UserFormProps) {
                           </SelectContent>
                         </Select>
                         <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
+
+                {selectedRole === UserRole.BusinessDevelopment_User && (
+                  <FormField
+                    control={form.control}
+                    name='hasAutomaticApproval'
+                    render={({ field }) => (
+                      <FormItem className='flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4'>
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <div className='space-y-1 leading-none'>
+                          <FormLabel>Aprobación Automática</FormLabel>
+                          <FormDescription>
+                            Al activar esta opción, el usuario tendrá aprobación
+                            automática de solicitudes
+                          </FormDescription>
+                        </div>
                       </FormItem>
                     )}
                   />

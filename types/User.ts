@@ -18,6 +18,7 @@ export interface UserForm {
   role: UserRole;
   dealershipId: string | null;
   isActive: boolean;
+  hasAutomaticApproval: boolean;
 }
 
 export type CreateUserForm = Omit<UserForm, 'isActive'>;
