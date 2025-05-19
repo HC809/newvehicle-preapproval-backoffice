@@ -46,6 +46,7 @@ import { LoanRequestStatus } from 'types/LoanRequests';
 import { UserRole } from 'types/User';
 import { LoanRequestTimeline } from '@/features/loan-requests/components/loan-request-timeline';
 import { RejectionModal } from '@/features/loan-requests/components/rejection-modal';
+import { ApprovalModal } from '@/features/loan-requests/components/approval-modal';
 import { LoanRequestEditForm } from '@/features/loan-requests/components';
 import { UploadDocumentButton } from '@/features/loan-documents/components';
 import AssignVisitForm from '@/features/loan-requests/components/assign-visit-form';
@@ -68,7 +69,9 @@ export default function LoanRequestDetailPage() {
   const [loaderError, setLoaderError] = useState<string | null>(null);
   const [showTimeline, setShowTimeline] = useState(false);
   const [showRejectionModal, setShowRejectionModal] = useState(false);
+  const [showApprovalModal, setShowApprovalModal] = useState(false);
   const [isManagerRejection, setIsManagerRejection] = useState(false);
+  const [isManagerApproval, setIsManagerApproval] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showAssignVisitModal, setShowAssignVisitModal] = useState(false);
 
@@ -200,21 +203,30 @@ export default function LoanRequestDetailPage() {
   const handleApproveLoan = async () => {
     if (!loanRequestDetail) return;
 
+    setIsManagerApproval(userRole === UserRole.BusinessDevelopment_Admin);
+    setShowApprovalModal(true);
+  };
+
+  // Función para manejar el envío del formulario de aprobación
+  const handleApprovalSubmit = async () => {
+    if (!loanRequestDetail) return;
+
     try {
-      if (userRole === UserRole.BusinessDevelopment_User) {
-        await approveByAgentMutation.mutateAsync(
+      if (isManagerApproval) {
+        await approveByManagerMutation.mutateAsync(
           loanRequestDetail.loanRequest.id
         );
-      } else if (userRole === UserRole.BusinessDevelopment_Admin) {
-        await approveByManagerMutation.mutateAsync(
+      } else {
+        await approveByAgentMutation.mutateAsync(
           loanRequestDetail.loanRequest.id
         );
       }
 
       await refetch();
       toast.success('Solicitud aprobada exitosamente');
-    } catch (error) {
-      toast.error('Error al aprobar la solicitud');
+      setShowApprovalModal(false);
+    } catch (error: any) {
+      toast.error(error.message || 'Error al aprobar la solicitud');
     }
   };
 
@@ -663,6 +675,28 @@ export default function LoanRequestDetailPage() {
                 isSubmitting={
                   rejectByAgentMutation.isPending ||
                   rejectByManagerMutation.isPending
+                }
+              />
+
+              <ApprovalModal
+                isOpen={showApprovalModal}
+                onClose={() => {
+                  if (
+                    !approveByAgentMutation.isPending &&
+                    !approveByManagerMutation.isPending
+                  ) {
+                    setShowApprovalModal(false);
+                  }
+                }}
+                onSubmit={handleApprovalSubmit}
+                title={
+                  isManagerApproval
+                    ? 'Aprobar Solicitud (Gerente de Oficial de Negocios)'
+                    : 'Aprobar Solicitud (Oficial de Negocios)'
+                }
+                isSubmitting={
+                  approveByAgentMutation.isPending ||
+                  approveByManagerMutation.isPending
                 }
               />
 
