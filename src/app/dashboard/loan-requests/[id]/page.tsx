@@ -9,7 +9,8 @@ import {
   FileText,
   History,
   Pencil,
-  XCircle
+  XCircle,
+  Users
 } from 'lucide-react';
 import { toast } from 'sonner';
 import PageContainer from '@/components/layout/page-container';
@@ -37,7 +38,8 @@ import {
   useApproveByAgent,
   useRejectByAgent,
   useApproveByManager,
-  useRejectByManager
+  useRejectByManager,
+  useApproveForCommittee
 } from '@/features/loan-requests/api/loan-request-service';
 import { useCalculateLoan } from '@/features/loan-requests/api/loan-calculation-service';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -74,6 +76,8 @@ export default function LoanRequestDetailPage() {
   const [isManagerApproval, setIsManagerApproval] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showAssignVisitModal, setShowAssignVisitModal] = useState(false);
+  const [showCommitteeApprovalModal, setShowCommitteeApprovalModal] =
+    useState(false);
 
   // Fetch loan request details from API
   const {
@@ -92,6 +96,7 @@ export default function LoanRequestDetailPage() {
   const rejectByAgentMutation = useRejectByAgent(apiClient!);
   const approveByManagerMutation = useApproveByManager(apiClient!);
   const rejectByManagerMutation = useRejectByManager(apiClient!);
+  const approveForCommitteeMutation = useApproveForCommittee(apiClient!);
 
   // Efecto para eliminar el resaltado en las tabs cuando se presiona una tecla
   // useEffect(() => {
@@ -314,6 +319,22 @@ export default function LoanRequestDetailPage() {
     }
   };
 
+  // Función para aprobar para comité
+  const handleApproveForCommittee = async () => {
+    if (!loanRequestDetail) return;
+
+    try {
+      await approveForCommitteeMutation.mutateAsync(
+        loanRequestDetail.loanRequest.id
+      );
+      await refetch();
+      toast.success('Solicitud aprobada para comité exitosamente');
+      setShowCommitteeApprovalModal(false);
+    } catch (error: any) {
+      toast.error(error.message || 'Error al aprobar la solicitud para comité');
+    }
+  };
+
   const canApproveReject = (status: LoanRequestStatus, request: any) => {
     if (!userRole) return false;
 
@@ -344,6 +365,16 @@ export default function LoanRequestDetailPage() {
     return (
       status === LoanRequestStatus.AcceptedByCustomer &&
       userRole === UserRole.BusinessDevelopment_User
+    );
+  };
+
+  // Check if user can approve for committee
+  const canApproveForCommittee = (status: LoanRequestStatus) => {
+    if (!userRole) return false;
+    return (
+      status === LoanRequestStatus.VisitRegistered &&
+      (userRole === UserRole.BusinessDevelopment_User ||
+        userRole === UserRole.BusinessDevelopment_Admin)
     );
   };
 
@@ -506,6 +537,25 @@ export default function LoanRequestDetailPage() {
                       Rechazar
                     </Button>
                   </>
+                )}
+                {canApproveForCommittee(
+                  loanRequestDetail.loanRequest.status
+                ) && (
+                  <Button
+                    variant='outline'
+                    onClick={() => setShowCommitteeApprovalModal(true)}
+                    disabled={approveForCommitteeMutation.isPending}
+                    className='gap-2 border-blue-600 text-blue-600 hover:bg-blue-50 dark:border-blue-500 dark:text-blue-500 dark:hover:bg-gray-800'
+                  >
+                    {approveForCommitteeMutation.isPending ? (
+                      'Aprobando...'
+                    ) : (
+                      <>
+                        <Users className='h-4 w-4' />
+                        Aprobar para Comité
+                      </>
+                    )}
+                  </Button>
                 )}
                 {renderChatButton()}
               </div>
@@ -698,6 +748,19 @@ export default function LoanRequestDetailPage() {
                   approveByAgentMutation.isPending ||
                   approveByManagerMutation.isPending
                 }
+              />
+
+              <ApprovalModal
+                isOpen={showCommitteeApprovalModal}
+                onClose={() => {
+                  if (!approveForCommitteeMutation.isPending) {
+                    setShowCommitteeApprovalModal(false);
+                  }
+                }}
+                onSubmit={handleApproveForCommittee}
+                title='Aprobar Solicitud para Comité'
+                description=''
+                isSubmitting={approveForCommitteeMutation.isPending}
               />
 
               <LoanRequestEditForm

@@ -284,3 +284,24 @@ export const useAssignVisit = (apiClient: AxiosInstance) => {
     }
   });
 };
+
+export const useApproveForCommittee = (apiClient: AxiosInstance) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (loanRequestId: string) => {
+      const response = await apiClient.post(
+        `/loan-requests/approve-for-committee/${loanRequestId}`
+      );
+      return response.data;
+    },
+    onSuccess: (_, loanRequestId) => {
+      // Invalidate the specific loan request to update its details
+      queryClient.invalidateQueries({
+        queryKey: [LOAN_REQUESTS_KEY, 'detail', loanRequestId]
+      });
+      // Also invalidate the list of loan requests
+      queryClient.invalidateQueries({ queryKey: [LOAN_REQUESTS_KEY] });
+    }
+  });
+};

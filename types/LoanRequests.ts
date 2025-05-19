@@ -12,6 +12,8 @@ export enum LoanRequestStatus {
   AcceptedByCustomer = 'AcceptedByCustomer',
   DeclinedByCustomer = 'DeclinedByCustomer',
   VisitAssigned = 'VisitAssigned',
+  VisitRegistered = 'VisitRegistered',
+  ApprovedForCommittee = 'ApprovedForCommittee',
   Cancelled = 'Cancelled',
   BranchManagerReview = 'BranchManagerReview'
 }
