@@ -58,7 +58,8 @@ const formSchema = z.object({
     ),
   documentType: z.nativeEnum(DocumentType, {
     errorMap: () => ({ message: 'Debe seleccionar un tipo de documento.' })
-  })
+  }),
+  fileName: z.string().min(1, 'El nombre del archivo es requerido')
 });
 
 type DocumentUploadFormProps = {
@@ -83,7 +84,8 @@ export default function DocumentUploadForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
       documentType: undefined,
-      file: undefined
+      file: undefined,
+      fileName: ''
     },
     mode: 'onChange'
   });
@@ -92,7 +94,8 @@ export default function DocumentUploadForm({
   const resetForm = useCallback(() => {
     form.reset({
       documentType: undefined,
-      file: undefined
+      file: undefined,
+      fileName: ''
     });
   }, [form]);
 
@@ -104,7 +107,8 @@ export default function DocumentUploadForm({
           documentType: values.documentType,
           file: values.file[0],
           loanRequestId,
-          clientId
+          clientId,
+          fileName: values.fileName
         },
         {
           onSuccess: () => {
@@ -145,7 +149,8 @@ export default function DocumentUploadForm({
     if (open) {
       form.reset({
         documentType: undefined,
-        file: undefined
+        file: undefined,
+        fileName: ''
       });
     }
   }, [open, form]);
@@ -185,6 +190,26 @@ export default function DocumentUploadForm({
             onSubmit={form.handleSubmit(handleSubmit)}
             className='space-y-6'
           >
+            <FormField
+              control={form.control}
+              name='fileName'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Nombre del archivo</FormLabel>
+                  <FormControl>
+                    <input
+                      {...field}
+                      type='text'
+                      className='flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50'
+                      placeholder='Ingrese el nombre del archivo'
+                      disabled={isFormLocked}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             <FormField
               control={form.control}
               name='documentType'

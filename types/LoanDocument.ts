@@ -27,4 +27,5 @@ export interface CreateLoanDocumentRequest {
   clientId?: string;
   documentType: DocumentType;
   file: File;
+  fileName: string;
 }

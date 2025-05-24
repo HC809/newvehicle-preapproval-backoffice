@@ -52,6 +52,7 @@ export const useCreateLoanDocument = (
       }
       formData.append('documentType', data.documentType);
       formData.append('file', data.file);
+      formData.append('fileName', data.fileName);
 
       const response = await apiClient.post(
         '/loan-documents/create',
