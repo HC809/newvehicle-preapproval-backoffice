@@ -22,14 +22,18 @@ import {
 } from '@/components/ui/dialog';
 import { AlertModal } from '@/components/modal/alert-modal';
 
+type ViewMode = 'grid' | 'list';
+
 interface DocumentViewerProps {
   document: LoanDocument;
   onDocumentDeleted?: () => void;
+  viewMode?: ViewMode;
 }
 
 export const DocumentViewer = ({
   document: doc,
-  onDocumentDeleted
+  onDocumentDeleted,
+  viewMode = 'grid'
 }: DocumentViewerProps) => {
   const apiClient = useAxios();
   const [loadingDocumentId, setLoadingDocumentId] = useState<string | null>(
@@ -133,6 +137,133 @@ export const DocumentViewer = ({
       setDeleteError(null);
     }
   };
+
+  if (viewMode === 'list') {
+    return (
+      <>
+        <div className='flex items-center justify-between rounded-md border p-3 transition-colors hover:bg-gray-50 dark:hover:bg-gray-900'>
+          <div className='flex items-center gap-3'>
+            <div className='flex h-10 w-10 items-center justify-center rounded-md bg-gray-100 dark:bg-gray-800'>
+              {getDocumentIcon(doc.contentType)}
+            </div>
+            <div className='flex flex-col'>
+              <span
+                className='line-clamp-1 max-w-[200px] text-wrap break-words font-medium'
+                title={doc.fileName}
+              >
+                {doc.fileName}
+              </span>
+              <div className='flex gap-2 text-xs text-muted-foreground'>
+                <span>
+                  {documentTypeTranslations[doc.documentType as DocumentType] ||
+                    doc.documentType}
+                </span>
+                <span>•</span>
+                <span>
+                  {format(new Date(doc.uploadedAt), 'PPP', {
+                    locale: es
+                  })}
+                </span>
+              </div>
+            </div>
+          </div>
+          <div className='flex items-center gap-2'>
+            <Button
+              variant='outline'
+              size='sm'
+              className='flex items-center justify-center gap-1 text-primary hover:bg-primary/10 hover:text-primary dark:hover:bg-primary/20'
+              onClick={() => handleViewDocument(false)}
+              disabled={loadingDocumentId === doc.id}
+              title={
+                isImage ? 'Ver imagen' : 'Ver documento en una nueva pestaña'
+              }
+            >
+              {loadingDocumentId === doc.id ? (
+                <Loader2 className='h-4 w-4 animate-spin' />
+              ) : (
+                <Eye className='h-4 w-4' />
+              )}
+              <span>Ver</span>
+            </Button>
+            <Button
+              variant='outline'
+              size='sm'
+              className='flex items-center justify-center gap-1 text-primary hover:bg-primary/10 hover:text-primary dark:hover:bg-primary/20'
+              onClick={() => handleViewDocument(true)}
+              disabled={loadingDocumentId === doc.id}
+              title='Descargar documento'
+            >
+              {loadingDocumentId === doc.id ? (
+                <Loader2 className='h-4 w-4 animate-spin' />
+              ) : (
+                <Download className='h-4 w-4' />
+              )}
+              <span>Descargar</span>
+            </Button>
+            <Button
+              variant='outline'
+              size='sm'
+              className='flex items-center justify-center gap-1 text-red-500 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950'
+              onClick={() => setShowDeleteModal(true)}
+              disabled={loadingDocumentId === doc.id}
+              title='Eliminar documento'
+            >
+              {loadingDocumentId === doc.id ? (
+                <Loader2 className='h-4 w-4 animate-spin' />
+              ) : (
+                <Trash2 className='h-4 w-4' />
+              )}
+              <span>Eliminar</span>
+            </Button>
+          </div>
+        </div>
+
+        {/* Modal para visualizar imágenes */}
+        <Dialog
+          open={showImageModal}
+          onOpenChange={(open) => {
+            setShowImageModal(open);
+            if (!open) handleCloseImageModal();
+          }}
+        >
+          <DialogContent className='flex h-[80vh] flex-col sm:max-w-[80vw]'>
+            <DialogHeader>
+              <DialogTitle>{doc.fileName}</DialogTitle>
+            </DialogHeader>
+            <div className='flex flex-1 items-center justify-center overflow-auto p-4'>
+              {imageUrl && (
+                <Image
+                  src={imageUrl}
+                  alt={doc.fileName}
+                  className='max-h-full max-w-full object-contain'
+                  width={1200}
+                  height={900}
+                  style={{ maxHeight: 'calc(80vh - 80px)' }}
+                  priority
+                />
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Modal de confirmación para eliminar documento */}
+        <AlertModal
+          isOpen={showDeleteModal}
+          onClose={handleCloseDeleteModal}
+          onConfirm={handleDeleteDocument}
+          loading={deleteDocumentMutation.isPending}
+          title='Eliminar documento'
+          description={`¿Está seguro que desea eliminar el documento "${doc.fileName}"? Esta acción no se puede deshacer.`}
+          confirmLabel={
+            deleteDocumentMutation.isPending ? 'Eliminando...' : 'Eliminar'
+          }
+          cancelLabel='Cancelar'
+          error={deleteError}
+          intent='delete'
+        />
+      </>
+    );
+  }
 
   return (
     <>
