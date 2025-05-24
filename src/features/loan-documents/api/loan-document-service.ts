@@ -7,7 +7,8 @@ import {
 import { AxiosInstance } from 'axios';
 import {
   LoanDocumentContent,
-  CreateLoanDocumentRequest
+  CreateLoanDocumentRequest,
+  DocumentType
 } from 'types/LoanDocument';
 
 const LOAN_DOCUMENTS_KEY = 'loanDocuments';
@@ -33,9 +34,6 @@ export const useLoanDocumentContent = (
   });
 };
 
-/**
- * Hook para crear un documento de préstamo
- */
 export const useCreateLoanDocument = (
   apiClient: AxiosInstance | undefined
 ): UseMutationResult<any, Error, CreateLoanDocumentRequest> => {
@@ -69,9 +67,6 @@ export const useCreateLoanDocument = (
   });
 };
 
-/**
- * Hook para eliminar un documento de préstamo
- */
 export const useDeleteLoanDocument = (
   apiClient: AxiosInstance | undefined
 ): UseMutationResult<any, Error, string> => {
@@ -82,6 +77,38 @@ export const useDeleteLoanDocument = (
       const response = await apiClient.delete(
         `/loan-documents/${loanDocumentId}`
       );
+      return response.data;
+    }
+  });
+};
+
+export const useUpdateLoanDocument = (
+  apiClient: AxiosInstance | undefined
+): UseMutationResult<
+  any,
+  Error,
+  {
+    loanDocumentId: string;
+    fileName: string;
+    documentType: DocumentType;
+  }
+> => {
+  return useMutation({
+    mutationFn: async (data: {
+      loanDocumentId: string;
+      fileName: string;
+      documentType: DocumentType;
+    }) => {
+      if (!apiClient) throw new Error('API client not initialized');
+
+      const response = await apiClient.put(
+        `/loan-documents/${data.loanDocumentId}`,
+        {
+          fileName: data.fileName,
+          documentType: data.documentType
+        }
+      );
+
       return response.data;
     }
   });

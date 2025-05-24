@@ -32,7 +32,10 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { DocumentType, documentTypeTranslations } from 'types/LoanDocument';
-import { useCreateLoanDocument } from '../api/loan-document-service';
+import {
+  useCreateLoanDocument,
+  useUpdateLoanDocument
+} from '../api/loan-document-service';
 import useAxios from '@/hooks/use-axios';
 import { toast } from 'sonner';
 
@@ -47,13 +50,14 @@ const ACCEPTED_FILE_TYPES = [
 const formSchema = z.object({
   file: z
     .any()
-    .refine((files) => files?.length === 1, 'Se requiere un archivo.')
+    .optional()
+    .refine((files) => !files || files.length === 1, 'Se requiere un archivo.')
     .refine(
-      (files) => files?.[0]?.size <= MAX_FILE_SIZE,
+      (files) => !files || files?.[0]?.size <= MAX_FILE_SIZE,
       `El tamaño máximo del archivo es 10MB.`
     )
     .refine(
-      (files) => ACCEPTED_FILE_TYPES.includes(files?.[0]?.type),
+      (files) => !files || ACCEPTED_FILE_TYPES.includes(files?.[0]?.type),
       'Formato de archivo no válido. Se aceptan .pdf, .jpg, .jpeg, y .png.'
     ),
   documentType: z.nativeEnum(DocumentType, {
@@ -68,6 +72,12 @@ type DocumentUploadFormProps = {
   loanRequestId?: string;
   clientId?: string;
   onSuccess?: () => void;
+  mode?: 'create' | 'edit';
+  document?: {
+    id: string;
+    fileName: string;
+    documentType: DocumentType;
+  };
 };
 
 export default function DocumentUploadForm({
@@ -75,17 +85,20 @@ export default function DocumentUploadForm({
   onOpenChange,
   loanRequestId,
   clientId,
-  onSuccess
+  onSuccess,
+  mode = 'create',
+  document
 }: DocumentUploadFormProps) {
   const apiClient = useAxios();
   const createDocumentMutation = useCreateLoanDocument(apiClient);
+  const updateDocumentMutation = useUpdateLoanDocument(apiClient);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      documentType: undefined,
+      documentType: document?.documentType,
       file: undefined,
-      fileName: ''
+      fileName: document?.fileName || ''
     },
     mode: 'onChange'
   });
@@ -102,58 +115,99 @@ export default function DocumentUploadForm({
   // Form submission handler
   const handleSubmit = useCallback(
     async (values: z.infer<typeof formSchema>) => {
-      createDocumentMutation.mutate(
-        {
-          documentType: values.documentType,
-          file: values.file[0],
-          loanRequestId,
-          clientId,
-          fileName: values.fileName
-        },
-        {
-          onSuccess: () => {
-            resetForm();
-            onOpenChange(false);
-            if (onSuccess) {
-              onSuccess();
+      if (mode === 'edit' && document) {
+        updateDocumentMutation.mutate(
+          {
+            loanDocumentId: document.id,
+            fileName: values.fileName,
+            documentType: values.documentType
+          },
+          {
+            onSuccess: () => {
+              resetForm();
+              onOpenChange(false);
+              if (onSuccess) {
+                onSuccess();
+              }
+              toast.success('Documento actualizado', {
+                description: 'El documento ha sido actualizado correctamente.'
+              });
             }
-            toast.success('Documento subido', {
-              description: 'El documento ha sido subido correctamente.'
-            });
           }
-        }
-      );
+        );
+      } else {
+        createDocumentMutation.mutate(
+          {
+            documentType: values.documentType,
+            file: values.file?.[0],
+            loanRequestId,
+            clientId,
+            fileName: values.fileName
+          },
+          {
+            onSuccess: () => {
+              resetForm();
+              onOpenChange(false);
+              if (onSuccess) {
+                onSuccess();
+              }
+              toast.success('Documento subido', {
+                description: 'El documento ha sido subido correctamente.'
+              });
+            }
+          }
+        );
+      }
     },
     [
       createDocumentMutation,
+      updateDocumentMutation,
       resetForm,
       onOpenChange,
       onSuccess,
       loanRequestId,
-      clientId
+      clientId,
+      mode,
+      document
     ]
   );
 
-  const isFormLocked = createDocumentMutation.isPending;
+  const isFormLocked =
+    createDocumentMutation.isPending || updateDocumentMutation.isPending;
 
   // Handle close button or dialog close
   const handleClose = useCallback(() => {
     if (isFormLocked) return; // Prevent closing if mutations are pending
     resetForm();
     createDocumentMutation.reset();
+    updateDocumentMutation.reset();
     onOpenChange(false);
-  }, [resetForm, onOpenChange, createDocumentMutation, isFormLocked]);
+  }, [
+    resetForm,
+    onOpenChange,
+    createDocumentMutation,
+    updateDocumentMutation,
+    isFormLocked
+  ]);
 
   // Initialize form when dialog opens
   useEffect(() => {
     if (open) {
-      form.reset({
-        documentType: undefined,
-        file: undefined,
-        fileName: ''
-      });
+      if (mode === 'create') {
+        form.reset({
+          documentType: undefined,
+          file: undefined,
+          fileName: ''
+        });
+      } else if (mode === 'edit' && document) {
+        form.reset({
+          documentType: document.documentType,
+          file: undefined,
+          fileName: document.fileName
+        });
+      }
     }
-  }, [open, form]);
+  }, [open, form, mode, document]);
 
   return (
     <Dialog
@@ -178,10 +232,12 @@ export default function DocumentUploadForm({
       >
         <DialogHeader>
           <DialogTitle className='text-lg md:text-xl'>
-            Cargar documento
+            {mode === 'edit' ? 'Editar documento' : 'Cargar documento'}
           </DialogTitle>
           <DialogDescription className='text-sm md:text-base'>
-            Seleccione el tipo de documento y el archivo que desea cargar.
+            {mode === 'edit'
+              ? 'Modifique el nombre y tipo del documento.'
+              : 'Seleccione el tipo de documento y el archivo que desea cargar.'}
           </DialogDescription>
         </DialogHeader>
 
@@ -237,35 +293,39 @@ export default function DocumentUploadForm({
               )}
             />
 
-            <FormField
-              control={form.control}
-              name='file'
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Archivo</FormLabel>
-                  <FormControl>
-                    <FileUploader
-                      value={field.value}
-                      onValueChange={field.onChange}
-                      maxFiles={1}
-                      maxSize={MAX_FILE_SIZE}
-                      accept={{
-                        'application/pdf': ['.pdf'],
-                        'image/jpeg': ['.jpg', '.jpeg'],
-                        'image/png': ['.png']
-                      }}
-                      disabled={isFormLocked}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {mode === 'create' && (
+              <FormField
+                control={form.control}
+                name='file'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Archivo</FormLabel>
+                    <FormControl>
+                      <FileUploader
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        maxFiles={1}
+                        maxSize={MAX_FILE_SIZE}
+                        accept={{
+                          'application/pdf': ['.pdf'],
+                          'image/jpeg': ['.jpg', '.jpeg'],
+                          'image/png': ['.png']
+                        }}
+                        disabled={isFormLocked}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
-            {createDocumentMutation.error && (
+            {(createDocumentMutation.error || updateDocumentMutation.error) && (
               <Alert variant='destructive'>
                 <AlertDescription>
-                  {String(createDocumentMutation.error)}
+                  {String(
+                    createDocumentMutation.error || updateDocumentMutation.error
+                  )}
                 </AlertDescription>
               </Alert>
             )}
@@ -288,7 +348,13 @@ export default function DocumentUploadForm({
                 ) : (
                   <SaveIcon className='mr-2 h-4 w-4' />
                 )}
-                {isFormLocked ? 'Subiendo...' : 'Subir documento'}
+                {isFormLocked
+                  ? mode === 'edit'
+                    ? 'Actualizando...'
+                    : 'Subiendo...'
+                  : mode === 'edit'
+                    ? 'Actualizar documento'
+                    : 'Subir documento'}
               </Button>
             </div>
           </form>

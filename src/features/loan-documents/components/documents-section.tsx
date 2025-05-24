@@ -1,9 +1,9 @@
 import { FileText, Grid, List } from 'lucide-react';
-import { DocumentViewer } from '@/features/loan-requests/components/document-viewer';
 import { LoanDocument } from 'types/LoanDocument';
 import UploadDocumentButton from './upload-document-button';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
+import DocumentViewer from '@/features/loan-requests/components/document-viewer';
 
 type ViewMode = 'grid' | 'list';
 
@@ -22,7 +22,7 @@ export function DocumentsSection({
   onDocumentUploaded,
   onDocumentDeleted
 }: DocumentsSectionProps) {
-  const [viewMode, setViewMode] = useState<ViewMode>('grid');
+  const [viewMode, setViewMode] = useState<ViewMode>('list');
 
   if (!documents || documents.length === 0) {
     return (
@@ -58,20 +58,20 @@ export function DocumentsSection({
           </h3>
           <div className='flex items-center gap-1 rounded-lg border p-1'>
             <Button
-              variant={viewMode === 'grid' ? 'default' : 'ghost'}
-              size='sm'
-              onClick={() => setViewMode('grid')}
-              className='h-8 w-8 p-0'
-            >
-              <Grid className='h-4 w-4' />
-            </Button>
-            <Button
               variant={viewMode === 'list' ? 'default' : 'ghost'}
               size='sm'
               onClick={() => setViewMode('list')}
               className='h-8 w-8 p-0'
             >
               <List className='h-4 w-4' />
+            </Button>
+            <Button
+              variant={viewMode === 'grid' ? 'default' : 'ghost'}
+              size='sm'
+              onClick={() => setViewMode('grid')}
+              className='h-8 w-8 p-0'
+            >
+              <Grid className='h-4 w-4' />
             </Button>
           </div>
         </div>
@@ -95,6 +95,7 @@ export function DocumentsSection({
             key={doc.id}
             document={doc}
             onDocumentDeleted={onDocumentDeleted}
+            onDocumentUpdated={onDocumentUploaded}
             viewMode={viewMode}
           />
         ))}

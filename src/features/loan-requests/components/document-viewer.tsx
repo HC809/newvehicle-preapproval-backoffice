@@ -1,49 +1,58 @@
 import { useState } from 'react';
-import { Eye, Download, Loader2, Trash2 } from 'lucide-react';
+import {
+  Eye,
+  Download,
+  Loader2,
+  Trash2,
+  Pencil,
+  FileText,
+  FileImage
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { useDocumentContent } from '../api/loan-request-service';
 import { useDeleteLoanDocument } from '@/features/loan-documents/api/loan-document-service';
 import useAxios from '@/hooks/use-axios';
-import { getDocumentIcon } from '@/utils/document-utils';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale/es';
-import Image from 'next/image';
 import {
   LoanDocument,
   DocumentType,
   documentTypeTranslations
 } from 'types/LoanDocument';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle
-} from '@/components/ui/dialog';
 import { AlertModal } from '@/components/modal/alert-modal';
+import DocumentUploadForm from '@/features/loan-documents/components/document-upload-form';
 
 type ViewMode = 'grid' | 'list';
 
 interface DocumentViewerProps {
   document: LoanDocument;
   onDocumentDeleted?: () => void;
+  onDocumentUpdated?: () => void;
   viewMode?: ViewMode;
 }
 
-export const DocumentViewer = ({
+const getDocumentIcon = (contentType: string) => {
+  if (contentType.startsWith('image/')) {
+    return <FileImage className='h-6 w-6 text-blue-500' />;
+  }
+  return <FileText className='h-6 w-6 text-red-500' />;
+};
+
+export default function DocumentViewer({
   document: doc,
   onDocumentDeleted,
+  onDocumentUpdated,
   viewMode = 'grid'
-}: DocumentViewerProps) => {
+}: DocumentViewerProps) {
   const apiClient = useAxios();
   const [loadingDocumentId, setLoadingDocumentId] = useState<string | null>(
     null
   );
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
-  const [showImageModal, setShowImageModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
-  const { refetch } = useDocumentContent(apiClient, doc.id);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const { data: documentContent } = useDocumentContent(apiClient, doc.id);
   const deleteDocumentMutation = useDeleteLoanDocument(apiClient);
 
   const isImage = doc.contentType.startsWith('image/');
@@ -51,13 +60,12 @@ export const DocumentViewer = ({
   const handleViewDocument = async (download = false) => {
     try {
       setLoadingDocumentId(doc.id);
-      const { data } = await refetch();
 
-      if (!data) {
+      if (!documentContent) {
         throw new Error('No se pudo obtener el documento');
       }
 
-      const { blob, fileName } = data;
+      const { blob, fileName } = documentContent;
       const blobUrl = URL.createObjectURL(blob);
 
       if (download) {
@@ -75,12 +83,8 @@ export const DocumentViewer = ({
         }, 100);
 
         toast.success(`Documento "${fileName}" descargado correctamente`);
-      } else if (isImage) {
-        // Mostrar imagen en el modal
-        setImageUrl(blobUrl);
-        setShowImageModal(true);
       } else {
-        // Abrir en una nueva pestaña (PDFs y otros formatos)
+        // Abrir en una nueva pestaña
         const link = document.createElement('a');
         link.href = blobUrl;
         link.target = '_blank';
@@ -120,17 +124,6 @@ export const DocumentViewer = ({
     }
   };
 
-  // Limpieza de recursos al cerrar el modal de imagen
-  const handleCloseImageModal = () => {
-    if (imageUrl) {
-      // Dar tiempo para que el modal se cierre completamente
-      setTimeout(() => {
-        URL.revokeObjectURL(imageUrl);
-        setImageUrl(null);
-      }, 300);
-    }
-  };
-
   const handleCloseDeleteModal = () => {
     if (!deleteDocumentMutation.isPending) {
       setShowDeleteModal(false);
@@ -148,7 +141,7 @@ export const DocumentViewer = ({
             </div>
             <div className='flex flex-col'>
               <span
-                className='line-clamp-1 max-w-[200px] text-wrap break-words font-medium'
+                className='line-clamp-1 max-w-[400px] text-wrap break-words font-medium'
                 title={doc.fileName}
               >
                 {doc.fileName}
@@ -183,7 +176,7 @@ export const DocumentViewer = ({
               ) : (
                 <Eye className='h-4 w-4' />
               )}
-              <span>Ver</span>
+              <span className='hidden sm:inline'>Ver</span>
             </Button>
             <Button
               variant='outline'
@@ -198,7 +191,18 @@ export const DocumentViewer = ({
               ) : (
                 <Download className='h-4 w-4' />
               )}
-              <span>Descargar</span>
+              <span className='hidden sm:inline'>Descargar</span>
+            </Button>
+            <Button
+              variant='outline'
+              size='sm'
+              className='flex items-center justify-center gap-1 text-primary hover:bg-primary/10 hover:text-primary dark:hover:bg-primary/20'
+              onClick={() => setIsEditDialogOpen(true)}
+              disabled={loadingDocumentId === doc.id}
+              title='Editar documento'
+            >
+              <Pencil className='h-4 w-4' />
+              <span className='hidden sm:inline'>Editar</span>
             </Button>
             <Button
               variant='outline'
@@ -213,38 +217,10 @@ export const DocumentViewer = ({
               ) : (
                 <Trash2 className='h-4 w-4' />
               )}
-              <span>Eliminar</span>
+              <span className='hidden sm:inline'>Eliminar</span>
             </Button>
           </div>
         </div>
-
-        {/* Modal para visualizar imágenes */}
-        <Dialog
-          open={showImageModal}
-          onOpenChange={(open) => {
-            setShowImageModal(open);
-            if (!open) handleCloseImageModal();
-          }}
-        >
-          <DialogContent className='flex h-[80vh] flex-col sm:max-w-[80vw]'>
-            <DialogHeader>
-              <DialogTitle>{doc.fileName}</DialogTitle>
-            </DialogHeader>
-            <div className='flex flex-1 items-center justify-center overflow-auto p-4'>
-              {imageUrl && (
-                <Image
-                  src={imageUrl}
-                  alt={doc.fileName}
-                  className='max-h-full max-w-full object-contain'
-                  width={1200}
-                  height={900}
-                  style={{ maxHeight: 'calc(80vh - 80px)' }}
-                  priority
-                />
-              )}
-            </div>
-          </DialogContent>
-        </Dialog>
 
         {/* Modal de confirmación para eliminar documento */}
         <AlertModal
@@ -260,6 +236,26 @@ export const DocumentViewer = ({
           cancelLabel='Cancelar'
           error={deleteError}
           intent='delete'
+        />
+
+        <DocumentUploadForm
+          open={isEditDialogOpen}
+          onOpenChange={setIsEditDialogOpen}
+          mode='edit'
+          document={{
+            id: doc.id,
+            fileName: doc.fileName,
+            documentType: doc.documentType as DocumentType
+          }}
+          onSuccess={() => {
+            setIsEditDialogOpen(false);
+            if (onDocumentUpdated) {
+              onDocumentUpdated();
+            }
+            toast.success('Documento actualizado', {
+              description: 'El documento ha sido actualizado correctamente.'
+            });
+          }}
         />
       </>
     );
@@ -286,7 +282,7 @@ export const DocumentViewer = ({
             locale: es
           })}
         </span>
-        <div className='mt-2 grid w-full grid-cols-3 gap-1'>
+        <div className='mt-2 grid w-full grid-cols-4 gap-1'>
           <Button
             variant='outline'
             size='sm'
@@ -302,7 +298,6 @@ export const DocumentViewer = ({
             ) : (
               <Eye className='h-4 w-4' />
             )}
-            <span>Ver</span>
           </Button>
           <Button
             variant='outline'
@@ -317,7 +312,16 @@ export const DocumentViewer = ({
             ) : (
               <Download className='h-4 w-4' />
             )}
-            <span>Descargar</span>
+          </Button>
+          <Button
+            variant='outline'
+            size='sm'
+            className='flex items-center justify-center gap-1 text-primary hover:bg-primary/10 hover:text-primary dark:hover:bg-primary/20'
+            onClick={() => setIsEditDialogOpen(true)}
+            disabled={loadingDocumentId === doc.id}
+            title='Editar documento'
+          >
+            <Pencil className='h-4 w-4' />
           </Button>
           <Button
             variant='outline'
@@ -332,38 +336,9 @@ export const DocumentViewer = ({
             ) : (
               <Trash2 className='h-4 w-4' />
             )}
-            <span>Eliminar</span>
           </Button>
         </div>
       </div>
-
-      {/* Modal para visualizar imágenes */}
-      <Dialog
-        open={showImageModal}
-        onOpenChange={(open) => {
-          setShowImageModal(open);
-          if (!open) handleCloseImageModal();
-        }}
-      >
-        <DialogContent className='flex h-[80vh] flex-col sm:max-w-[80vw]'>
-          <DialogHeader>
-            <DialogTitle>{doc.fileName}</DialogTitle>
-          </DialogHeader>
-          <div className='flex flex-1 items-center justify-center overflow-auto p-4'>
-            {imageUrl && (
-              <Image
-                src={imageUrl}
-                alt={doc.fileName}
-                className='max-h-full max-w-full object-contain'
-                width={1200}
-                height={900}
-                style={{ maxHeight: 'calc(80vh - 80px)' }}
-                priority
-              />
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
 
       {/* Modal de confirmación para eliminar documento */}
       <AlertModal
@@ -380,6 +355,26 @@ export const DocumentViewer = ({
         error={deleteError}
         intent='delete'
       />
+
+      <DocumentUploadForm
+        open={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+        mode='edit'
+        document={{
+          id: doc.id,
+          fileName: doc.fileName,
+          documentType: doc.documentType as DocumentType
+        }}
+        onSuccess={() => {
+          setIsEditDialogOpen(false);
+          if (onDocumentUpdated) {
+            onDocumentUpdated();
+          }
+          toast.success('Documento actualizado', {
+            description: 'El documento ha sido actualizado correctamente.'
+          });
+        }}
+      />
     </>
   );
-};
+}
