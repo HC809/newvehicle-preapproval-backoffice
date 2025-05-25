@@ -65,7 +65,15 @@ export const LoanRequestColumns = (
     },
     {
       accessorKey: 'dni',
-      header: () => <span className='font-bold'>DNI</span>
+      header: () => <span className='font-bold'>DNI</span>,
+      cell: ({ row }) => (
+        <div className='flex items-center gap-2'>
+          <span>{row.original.dni}</span>
+          {row.original.clientName && (
+            <span className='text-gray-500'>- {row.original.clientName}</span>
+          )}
+        </div>
+      )
     },
     // {
     //   accessorKey: 'city',

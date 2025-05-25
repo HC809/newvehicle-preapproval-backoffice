@@ -81,8 +81,13 @@ function LoanRequestContent() {
       // Filtro por DNI (caso insensitivo y eliminando espacios)
       if (dniFilter && dniFilter.trim() !== '') {
         const normalizedDni = request.dni.toLowerCase().trim();
+        const normalizedClientName =
+          request.clientName?.toLowerCase().trim() || '';
         const normalizedFilter = dniFilter.toLowerCase().trim();
-        if (!normalizedDni.includes(normalizedFilter)) {
+        if (
+          !normalizedDni.includes(normalizedFilter) &&
+          !normalizedClientName.includes(normalizedFilter)
+        ) {
           return false;
         }
       }

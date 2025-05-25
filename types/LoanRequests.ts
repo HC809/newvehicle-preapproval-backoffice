@@ -30,6 +30,7 @@ export interface LoanRequest {
   dealershipName: string;
   creatorName: string;
   managerName: string;
+  clientName: string;
   dni: string;
   vehicleTypeId: string;
   vehicleTypeName: string;
