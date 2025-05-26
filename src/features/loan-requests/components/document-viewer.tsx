@@ -15,11 +15,18 @@ import { useDeleteLoanDocument } from '@/features/loan-documents/api/loan-docume
 import useAxios from '@/hooks/use-axios';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale/es';
+import Image from 'next/image';
 import {
   LoanDocument,
   DocumentType,
   documentTypeTranslations
 } from 'types/LoanDocument';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle
+} from '@/components/ui/dialog';
 import { AlertModal } from '@/components/modal/alert-modal';
 import DocumentUploadForm from '@/features/loan-documents/components/document-upload-form';
 
@@ -49,26 +56,29 @@ export default function DocumentViewer({
   const [loadingDocumentId, setLoadingDocumentId] = useState<string | null>(
     null
   );
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [showImageModal, setShowImageModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const { data: documentContent } = useDocumentContent(apiClient, doc.id);
+  const { refetch } = useDocumentContent(apiClient, doc.id);
   const deleteDocumentMutation = useDeleteLoanDocument(apiClient);
 
   const isImage = doc.contentType.startsWith('image/');
 
-  const handleViewDocument = async (download = false) => {
+  const handleViewDocument = async (isDownload: boolean) => {
     try {
       setLoadingDocumentId(doc.id);
+      const { data } = await refetch();
 
-      if (!documentContent) {
+      if (!data) {
         throw new Error('No se pudo obtener el documento');
       }
 
-      const { blob, fileName } = documentContent;
+      const { blob, fileName } = data;
       const blobUrl = URL.createObjectURL(blob);
 
-      if (download) {
+      if (isDownload) {
         // Descargar el archivo
         const link = document.createElement('a');
         link.href = blobUrl;
@@ -83,8 +93,12 @@ export default function DocumentViewer({
         }, 100);
 
         toast.success(`Documento "${fileName}" descargado correctamente`);
+      } else if (isImage) {
+        // Mostrar imagen en el modal
+        setImageUrl(blobUrl);
+        setShowImageModal(true);
       } else {
-        // Abrir en una nueva pestaña
+        // Abrir PDF en una nueva pestaña
         const link = document.createElement('a');
         link.href = blobUrl;
         link.target = '_blank';
@@ -128,6 +142,14 @@ export default function DocumentViewer({
     if (!deleteDocumentMutation.isPending) {
       setShowDeleteModal(false);
       setDeleteError(null);
+    }
+  };
+
+  // Limpieza de recursos al cerrar el modal de imagen
+  const handleCloseImageModal = () => {
+    if (imageUrl) {
+      URL.revokeObjectURL(imageUrl);
+      setImageUrl(null);
     }
   };
 
@@ -221,6 +243,35 @@ export default function DocumentViewer({
             </Button>
           </div>
         </div>
+
+        {/* Modal para visualizar imágenes */}
+        <Dialog
+          open={showImageModal}
+          onOpenChange={(open) => {
+            setShowImageModal(open);
+            if (!open) handleCloseImageModal();
+          }}
+        >
+          <DialogContent className='flex h-[80vh] flex-col sm:max-w-[80vw]'>
+            <DialogHeader>
+              <DialogTitle>{doc.fileName}</DialogTitle>
+            </DialogHeader>
+            <div className='flex flex-1 items-center justify-center overflow-auto p-4'>
+              {imageUrl && (
+                <Image
+                  src={imageUrl}
+                  alt={doc.fileName}
+                  className='max-h-full max-w-full object-contain'
+                  width={1200}
+                  height={900}
+                  style={{ maxHeight: 'calc(80vh - 80px)' }}
+                  priority
+                  unoptimized
+                />
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {/* Modal de confirmación para eliminar documento */}
         <AlertModal
@@ -339,6 +390,35 @@ export default function DocumentViewer({
           </Button>
         </div>
       </div>
+
+      {/* Modal para visualizar imágenes */}
+      <Dialog
+        open={showImageModal}
+        onOpenChange={(open) => {
+          setShowImageModal(open);
+          if (!open) handleCloseImageModal();
+        }}
+      >
+        <DialogContent className='flex h-[80vh] flex-col sm:max-w-[80vw]'>
+          <DialogHeader>
+            <DialogTitle>{doc.fileName}</DialogTitle>
+          </DialogHeader>
+          <div className='flex flex-1 items-center justify-center overflow-auto p-4'>
+            {imageUrl && (
+              <Image
+                src={imageUrl}
+                alt={doc.fileName}
+                className='max-h-full max-w-full object-contain'
+                width={1200}
+                height={900}
+                style={{ maxHeight: 'calc(80vh - 80px)' }}
+                priority
+                unoptimized
+              />
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Modal de confirmación para eliminar documento */}
       <AlertModal
