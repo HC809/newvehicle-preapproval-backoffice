@@ -496,7 +496,7 @@ export default function LoanRequestDetailPage() {
                   <Button
                     variant='outline'
                     onClick={() => setShowAssignVisitModal(true)}
-                    className='gap-2 bg-purple-700 text-white hover:bg-purple-800'
+                    className='gap-2 bg-purple-700 text-white hover:bg-purple-800 hover:text-white'
                   >
                     <Building className='h-4 w-4' />
                     Asignar Visita
@@ -529,10 +529,21 @@ export default function LoanRequestDetailPage() {
                     <Button
                       variant='destructive'
                       onClick={handleRejectLoan}
-                      className='gap-2'
+                      disabled={
+                        rejectByAgentMutation.isPending ||
+                        rejectByManagerMutation.isPending
+                      }
+                      className='gap-2 bg-red-600 text-white hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700'
                     >
-                      <XCircle className='h-4 w-4' />
-                      Rechazar
+                      {rejectByAgentMutation.isPending ||
+                      rejectByManagerMutation.isPending ? (
+                        'Rechazando...'
+                      ) : (
+                        <>
+                          <XCircle className='h-4 w-4' />
+                          Rechazar
+                        </>
+                      )}
                     </Button>
                   </>
                 )}
