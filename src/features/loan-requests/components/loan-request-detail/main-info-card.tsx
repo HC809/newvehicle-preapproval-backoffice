@@ -37,7 +37,9 @@ export const MainInfoCard = ({
 }: MainInfoCardProps) => {
   const [copiedId, setCopiedId] = useState(false);
   const showVisitTab =
-    loanRequest.status === LoanRequestStatus.VisitAssigned && visit;
+    (loanRequest.status === LoanRequestStatus.VisitAssigned ||
+      loanRequest.status === LoanRequestStatus.VisitRegistered) &&
+    visit;
   const showBranchManagerTab =
     loanRequest.status === LoanRequestStatus.BranchManagerReview && visit;
 
