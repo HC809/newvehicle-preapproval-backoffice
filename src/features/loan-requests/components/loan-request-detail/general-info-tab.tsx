@@ -53,7 +53,6 @@ export const GeneralInfoTab = ({
         value={
           <div className='flex items-center gap-2'>
             <span>{loanRequest.dni}</span>
-            {client && <span className='text-gray-500'>- {client.name}</span>}
             <button
               onClick={copyDNI}
               className='rounded-full p-1 hover:bg-gray-100 dark:hover:bg-gray-800'
