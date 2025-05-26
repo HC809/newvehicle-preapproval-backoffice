@@ -71,7 +71,7 @@ export default function NotificationList({
   const getNotificationTypeName = (type: LoanNotificationType): string => {
     switch (type) {
       case LoanNotificationType.StatusChanged:
-        return 'Estado Cambiado';
+        return 'Cambio de Estado';
       case LoanNotificationType.Message:
         return 'Mensaje';
       case LoanNotificationType.System:
@@ -87,9 +87,11 @@ export default function NotificationList({
       case LoanNotificationType.System:
         return <AlertTriangle className='h-5 w-5 text-destructive' />;
       case LoanNotificationType.Message:
-        return <MessageSquare className='h-5 w-5 text-secondary' />;
+        return (
+          <MessageSquare className='h-5 w-5 text-green-500 dark:text-green-400' />
+        );
       case LoanNotificationType.StatusChanged:
-        return <BellRing className='h-5 w-5 text-primary' />;
+        return <FileSymlink className='h-5 w-5 text-primary' />;
       default:
         return <BellRing className='h-5 w-5 text-muted-foreground' />;
     }
@@ -170,7 +172,7 @@ export default function NotificationList({
                               LoanNotificationType.StatusChanged
                             ? 'hsl(var(--primary))'
                             : notification.type === LoanNotificationType.Message
-                              ? 'hsl(var(--secondary))'
+                              ? 'rgb(34, 197, 94)'
                               : 'hsl(var(--muted))'
                     }}
                   >
