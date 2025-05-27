@@ -486,7 +486,8 @@ export default function LoanRequestDetailPage() {
                     LoanRequestStatus.RejectedByAgent,
                     LoanRequestStatus.RejectedByManager,
                     LoanRequestStatus.DeclinedByCustomer
-                  ].includes(loanRequestDetail.loanRequest.status) && (
+                  ].includes(loanRequestDetail.loanRequest.status) &&
+                  userRole !== UserRole.BranchManager && (
                     <Button
                       variant='outline'
                       onClick={() => setShowEditModal(true)}
@@ -560,30 +561,32 @@ export default function LoanRequestDetailPage() {
                   </Button>
                 )}
                 {renderChatButton()}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant='ghost'
-                      size='icon'
-                      disabled={[
-                        LoanRequestStatus.RejectedByAgent,
-                        LoanRequestStatus.RejectedByManager,
-                        LoanRequestStatus.DeclinedByCustomer
-                      ].includes(loanRequestDetail.loanRequest.status)}
-                    >
-                      <MoreVertical className='h-4 w-4' />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align='end'>
-                    <DropdownMenuItem
-                      onClick={handleRejectLoan}
-                      className='text-red-600 focus:text-red-600 dark:text-red-400 dark:focus:text-red-400'
-                    >
-                      <XCircle className='mr-2 h-4 w-4' />
-                      Rechazar solicitud
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                {userRole !== UserRole.BranchManager && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant='ghost'
+                        size='icon'
+                        disabled={[
+                          LoanRequestStatus.RejectedByAgent,
+                          LoanRequestStatus.RejectedByManager,
+                          LoanRequestStatus.DeclinedByCustomer
+                        ].includes(loanRequestDetail.loanRequest.status)}
+                      >
+                        <MoreVertical className='h-4 w-4' />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align='end'>
+                      <DropdownMenuItem
+                        onClick={handleRejectLoan}
+                        className='text-red-600 focus:text-red-600 dark:text-red-400 dark:focus:text-red-400'
+                      >
+                        <XCircle className='mr-2 h-4 w-4' />
+                        Rechazar solicitud
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
               </div>
             )}
           </div>
