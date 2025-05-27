@@ -10,7 +10,8 @@ import {
   Pencil,
   XCircle,
   Users,
-  MoreVertical
+  MoreVertical,
+  FileText
 } from 'lucide-react';
 import { toast } from 'sonner';
 import PageContainer from '@/components/layout/page-container';
@@ -38,7 +39,8 @@ import {
   useRejectByAgent,
   useApproveByManager,
   useRejectByManager,
-  useApproveForCommittee
+  useApproveForCommittee,
+  useAddBranchManagerComment
 } from '@/features/loan-requests/api/loan-request-service';
 import { useCalculateLoan } from '@/features/loan-requests/api/loan-calculation-service';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -58,6 +60,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
+import { BranchManagerCommentModal } from '@/features/loan-requests/components/branch-manager-comment-modal';
 
 export default function LoanRequestDetailPage() {
   const router = useRouter();
@@ -83,6 +86,8 @@ export default function LoanRequestDetailPage() {
   const [showAssignVisitModal, setShowAssignVisitModal] = useState(false);
   const [showCommitteeApprovalModal, setShowCommitteeApprovalModal] =
     useState(false);
+  const [showBranchManagerCommentModal, setShowBranchManagerCommentModal] =
+    useState(false);
 
   // Fetch loan request details from API
   const {
@@ -102,6 +107,9 @@ export default function LoanRequestDetailPage() {
   const approveByManagerMutation = useApproveByManager(apiClient!);
   const rejectByManagerMutation = useRejectByManager(apiClient!);
   const approveForCommitteeMutation = useApproveForCommittee(apiClient!);
+  const addBranchManagerCommentMutation = useAddBranchManagerComment(
+    apiClient!
+  );
 
   // Efecto para eliminar el resaltado en las tabs cuando se presiona una tecla
   // useEffect(() => {
@@ -340,6 +348,34 @@ export default function LoanRequestDetailPage() {
     }
   };
 
+  // Check if user can add branch manager comment
+  const canAddBranchManagerComment = (status: LoanRequestStatus) => {
+    if (!userRole) return false;
+    return (
+      userRole === UserRole.BranchManager &&
+      [
+        LoanRequestStatus.VisitRegistered,
+        LoanRequestStatus.BranchManagerReview
+      ].includes(status)
+    );
+  };
+
+  // Handle branch manager comment submission
+  const handleBranchManagerCommentSubmit = async (comment: string) => {
+    if (!loanRequestDetail) return;
+
+    try {
+      await addBranchManagerCommentMutation.mutateAsync({
+        loanRequestId: loanRequestDetail.loanRequest.id,
+        comment
+      });
+      await refetch();
+      toast.success('Comentario agregado exitosamente');
+    } catch (error: any) {
+      toast.error(error.message || 'Error al agregar el comentario');
+    }
+  };
+
   const canApproveReject = (status: LoanRequestStatus, request: any) => {
     if (!userRole) return false;
 
@@ -560,6 +596,18 @@ export default function LoanRequestDetailPage() {
                     )}
                   </Button>
                 )}
+                {canAddBranchManagerComment(
+                  loanRequestDetail.loanRequest.status
+                ) && (
+                  <Button
+                    variant='outline'
+                    onClick={() => setShowBranchManagerCommentModal(true)}
+                    className='gap-2 border-blue-600 text-blue-600 hover:bg-blue-50 dark:border-blue-500 dark:text-blue-500 dark:hover:bg-gray-800'
+                  >
+                    <FileText className='h-4 w-4' />
+                    Agregar Comentario
+                  </Button>
+                )}
                 {renderChatButton()}
                 {userRole !== UserRole.BranchManager && (
                   <DropdownMenu>
@@ -764,6 +812,18 @@ export default function LoanRequestDetailPage() {
                 onSuccess={() => {
                   refetch();
                 }}
+              />
+
+              <BranchManagerCommentModal
+                isOpen={showBranchManagerCommentModal}
+                onClose={() => {
+                  if (!addBranchManagerCommentMutation.isPending) {
+                    setShowBranchManagerCommentModal(false);
+                  }
+                }}
+                onSubmit={handleBranchManagerCommentSubmit}
+                isSubmitting={addBranchManagerCommentMutation.isPending}
+                error={addBranchManagerCommentMutation.error?.toString()}
               />
             </>
           )}

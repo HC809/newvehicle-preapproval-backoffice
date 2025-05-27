@@ -307,3 +307,29 @@ export const useApproveForCommittee = (apiClient: AxiosInstance) => {
     }
   });
 };
+
+export const useAddBranchManagerComment = (apiClient: AxiosInstance) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      loanRequestId,
+      comment
+    }: {
+      loanRequestId: string;
+      comment: string;
+    }) => {
+      const response = await apiClient.post(
+        `/loan-requests/add-branch-manager-comment/${loanRequestId}`,
+        { comment }
+      );
+      return response.data;
+    },
+    onSuccess: (_, variables) => {
+      // Invalidate the specific loan request to update its details
+      queryClient.invalidateQueries({
+        queryKey: [LOAN_REQUESTS_KEY, 'detail', variables.loanRequestId]
+      });
+    }
+  });
+};
