@@ -188,14 +188,15 @@ export const useApproveByAgent = (apiClient: AxiosInstance) => {
 };
 
 export const useRejectByAgent = (apiClient: AxiosInstance) => {
-  return useMutation({
-    mutationFn: async ({
-      loanRequestId,
-      rejectionReason
-    }: {
+  return useMutation<
+    string,
+    string,
+    {
       loanRequestId: string;
       rejectionReason: string;
-    }) => {
+    }
+  >({
+    mutationFn: async ({ loanRequestId, rejectionReason }) => {
       const response = await apiClient.post(
         `/loan-requests/reject-by-agent/${loanRequestId}`,
         { rejectionReason }
@@ -217,14 +218,15 @@ export const useApproveByManager = (apiClient: AxiosInstance) => {
 };
 
 export const useRejectByManager = (apiClient: AxiosInstance) => {
-  return useMutation({
-    mutationFn: async ({
-      loanRequestId,
-      rejectionReason
-    }: {
+  return useMutation<
+    string,
+    string,
+    {
       loanRequestId: string;
       rejectionReason: string;
-    }) => {
+    }
+  >({
+    mutationFn: async ({ loanRequestId, rejectionReason }) => {
       const response = await apiClient.post(
         `/loan-requests/reject-by-manager/${loanRequestId}`,
         { rejectionReason }

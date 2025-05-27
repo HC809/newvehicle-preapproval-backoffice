@@ -9,7 +9,8 @@ import {
   History,
   Pencil,
   XCircle,
-  Users
+  Users,
+  MoreVertical
 } from 'lucide-react';
 import { toast } from 'sonner';
 import PageContainer from '@/components/layout/page-container';
@@ -51,6 +52,12 @@ import { LoanRequestEditForm } from '@/features/loan-requests/components';
 import AssignVisitForm from '@/features/loan-requests/components/assign-visit-form';
 import { ChatButton } from '@/features/chat/ChatButton';
 import { DocumentsSection } from '@/features/loan-documents/components/documents-section';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from '@/components/ui/dropdown-menu';
 
 export default function LoanRequestDetailPage() {
   const router = useRouter();
@@ -474,7 +481,12 @@ export default function LoanRequestDetailPage() {
               <div className='flex items-center gap-2'>
                 {loanRequestDetail.loanRequest.equifaxChecked &&
                   loanRequestDetail.loanRequest.bantotalChecked &&
-                  loanRequestDetail.loanRequest.financingCalculated && (
+                  loanRequestDetail.loanRequest.financingCalculated &&
+                  ![
+                    LoanRequestStatus.RejectedByAgent,
+                    LoanRequestStatus.RejectedByManager,
+                    LoanRequestStatus.DeclinedByCustomer
+                  ].includes(loanRequestDetail.loanRequest.status) && (
                     <Button
                       variant='outline'
                       onClick={() => setShowEditModal(true)}
@@ -526,25 +538,6 @@ export default function LoanRequestDetailPage() {
                         </>
                       )}
                     </Button>
-                    <Button
-                      variant='destructive'
-                      onClick={handleRejectLoan}
-                      disabled={
-                        rejectByAgentMutation.isPending ||
-                        rejectByManagerMutation.isPending
-                      }
-                      className='gap-2 bg-red-600 text-white hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700'
-                    >
-                      {rejectByAgentMutation.isPending ||
-                      rejectByManagerMutation.isPending ? (
-                        'Rechazando...'
-                      ) : (
-                        <>
-                          <XCircle className='h-4 w-4' />
-                          Rechazar
-                        </>
-                      )}
-                    </Button>
                   </>
                 )}
                 {canApproveForCommittee(
@@ -567,6 +560,30 @@ export default function LoanRequestDetailPage() {
                   </Button>
                 )}
                 {renderChatButton()}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant='ghost'
+                      size='icon'
+                      disabled={[
+                        LoanRequestStatus.RejectedByAgent,
+                        LoanRequestStatus.RejectedByManager,
+                        LoanRequestStatus.DeclinedByCustomer
+                      ].includes(loanRequestDetail.loanRequest.status)}
+                    >
+                      <MoreVertical className='h-4 w-4' />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align='end'>
+                    <DropdownMenuItem
+                      onClick={handleRejectLoan}
+                      className='text-red-600 focus:text-red-600 dark:text-red-400 dark:focus:text-red-400'
+                    >
+                      <XCircle className='mr-2 h-4 w-4' />
+                      Rechazar solicitud
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             )}
           </div>
@@ -685,6 +702,11 @@ export default function LoanRequestDetailPage() {
                 isSubmitting={
                   rejectByAgentMutation.isPending ||
                   rejectByManagerMutation.isPending
+                }
+                error={
+                  isManagerRejection
+                    ? rejectByManagerMutation.error
+                    : rejectByAgentMutation.error
                 }
               />
 

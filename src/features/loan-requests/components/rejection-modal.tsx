@@ -21,6 +21,7 @@ import {
   FormMessage
 } from '@/components/ui/form';
 import { Loader2 } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const FormSchema = z.object({
   rejectionReason: z.string().min(1, {
@@ -35,6 +36,7 @@ interface RejectionModalProps {
   title?: string;
   description?: string;
   isSubmitting?: boolean;
+  error?: string | null;
 }
 
 export function RejectionModal({
@@ -43,7 +45,8 @@ export function RejectionModal({
   onSubmit,
   title,
   description,
-  isSubmitting
+  isSubmitting,
+  error
 }: RejectionModalProps) {
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -102,7 +105,6 @@ export function RejectionModal({
                     <Textarea
                       {...field}
                       placeholder='Ingrese la razón del rechazo...'
-                      //onKeyDown={(e) => e.stopPropagation()}
                       disabled={isSubmitting}
                     />
                   </FormControl>
@@ -110,6 +112,12 @@ export function RejectionModal({
                 </FormItem>
               )}
             />
+
+            {error && (
+              <Alert variant='destructive'>
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
 
             <DialogFooter>
               <Button
