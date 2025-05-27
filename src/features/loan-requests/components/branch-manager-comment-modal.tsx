@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -17,6 +17,7 @@ interface BranchManagerCommentModalProps {
   onSubmit: (comment: string) => Promise<void>;
   isSubmitting: boolean;
   error?: string | null;
+  existingComment?: string | null;
 }
 
 export function BranchManagerCommentModal({
@@ -24,9 +25,18 @@ export function BranchManagerCommentModal({
   onClose,
   onSubmit,
   isSubmitting,
-  error
+  error,
+  existingComment
 }: BranchManagerCommentModalProps) {
   const [comment, setComment] = useState('');
+
+  useEffect(() => {
+    if (isOpen && existingComment) {
+      setComment(existingComment);
+    } else {
+      setComment('');
+    }
+  }, [isOpen, existingComment]);
 
   const handleSubmit = async () => {
     if (!comment.trim()) {
@@ -43,13 +53,19 @@ export function BranchManagerCommentModal({
     }
   };
 
+  const isEditing = !!existingComment;
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Agregar Comentario</DialogTitle>
+          <DialogTitle>
+            {isEditing ? 'Editar Comentario' : 'Agregar Comentario'}
+          </DialogTitle>
           <DialogDescription>
-            Por favor, ingrese su comentario sobre la solicitud de préstamo.
+            {isEditing
+              ? 'Modifique el comentario sobre la solicitud de préstamo.'
+              : 'Por favor, ingrese su comentario sobre la solicitud de préstamo.'}
           </DialogDescription>
         </DialogHeader>
 
@@ -68,7 +84,11 @@ export function BranchManagerCommentModal({
             Cancelar
           </Button>
           <Button onClick={handleSubmit} disabled={isSubmitting}>
-            {isSubmitting ? 'Enviando...' : 'Enviar Comentario'}
+            {isSubmitting
+              ? 'Enviando...'
+              : isEditing
+                ? 'Guardar Cambios'
+                : 'Enviar Comentario'}
           </Button>
         </DialogFooter>
       </DialogContent>

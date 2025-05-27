@@ -1,12 +1,17 @@
 import { InfoItem } from '@/components/custom/info-item';
 import { Visit } from 'types/LoanRequests';
-import { MapPin, Building, User } from 'lucide-react';
+import { MapPin, Building, User, FileText } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 interface VisitInfoTabProps {
   visit: Visit;
+  branchManagerComment?: string | null;
 }
 
-export const VisitInfoTab = ({ visit }: VisitInfoTabProps) => {
+export const VisitInfoTab = ({
+  visit,
+  branchManagerComment
+}: VisitInfoTabProps) => {
   return (
     <div className='space-y-6'>
       {/* Sección de sucursal */}
@@ -52,6 +57,23 @@ export const VisitInfoTab = ({ visit }: VisitInfoTabProps) => {
           )}
         </div>
       </div>
+
+      {/* Sección de comentario del gerente */}
+      {branchManagerComment && (
+        <div>
+          <h3 className='mb-3 border-b pb-2 text-sm font-medium text-muted-foreground'>
+            Comentario del Gerente
+          </h3>
+          <div className='rounded-lg border border-green-200 bg-green-50 p-4 dark:border-green-800 dark:bg-green-900/20'>
+            <div className='flex items-start gap-3'>
+              <FileText className='mt-0.5 h-4 w-4 text-green-600 dark:text-green-400' />
+              <p className='text-sm text-green-700 dark:text-green-300'>
+                {branchManagerComment}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

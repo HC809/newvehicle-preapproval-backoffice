@@ -47,6 +47,7 @@ export interface LoanRequest {
   incomeType: IncomeType | null;
   city: string;
   comment: string;
+  branchManagerComment: string | null;
   status: LoanRequestStatus;
   rejectionReason: string | null;
   createdAt: string;

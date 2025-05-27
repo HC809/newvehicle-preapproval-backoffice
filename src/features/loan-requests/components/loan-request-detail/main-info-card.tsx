@@ -28,12 +28,14 @@ interface MainInfoCardProps {
   loanRequest: LoanRequest;
   client?: Client;
   visit?: Visit;
+  branchManagerComment?: string | null;
 }
 
 export const MainInfoCard = ({
   loanRequest,
   client,
-  visit
+  visit,
+  branchManagerComment
 }: MainInfoCardProps) => {
   const [copiedId, setCopiedId] = useState(false);
   const showVisitTab =
@@ -140,7 +142,16 @@ export const MainInfoCard = ({
               value='visit'
               className='mt-4 space-y-4 focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0'
             >
-              <VisitInfoTab visit={visit} />
+              {visit ? (
+                <VisitInfoTab
+                  visit={visit}
+                  branchManagerComment={branchManagerComment}
+                />
+              ) : (
+                <div className='py-4 text-center text-muted-foreground'>
+                  No hay información de visita disponible
+                </div>
+              )}
             </TabsContent>
           )}
 

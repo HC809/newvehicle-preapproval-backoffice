@@ -605,7 +605,9 @@ export default function LoanRequestDetailPage() {
                     className='gap-2 border-blue-600 text-blue-600 hover:bg-blue-50 dark:border-blue-500 dark:text-blue-500 dark:hover:bg-gray-800'
                   >
                     <FileText className='h-4 w-4' />
-                    Agregar Comentario
+                    {loanRequestDetail.loanRequest.branchManagerComment
+                      ? 'Editar Comentario'
+                      : 'Agregar Comentario'}
                   </Button>
                 )}
                 {renderChatButton()}
@@ -671,6 +673,9 @@ export default function LoanRequestDetailPage() {
                   loanRequest={loanRequestDetail.loanRequest}
                   client={loanRequestDetail.client}
                   visit={loanRequestDetail.visit}
+                  branchManagerComment={
+                    loanRequestDetail.loanRequest.branchManagerComment
+                  }
                 />
                 <RejectionAlert
                   rejectionReason={
@@ -824,6 +829,9 @@ export default function LoanRequestDetailPage() {
                 onSubmit={handleBranchManagerCommentSubmit}
                 isSubmitting={addBranchManagerCommentMutation.isPending}
                 error={addBranchManagerCommentMutation.error?.toString()}
+                existingComment={
+                  loanRequestDetail.loanRequest.branchManagerComment
+                }
               />
             </>
           )}
