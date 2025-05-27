@@ -79,22 +79,18 @@ export const LoanRequestColumns = (
     //   accessorKey: 'city',
     //   header: () => <span className='font-bold'>Ciudad</span>
     // },
-    {
-      accessorKey: 'vehicleTypeName',
-      header: () => <span className='font-bold'>Tipo de Vehículo</span>
-    },
-    // {
-    //   accessorKey: 'vehicleBrand',
-    //   header: () => <span className='font-bold'>Marca</span>
-    // },
-    // {
-    //   accessorKey: 'vehicleModel',
-    //   header: () => <span className='font-bold'>Modelo</span>
-    // },
-    {
-      accessorKey: 'vehicleYear',
-      header: () => <span className='font-bold'>Año</span>
-    },
+    ...(isBranchManager
+      ? []
+      : [
+          {
+            accessorKey: 'vehicleTypeName',
+            header: () => <span className='font-bold'>Tipo de Vehículo</span>
+          },
+          {
+            accessorKey: 'vehicleYear',
+            header: () => <span className='font-bold'>Año</span>
+          }
+        ]),
     {
       accessorKey: 'requestedAmount',
       header: () => <span className='font-bold'>Valor del Vehículo</span>,
@@ -146,6 +142,23 @@ export const LoanRequestColumns = (
     }
   };
 
+  // Columna para mostrar si el gerente de agencia ya revisó la solicitud
+  const reviewStatusColumn: ColumnDef<LoanRequest> = {
+    accessorKey: 'branchManagerComment',
+    header: () => <span className='font-bold'>Revisión</span>,
+    cell: ({ row }) => {
+      const hasReviewed = !!row.original.branchManagerComment;
+      return (
+        <Badge
+          variant={hasReviewed ? 'success' : 'secondary'}
+          className={`min-w-[120px] justify-center`}
+        >
+          {hasReviewed ? 'Revisado' : 'Pendiente'}
+        </Badge>
+      );
+    }
+  };
+
   // Columna de responsable que se mostrará condicionalmente
   const managerColumn: ColumnDef<LoanRequest> = {
     accessorKey: 'managerName',
@@ -171,6 +184,7 @@ export const LoanRequestColumns = (
   // Insertar la columna de tipo de ingreso antes de fecha de solicitud si el usuario es gerente de agencia
   if (isBranchManager) {
     finalColumns.splice(createdAtColumnIndex, 0, incomeTypeColumn);
+    finalColumns.splice(createdAtColumnIndex + 1, 0, reviewStatusColumn);
   }
 
   // Agregar la columna de manager después de status si es necesario
