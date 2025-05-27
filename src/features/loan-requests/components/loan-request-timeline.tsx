@@ -46,6 +46,8 @@ const getEventTypeTranslation = (eventType: string) => {
       return 'Subida de Documento';
     case 'FileDeleted':
       return 'Documento Eliminado';
+    case 'BranchManagerComment':
+      return 'Comentario del Gerente de Agencia';
     default:
       return eventType;
   }
@@ -65,6 +67,8 @@ const getEventIcon = (eventType: string) => {
       return <FileText className='h-4 w-4' />;
     case 'FileDeleted':
       return <FileX className='h-4 w-4' />;
+    case 'BranchManagerComment':
+      return <FileText className='h-4 w-4' />;
     default:
       return <AlertCircle className='h-4 w-4' />;
   }
@@ -132,7 +136,7 @@ export function LoanRequestTimeline({
 
               return (
                 <div key={date} className='space-y-6'>
-                  <div className='sticky top-0 z-10 -mx-4 mb-4 bg-primary-foreground px-4 py-3 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-primary-foreground/90'>
+                  <div className='sticky top-0 z-10 -mx-4 mb-4 bg-background px-4 py-3 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-background/90'>
                     <h3 className='flex items-center gap-2 text-base font-semibold text-primary'>
                       <Calendar className='h-4 w-4' />
                       {date}
