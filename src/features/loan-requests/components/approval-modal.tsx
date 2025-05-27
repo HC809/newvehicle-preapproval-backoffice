@@ -17,6 +17,7 @@ interface ApprovalModalProps {
   title?: string;
   description?: string;
   isSubmitting?: boolean;
+  buttonText?: string;
 }
 
 export function ApprovalModal({
@@ -24,8 +25,9 @@ export function ApprovalModal({
   onClose,
   onSubmit,
   title,
-  description,
-  isSubmitting
+  description = '¿Está seguro que desea aprobar esta solicitud? Esta acción no se puede deshacer.',
+  isSubmitting,
+  buttonText = 'Aprobar'
 }: ApprovalModalProps) {
   const handleClose = () => {
     if (isSubmitting) return;
@@ -59,11 +61,6 @@ export function ApprovalModal({
         </DialogHeader>
 
         <div className='space-y-4'>
-          <p className='text-sm text-muted-foreground'>
-            ¿Está seguro que desea aprobar esta solicitud? Esta acción no se
-            puede deshacer.
-          </p>
-
           <DialogFooter>
             <Button
               type='button'
@@ -81,7 +78,7 @@ export function ApprovalModal({
               className='gap-2 bg-green-600 hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-700'
             >
               {isSubmitting && <Loader2 className='h-4 w-4 animate-spin' />}
-              Aprobar
+              {buttonText}
             </Button>
           </DialogFooter>
         </div>

@@ -98,6 +98,8 @@ export const translateStatus = (status: LoanRequestStatus): string => {
       return 'Cancelado';
     case LoanRequestStatus.BranchManagerReview:
       return 'Revisión Gerente Agencia';
+    case LoanRequestStatus.Completed:
+      return 'Completado';
     default:
       return status;
   }

@@ -333,3 +333,24 @@ export const useAddBranchManagerComment = (apiClient: AxiosInstance) => {
     }
   });
 };
+
+export const useCompleteLoanRequest = (apiClient: AxiosInstance) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (loanRequestId: string) => {
+      const response = await apiClient.post(
+        `/loan-requests/complete/${loanRequestId}`
+      );
+      return response.data;
+    },
+    onSuccess: (_, loanRequestId) => {
+      // Invalidate the specific loan request to update its details
+      queryClient.invalidateQueries({
+        queryKey: [LOAN_REQUESTS_KEY, 'detail', loanRequestId]
+      });
+      // Also invalidate the list of loan requests
+      queryClient.invalidateQueries({ queryKey: [LOAN_REQUESTS_KEY] });
+    }
+  });
+};

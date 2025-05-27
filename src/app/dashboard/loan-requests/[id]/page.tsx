@@ -40,7 +40,8 @@ import {
   useApproveByManager,
   useRejectByManager,
   useApproveForCommittee,
-  useAddBranchManagerComment
+  useAddBranchManagerComment,
+  useCompleteLoanRequest
 } from '@/features/loan-requests/api/loan-request-service';
 import { useCalculateLoan } from '@/features/loan-requests/api/loan-calculation-service';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -88,6 +89,7 @@ export default function LoanRequestDetailPage() {
     useState(false);
   const [showBranchManagerCommentModal, setShowBranchManagerCommentModal] =
     useState(false);
+  const [showCompleteModal, setShowCompleteModal] = useState(false);
 
   // Fetch loan request details from API
   const {
@@ -110,6 +112,7 @@ export default function LoanRequestDetailPage() {
   const addBranchManagerCommentMutation = useAddBranchManagerComment(
     apiClient!
   );
+  const completeLoanRequestMutation = useCompleteLoanRequest(apiClient!);
 
   // Efecto para eliminar el resaltado en las tabs cuando se presiona una tecla
   // useEffect(() => {
@@ -413,10 +416,37 @@ export default function LoanRequestDetailPage() {
   const canApproveForCommittee = (status: LoanRequestStatus) => {
     if (!userRole) return false;
     return (
-      status === LoanRequestStatus.VisitRegistered &&
+      (status === LoanRequestStatus.VisitRegistered ||
+        status === LoanRequestStatus.BranchManagerReview) &&
       (userRole === UserRole.BusinessDevelopment_User ||
         userRole === UserRole.BusinessDevelopment_Admin)
     );
+  };
+
+  // Check if user can complete loan request
+  const canCompleteLoanRequest = (status: LoanRequestStatus) => {
+    if (!userRole) return false;
+    return (
+      status === LoanRequestStatus.ApprovedForCommittee &&
+      (userRole === UserRole.BusinessDevelopment_User ||
+        userRole === UserRole.BusinessDevelopment_Admin)
+    );
+  };
+
+  // Handle complete loan request submission
+  const handleCompleteLoanRequest = async () => {
+    if (!loanRequestDetail) return;
+
+    try {
+      await completeLoanRequestMutation.mutateAsync(
+        loanRequestDetail.loanRequest.id
+      );
+      await refetch();
+      toast.success('Solicitud completada exitosamente');
+      setShowCompleteModal(false);
+    } catch (error: any) {
+      toast.error(error.message || 'Error al completar la solicitud');
+    }
   };
 
   // Renderizar el botón de chat para la solicitud de préstamo
@@ -608,6 +638,25 @@ export default function LoanRequestDetailPage() {
                     {loanRequestDetail.loanRequest.branchManagerComment
                       ? 'Editar Comentario'
                       : 'Agregar Comentario'}
+                  </Button>
+                )}
+                {canCompleteLoanRequest(
+                  loanRequestDetail.loanRequest.status
+                ) && (
+                  <Button
+                    variant='outline'
+                    onClick={() => setShowCompleteModal(true)}
+                    disabled={completeLoanRequestMutation.isPending}
+                    className='gap-2 border-green-600 text-green-600 hover:bg-green-50 dark:border-green-500 dark:text-green-500 dark:hover:bg-gray-800'
+                  >
+                    {completeLoanRequestMutation.isPending ? (
+                      'Completando...'
+                    ) : (
+                      <>
+                        <CheckCircle className='h-4 w-4' />
+                        Completar
+                      </>
+                    )}
                   </Button>
                 )}
                 {renderChatButton()}
@@ -832,6 +881,20 @@ export default function LoanRequestDetailPage() {
                 existingComment={
                   loanRequestDetail.loanRequest.branchManagerComment
                 }
+              />
+
+              <ApprovalModal
+                isOpen={showCompleteModal}
+                onClose={() => {
+                  if (!completeLoanRequestMutation.isPending) {
+                    setShowCompleteModal(false);
+                  }
+                }}
+                onSubmit={handleCompleteLoanRequest}
+                title='Completar Solicitud'
+                description='¿Está seguro que desea marcar esta solicitud como completada? Esta acción no se puede deshacer.'
+                isSubmitting={completeLoanRequestMutation.isPending}
+                buttonText='Completar'
               />
             </>
           )}
