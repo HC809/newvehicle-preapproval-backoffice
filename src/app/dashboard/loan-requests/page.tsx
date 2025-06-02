@@ -168,6 +168,11 @@ function LoanRequestContent() {
               </Tabs>
             )}
 
+            <Button variant='default' onClick={() => setIsFormOpen(true)}>
+              <PlusIcon className='mr-2 h-4 w-4' />
+              Nueva Solicitud
+            </Button>
+
             {isBranchManager && (
               <div className='mr-2 flex items-center gap-2'>
                 <Briefcase className='h-4 w-4 text-amber-500' />
@@ -203,10 +208,6 @@ function LoanRequestContent() {
               <ReloadIcon
                 className={cn('h-4 w-4', isFetching && 'animate-spin')}
               />
-            </Button>
-            <Button variant='default' onClick={() => setIsFormOpen(true)}>
-              <PlusIcon className='mr-2 h-4 w-4' />
-              Nueva Solicitud
             </Button>
           </div>
         </div>
