@@ -100,6 +100,19 @@ export interface UpdateLoanRequestForm {
   monthlyIncome: number;
 }
 
+export interface CreateLoanRequest {
+  dni: string;
+  vehicleTypeId: string;
+  requestedAmount: number;
+  vehicleBrand: string;
+  vehicleModel: string;
+  vehicleYear: number;
+  monthlyIncome: number;
+  dealershipAdminId: string;
+  city?: string;
+  comment?: string;
+}
+
 export interface ChatParticipant {
   id: string;
   name: string;

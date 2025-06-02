@@ -11,7 +11,8 @@ import {
   LoanRequestListingParams,
   LoanRequestDetail,
   UpdateLoanRequestForm,
-  IncomeType
+  IncomeType,
+  CreateLoanRequest
 } from 'types/LoanRequests';
 
 const LOAN_REQUESTS_KEY = 'loanRequests';
@@ -51,6 +52,28 @@ export const useLoanRequests = (
       return response.data;
     },
     enabled: !!apiClient && enabled
+  });
+};
+
+export const useCreateLoanRequest = (apiClient: AxiosInstance | undefined) => {
+  const queryClient = useQueryClient();
+
+  return useMutation<string, Error, CreateLoanRequest>({
+    mutationFn: async (loanRequest: CreateLoanRequest) => {
+      if (!apiClient) throw new Error('API client not initialized');
+      try {
+        const response = await apiClient.post<string>(
+          '/loan-requests/create-by-business-user',
+          loanRequest
+        );
+        return response.data;
+      } catch (error) {
+        throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [LOAN_REQUESTS_KEY] });
+    }
   });
 };
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, Suspense, useEffect, useMemo, useCallback } from 'react';
-import { ReloadIcon } from '@radix-ui/react-icons';
+import { ReloadIcon, PlusIcon } from '@radix-ui/react-icons';
 import PageContainer from '@/components/layout/page-container';
 import { Heading } from '@/components/ui/heading';
 import { Separator } from '@/components/ui/separator';
@@ -11,7 +11,6 @@ import useAxios from '@/hooks/use-axios';
 import ErrorAlert from '@/components/custom/error-alert';
 import LoanRequestListingPage from '@/features/loan-requests/components/loan-request-listing';
 import { useLoanRequests } from '@/features/loan-requests/api/loan-request-service';
-import KBar from '@/components/kbar';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useSession } from 'next-auth/react';
 import LoanRequestTableAction from '@/features/loan-requests/components/loan-request-table-action';
@@ -28,6 +27,7 @@ import {
   SelectValue
 } from '@/components/ui/select';
 import { Briefcase } from 'lucide-react';
+import LoanRequestForm from '@/features/loan-requests/components/loan-request-form';
 
 function LoanRequestContent() {
   const apiClient = useAxios();
@@ -142,103 +142,107 @@ function LoanRequestContent() {
     // Aquí podrías resetear los otros filtros si es necesario
   }, [isBranchManager]);
 
-  const kbarActions = {};
+  const [isFormOpen, setIsFormOpen] = useState(false);
 
   return (
-    <KBar actions={kbarActions}>
-      <PageContainer scrollable={false}>
-        <div className='flex flex-1 flex-col space-y-4'>
-          <div className='flex items-start justify-between'>
-            <Heading
-              title='Solicitudes de Préstamo'
-              description='Administración de solicitudes de préstamo para vehículos.'
-            />
-            <div className='flex items-center gap-4'>
-              {!isAdmin && !isBranchManager && (
-                <Tabs
-                  value={viewMode}
-                  onValueChange={(value) =>
-                    setViewMode(value as 'assigned' | 'all')
-                  }
-                  className='mr-2'
-                >
-                  <TabsList>
-                    <TabsTrigger value='assigned'>Asignadas</TabsTrigger>
-                    <TabsTrigger value='all'>Todas</TabsTrigger>
-                  </TabsList>
-                </Tabs>
-              )}
-
-              {isBranchManager && (
-                <div className='mr-2 flex items-center gap-2'>
-                  <Briefcase className='h-4 w-4 text-amber-500' />
-                  <Select
-                    value={incomeTypeFilter}
-                    onValueChange={setIncomeTypeFilter}
-                  >
-                    <SelectTrigger className='w-[250px]'>
-                      <SelectValue placeholder='Filtrar por tipo de ingreso' />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value='all'>Todos</SelectItem>
-                      <SelectItem value={IncomeType.Salaried}>
-                        {translateIncomeType(IncomeType.Salaried)}
-                      </SelectItem>
-                      <SelectItem value={IncomeType.BusinessOwner}>
-                        {translateIncomeType(IncomeType.BusinessOwner)}
-                      </SelectItem>
-                      <SelectItem value={IncomeType.Both}>
-                        {translateIncomeType(IncomeType.Both)}
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
-
-              <Button
-                variant='default'
-                size='icon'
-                onClick={() => refetch()}
-                disabled={isFetching}
-              >
-                <ReloadIcon
-                  className={cn('h-4 w-4', isFetching && 'animate-spin')}
-                />
-              </Button>
-            </div>
-          </div>
-
-          <Separator />
-
-          <LoanRequestTableAction
-            dniFilter={dniFilter}
-            setDniFilter={setDniFilter}
-            resetAllFilters={resetAllFilters}
+    <PageContainer scrollable={false}>
+      <div className='flex flex-1 flex-col space-y-4'>
+        <div className='flex items-start justify-between'>
+          <Heading
+            title='Solicitudes de Préstamo'
+            description='Administración de solicitudes de préstamo para vehículos.'
           />
-
-          {error ? (
-            <div className='space-y-4'>
-              <ErrorAlert error={error?.message || String(error)} />
-            </div>
-          ) : (
-            <>
-              <Suspense
-                fallback={<DataTableSkeleton columnCount={10} rowCount={10} />}
+          <div className='flex items-center gap-4'>
+            {!isAdmin && !isBranchManager && (
+              <Tabs
+                value={viewMode}
+                onValueChange={(value) =>
+                  setViewMode(value as 'assigned' | 'all')
+                }
+                className='mr-2'
               >
-                <LoanRequestListingPage
-                  loanRequests={filteredLoanRequests || []}
-                  totalItems={filteredLoanRequests?.length || 0}
-                  isLoading={isLoading || !allLoanRequests}
-                  viewMode={viewMode}
-                  isAdmin={isAdmin}
-                  userRole={userRole}
-                />
-              </Suspense>
-            </>
-          )}
+                <TabsList>
+                  <TabsTrigger value='assigned'>Asignadas</TabsTrigger>
+                  <TabsTrigger value='all'>Todas</TabsTrigger>
+                </TabsList>
+              </Tabs>
+            )}
+
+            {isBranchManager && (
+              <div className='mr-2 flex items-center gap-2'>
+                <Briefcase className='h-4 w-4 text-amber-500' />
+                <Select
+                  value={incomeTypeFilter}
+                  onValueChange={setIncomeTypeFilter}
+                >
+                  <SelectTrigger className='w-[250px]'>
+                    <SelectValue placeholder='Filtrar por tipo de ingreso' />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value='all'>Todos</SelectItem>
+                    <SelectItem value={IncomeType.Salaried}>
+                      {translateIncomeType(IncomeType.Salaried)}
+                    </SelectItem>
+                    <SelectItem value={IncomeType.BusinessOwner}>
+                      {translateIncomeType(IncomeType.BusinessOwner)}
+                    </SelectItem>
+                    <SelectItem value={IncomeType.Both}>
+                      {translateIncomeType(IncomeType.Both)}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            <Button
+              variant='default'
+              size='icon'
+              onClick={() => refetch()}
+              disabled={isFetching}
+            >
+              <ReloadIcon
+                className={cn('h-4 w-4', isFetching && 'animate-spin')}
+              />
+            </Button>
+            <Button variant='default' onClick={() => setIsFormOpen(true)}>
+              <PlusIcon className='mr-2 h-4 w-4' />
+              Nueva Solicitud
+            </Button>
+          </div>
         </div>
-      </PageContainer>
-    </KBar>
+
+        <Separator />
+
+        <LoanRequestTableAction
+          dniFilter={dniFilter}
+          setDniFilter={setDniFilter}
+          resetAllFilters={resetAllFilters}
+        />
+
+        {error ? (
+          <div className='space-y-4'>
+            <ErrorAlert error={error?.message || String(error)} />
+          </div>
+        ) : (
+          <>
+            <Suspense
+              fallback={<DataTableSkeleton columnCount={10} rowCount={10} />}
+            >
+              <LoanRequestListingPage
+                loanRequests={filteredLoanRequests || []}
+                totalItems={filteredLoanRequests?.length || 0}
+                isLoading={isLoading || !allLoanRequests}
+                viewMode={viewMode}
+                isAdmin={isAdmin}
+                userRole={userRole}
+              />
+            </Suspense>
+
+            <LoanRequestForm open={isFormOpen} onOpenChange={setIsFormOpen} />
+          </>
+        )}
+      </div>
+    </PageContainer>
   );
 }
 
