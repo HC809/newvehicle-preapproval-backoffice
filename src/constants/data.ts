@@ -1,16 +1,24 @@
 import { NavItem } from 'types';
 
 // Determinar si estamos en modo de desarrollo
-const isDevelopment = process.env.NODE_ENV === 'development';
+//const isDevelopment = process.env.NODE_ENV === 'development';
 
 //Info: The following data is used for the sidebar navigation and Cmd K bar.
 export const navItems: NavItem[] = [
   {
     title: 'Dashboard',
-    url: '/dashboard/overview',
+    url: '/dashboard',
     icon: 'dashboard',
     isActive: false,
     shortcut: ['d', 'd'],
+    items: [] // Empty array as there are no child items for Dashboard
+  },
+  {
+    title: 'Notificaciones',
+    url: '/dashboard/notifications',
+    icon: 'notifications',
+    isActive: false,
+    shortcut: ['n', 'n'],
     items: [] // Empty array as there are no child items for Dashboard
   },
   {

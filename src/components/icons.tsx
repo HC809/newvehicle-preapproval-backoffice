@@ -35,7 +35,8 @@ import {
   X,
   List,
   Users,
-  Terminal
+  Terminal,
+  BellRing
 } from 'lucide-react';
 
 export type Icon = LucideIcon;
@@ -75,6 +76,7 @@ export const Icons = {
   tasas: PercentIcon,
   clients: Users,
   terminal: Terminal,
+  notifications: BellRing,
   gitHub: ({ ...props }: LucideProps) => (
     <svg
       aria-hidden='true'
