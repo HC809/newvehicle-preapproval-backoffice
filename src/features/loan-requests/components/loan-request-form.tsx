@@ -39,6 +39,7 @@ import { useUsers } from '@/features/users/api/user-service';
 import { UserRole } from 'types/User';
 import { toast } from 'sonner';
 import { CreateLoanRequest } from 'types/LoanRequests';
+import { NumberInput } from '@/components/number-input';
 
 const formSchema = z.object({
   dni: z.string().min(13, {
@@ -272,13 +273,15 @@ export default function LoanRequestForm({
                       <FormItem>
                         <FormLabel>Ingreso Mensual</FormLabel>
                         <FormControl>
-                          <Input
-                            type='number'
-                            {...field}
-                            onChange={(e) =>
-                              field.onChange(parseFloat(e.target.value) || 0)
-                            }
+                          <NumberInput
                             placeholder='Ingrese el ingreso mensual'
+                            min={1}
+                            thousandSeparator=','
+                            prefix='L '
+                            value={field.value}
+                            onValueChange={(value: number | undefined) => {
+                              field.onChange(value === undefined ? 0 : value);
+                            }}
                           />
                         </FormControl>
                         <FormMessage />
@@ -322,15 +325,17 @@ export default function LoanRequestForm({
                     name='requestedAmount'
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Monto Solicitado</FormLabel>
+                        <FormLabel>Valor del Vehículo</FormLabel>
                         <FormControl>
-                          <Input
-                            type='number'
-                            {...field}
-                            onChange={(e) =>
-                              field.onChange(parseFloat(e.target.value) || 0)
-                            }
+                          <NumberInput
                             placeholder='Ingrese el monto solicitado'
+                            min={1}
+                            thousandSeparator=','
+                            prefix='L '
+                            value={field.value}
+                            onValueChange={(value: number | undefined) => {
+                              field.onChange(value === undefined ? 0 : value);
+                            }}
                           />
                         </FormControl>
                         <FormMessage />
@@ -428,7 +433,7 @@ export default function LoanRequestForm({
                     name='dealershipAdminId'
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Administrador de Concesionaria</FormLabel>
+                        <FormLabel>Asesor de Concesionaria</FormLabel>
                         <Select
                           onValueChange={field.onChange}
                           value={field.value}

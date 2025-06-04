@@ -305,6 +305,8 @@ export default function LoanRequestEditForm({
                         <NumberInput
                           placeholder='Ingrese el monto solicitado'
                           min={1}
+                          thousandSeparator=','
+                          prefix='L '
                           value={field.value}
                           onValueChange={(value: number | undefined) => {
                             field.onChange(value === undefined ? 0 : value);
@@ -403,6 +405,8 @@ export default function LoanRequestEditForm({
                         <NumberInput
                           placeholder='Ingrese el ingreso mensual'
                           min={0}
+                          thousandSeparator=','
+                          prefix='L '
                           value={field.value}
                           onValueChange={(value: number | undefined) => {
                             field.onChange(value === undefined ? 0 : value);
