@@ -31,7 +31,7 @@ import { SaveIcon } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { UpdateLoanRequestForm } from 'types/LoanRequests';
+import { LoanRequest, UpdateLoanRequestForm } from 'types/LoanRequests';
 import { useUpdateLoanRequest } from '../api/loan-request-service';
 import { useVehicleTypes } from '@/features/vehicle-types/api/vehicle-type-service';
 import useAxios from '@/hooks/use-axios';
@@ -61,6 +61,10 @@ const formSchema = z.object({
   requestedAmount: z
     .number()
     .min(1, { message: 'El monto solicitado debe ser mayor a 0.' }),
+  interestRate: z
+    .number()
+    .min(0, { message: 'La tasa de interés no puede ser negativa.' })
+    .max(100, { message: 'La tasa de interés no puede ser mayor a 100%.' }),
   approvedLoanTermMonths: z
     .number()
     .min(1, { message: 'El plazo aprobado debe ser al menos 1 mes.' })
@@ -76,12 +80,14 @@ const formSchema = z.object({
   monthlyIncome: z
     .number()
     .min(0, { message: 'El ingreso mensual no puede ser negativo.' })
+    .nullable()
+    .transform((val) => (val === 0 ? null : val))
 }) satisfies z.ZodType<UpdateLoanRequestForm>;
 
 type LoanRequestEditFormProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  loanRequest: any; // Using any here since we'll use the fields from LoanRequest that we need
+  loanRequest: LoanRequest;
   onSuccess: () => void;
 };
 
@@ -107,6 +113,7 @@ export default function LoanRequestEditForm({
       vehicleYear: new Date().getFullYear(),
       vehicleTypeId: '',
       requestedAmount: 0,
+      interestRate: 0,
       approvedLoanTermMonths: 1,
       approvedDownPaymentPercentage: 0,
       vehicleInsuranceRate: 0,
@@ -125,6 +132,7 @@ export default function LoanRequestEditForm({
         vehicleYear: loanRequest.vehicleYear || new Date().getFullYear(),
         vehicleTypeId: loanRequest.vehicleTypeId || '',
         requestedAmount: loanRequest.requestedAmount || 0,
+        interestRate: loanRequest.appliedInterestRate || 0,
         approvedLoanTermMonths:
           loanRequest.approvedLoanTermMonths ||
           loanRequest.requestedLoanTermMonths ||
@@ -142,7 +150,9 @@ export default function LoanRequestEditForm({
       updateLoanRequestMutation.mutate(
         {
           ...values,
-          loanRequestId: values.id
+          loanRequestId: values.id,
+          monthlyIncome:
+            values.monthlyIncome === 0 ? null : values.monthlyIncome
         },
         {
           onSuccess: () => {
@@ -323,6 +333,32 @@ export default function LoanRequestEditForm({
               <div className='space-y-4'>
                 <FormField
                   control={form.control}
+                  name='interestRate'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Tasa de Interés (%)</FormLabel>
+                      <FormControl>
+                        <NumberInput
+                          placeholder='Ingrese la tasa de interés'
+                          min={0}
+                          max={100}
+                          step={0.1}
+                          decimalScale={2}
+                          fixedDecimalScale={true}
+                          suffix='%'
+                          value={field.value}
+                          onValueChange={(value: number | undefined) => {
+                            field.onChange(value === undefined ? 0 : value);
+                          }}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
                   name='approvedLoanTermMonths'
                   render={({ field }) => (
                     <FormItem>
@@ -407,7 +443,7 @@ export default function LoanRequestEditForm({
                           min={0}
                           thousandSeparator=','
                           prefix='L '
-                          value={field.value}
+                          value={field.value ?? undefined}
                           onValueChange={(value: number | undefined) => {
                             field.onChange(value === undefined ? 0 : value);
                           }}

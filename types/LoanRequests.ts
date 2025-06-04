@@ -97,7 +97,7 @@ export interface UpdateLoanRequestForm {
   approvedLoanTermMonths: number;
   approvedDownPaymentPercentage: number;
   vehicleInsuranceRate: number;
-  monthlyIncome: number;
+  monthlyIncome: number | null;
 }
 
 export interface CreateLoanRequest {
@@ -107,7 +107,7 @@ export interface CreateLoanRequest {
   vehicleBrand: string;
   vehicleModel: string;
   vehicleYear: number;
-  monthlyIncome: number;
+  monthlyIncome: number | null;
   dealershipAdminId: string;
   city?: string;
   comment?: string;
