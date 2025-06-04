@@ -1,6 +1,7 @@
 export interface LoginPayload {
   email: string;
   password: string;
+  isBO: boolean;
 }
 
 export interface AuthResponse {

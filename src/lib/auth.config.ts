@@ -18,7 +18,8 @@ const authOptions = {
       async authorize(credentials): Promise<User | null> {
         const loginPayload: LoginPayload = {
           email: credentials.email as string,
-          password: credentials.password as string
+          password: credentials.password as string,
+          isBO: true
         };
 
         const apiClient = createAxiosInstance();
