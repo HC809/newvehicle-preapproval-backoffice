@@ -1,7 +1,7 @@
 import { Toaster } from '@/components/ui/sonner';
 import type { Metadata } from 'next';
 import { NuqsAdapter } from 'nuqs/adapters/next/app';
-import { Lato } from 'next/font/google';
+import localFont from 'next/font/local';
 import NextTopLoader from 'nextjs-toploader';
 import ThemeProvider from '@/components/layout/ThemeToggle/theme-provider';
 import './globals.css';
@@ -12,9 +12,25 @@ export const metadata: Metadata = {
   description: 'COFISA'
 };
 
-const lato = Lato({
-  subsets: ['latin'],
-  weight: ['400', '700', '900'],
+const lato = localFont({
+  src: [
+    {
+      path: '../../public/fonts/lato/Lato-Regular.ttf', // Nota: ../../ desde src/app/
+      weight: '400',
+      style: 'normal'
+    },
+    {
+      path: '../../public/fonts/lato/Lato-Bold.ttf',
+      weight: '700',
+      style: 'normal'
+    },
+    {
+      path: '../../public/fonts/lato/Lato-Black.ttf',
+      weight: '900',
+      style: 'normal'
+    }
+  ],
+  variable: '--font-lato',
   display: 'swap'
 });
 
