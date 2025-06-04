@@ -48,9 +48,14 @@ const formSchema = z.object({
   vehicleTypeId: z.string().min(1, {
     message: 'Debe seleccionar un tipo de vehículo.'
   }),
-  requestedAmount: z.number().min(1, {
-    message: 'El monto solicitado debe ser mayor a 0.'
-  }),
+  requestedAmount: z
+    .number({
+      required_error: 'El valor del vehículo es requerido.',
+      invalid_type_error: 'El valor del vehículo debe ser un número.'
+    })
+    .min(0.01, {
+      message: 'El valor del vehículo debe ser mayor a 0.'
+    }),
   vehicleBrand: z.string().min(1, {
     message: 'La marca del vehículo es requerida.'
   }),
@@ -60,9 +65,7 @@ const formSchema = z.object({
   vehicleYear: z.number().min(1900, {
     message: 'El año del vehículo debe ser válido.'
   }),
-  monthlyIncome: z.number().min(1, {
-    message: 'El ingreso mensual debe ser mayor a 0.'
-  }),
+  monthlyIncome: z.number().optional(),
   dealershipId: z.string().min(1, {
     message: 'Debe seleccionar una concesionaria.'
   }),
@@ -155,7 +158,11 @@ export default function LoanRequestForm({
         vehicleBrand: result.data.vehicleBrand,
         vehicleModel: result.data.vehicleModel,
         vehicleYear: result.data.vehicleYear,
-        monthlyIncome: result.data.monthlyIncome,
+        monthlyIncome:
+          result.data.monthlyIncome === 0 ||
+          result.data.monthlyIncome === undefined
+            ? null
+            : result.data.monthlyIncome,
         dealershipAdminId: result.data.dealershipAdminId,
         city: result.data.city || '',
         comment: result.data.comment || ''
@@ -275,7 +282,6 @@ export default function LoanRequestForm({
                         <FormControl>
                           <NumberInput
                             placeholder='Ingrese el ingreso mensual'
-                            min={1}
                             thousandSeparator=','
                             prefix='L '
                             value={field.value}
@@ -329,7 +335,6 @@ export default function LoanRequestForm({
                         <FormControl>
                           <NumberInput
                             placeholder='Ingrese el monto solicitado'
-                            min={1}
                             thousandSeparator=','
                             prefix='L '
                             value={field.value}
