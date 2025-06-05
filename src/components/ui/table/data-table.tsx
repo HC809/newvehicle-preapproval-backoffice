@@ -55,7 +55,7 @@ export function DataTable<TData, TValue>({
     'limit',
     parseAsInteger
       .withOptions({ shallow: false, history: 'push' })
-      .withDefault(10)
+      .withDefault(20)
   );
 
   const paginationState = {
@@ -89,7 +89,7 @@ export function DataTable<TData, TValue>({
     onPaginationChange: handlePaginationChange,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    manualPagination: true,
+    manualPagination: false,
     manualFiltering: true
   });
 
@@ -160,22 +160,22 @@ export function DataTable<TData, TValue>({
           <div className='flex-1 text-sm text-muted-foreground'>
             {totalItems > 0 ? (
               <>
-                Showing{' '}
-                {paginationState.pageIndex * paginationState.pageSize + 1} to{' '}
+                Mostrando{' '}
+                {paginationState.pageIndex * paginationState.pageSize + 1} a{' '}
                 {Math.min(
                   (paginationState.pageIndex + 1) * paginationState.pageSize,
                   totalItems
                 )}{' '}
-                of {totalItems} entries
+                de {totalItems} registros
               </>
             ) : (
-              'No entries found'
+              'No hay registros'
             )}
           </div>
           <div className='flex flex-col items-center gap-4 sm:flex-row sm:gap-6 lg:gap-8'>
             <div className='flex items-center space-x-2'>
               <p className='whitespace-nowrap text-sm font-medium'>
-                Rows per page
+                Registros por página
               </p>
               <Select
                 value={`${paginationState.pageSize}`}
@@ -201,15 +201,15 @@ export function DataTable<TData, TValue>({
           <div className='flex w-[150px] items-center justify-center text-sm font-medium'>
             {totalItems > 0 ? (
               <>
-                Page {paginationState.pageIndex + 1} of {table.getPageCount()}
+                Página {paginationState.pageIndex + 1} de {table.getPageCount()}
               </>
             ) : (
-              'No pages'
+              'Sin páginas'
             )}
           </div>
           <div className='flex items-center space-x-2'>
             <Button
-              aria-label='Go to first page'
+              aria-label='Ir a la primera página'
               variant='outline'
               className='hidden h-8 w-8 p-0 lg:flex'
               onClick={() => table.setPageIndex(0)}
@@ -218,7 +218,7 @@ export function DataTable<TData, TValue>({
               <DoubleArrowLeftIcon className='h-4 w-4' aria-hidden='true' />
             </Button>
             <Button
-              aria-label='Go to previous page'
+              aria-label='Ir a la página anterior'
               variant='outline'
               className='h-8 w-8 p-0'
               onClick={() => table.previousPage()}
@@ -227,7 +227,7 @@ export function DataTable<TData, TValue>({
               <ChevronLeftIcon className='h-4 w-4' aria-hidden='true' />
             </Button>
             <Button
-              aria-label='Go to next page'
+              aria-label='Ir a la página siguiente'
               variant='outline'
               className='h-8 w-8 p-0'
               onClick={() => table.nextPage()}
@@ -236,7 +236,7 @@ export function DataTable<TData, TValue>({
               <ChevronRightIcon className='h-4 w-4' aria-hidden='true' />
             </Button>
             <Button
-              aria-label='Go to last page'
+              aria-label='Ir a la última página'
               variant='outline'
               className='hidden h-8 w-8 p-0 lg:flex'
               onClick={() => table.setPageIndex(table.getPageCount() - 1)}
