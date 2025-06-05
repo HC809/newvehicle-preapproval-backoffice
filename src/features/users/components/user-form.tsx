@@ -40,6 +40,21 @@ import { useDealerships } from '@/features/dealerships/api/dealership-service';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import { translateRole } from '@/utils/translateRole';
+import { Check, ChevronsUpDown } from 'lucide-react';
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList
+} from '@/components/ui/command';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger
+} from '@/components/ui/popover';
+import { cn } from '@/lib/utils';
 
 const DEFAULT_DEALERSHIP_NAME = 'COFISA';
 
@@ -218,6 +233,8 @@ export default function UserForm({ open, onOpenChange }: UserFormProps) {
   const isLoadingDealerships =
     isDealershipsLoading || isDealershipsFetching || !isDealershipsSuccess;
 
+  const [dealershipOpen, setDealershipOpen] = React.useState(false);
+
   return (
     <Dialog
       open={open}
@@ -331,33 +348,72 @@ export default function UserForm({ open, onOpenChange }: UserFormProps) {
                     control={form.control}
                     name='dealershipId'
                     render={({ field }) => (
-                      <FormItem>
+                      <FormItem className='flex flex-col'>
                         <FormLabel>Concesionaria</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          value={field.value || undefined}
-                          defaultValue={field.value || undefined}
+                        <Popover
+                          open={dealershipOpen}
+                          onOpenChange={setDealershipOpen}
                         >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder='Seleccione una concesionaria'>
-                                {filteredDealerships.find(
-                                  (d) => d.id === field.value
-                                )?.name || 'Seleccione una concesionaria'}
-                              </SelectValue>
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {filteredDealerships.map((dealership) => (
-                              <SelectItem
-                                key={dealership.id}
-                                value={dealership.id}
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant='outline'
+                                role='combobox'
+                                aria-expanded={dealershipOpen}
+                                className={cn(
+                                  'w-full justify-between',
+                                  !field.value && 'text-muted-foreground'
+                                )}
                               >
-                                {dealership.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                                {field.value
+                                  ? filteredDealerships.find(
+                                      (dealership) =>
+                                        dealership.id === field.value
+                                    )?.name
+                                  : 'Seleccione una concesionaria'}
+                                <ChevronsUpDown className='ml-2 h-4 w-4 shrink-0 opacity-50' />
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className='w-full p-0'>
+                            <Command>
+                              <CommandInput
+                                placeholder='Buscar concesionaria...'
+                                className='h-9'
+                              />
+                              <CommandList>
+                                <CommandEmpty>
+                                  No se encontraron concesionarias.
+                                </CommandEmpty>
+                                <CommandGroup>
+                                  {filteredDealerships.map((dealership) => (
+                                    <CommandItem
+                                      key={dealership.id}
+                                      value={dealership.name}
+                                      onSelect={() => {
+                                        form.setValue(
+                                          'dealershipId',
+                                          dealership.id
+                                        );
+                                        setDealershipOpen(false);
+                                      }}
+                                    >
+                                      {dealership.name}
+                                      <Check
+                                        className={cn(
+                                          'ml-auto h-4 w-4',
+                                          field.value === dealership.id
+                                            ? 'opacity-100'
+                                            : 'opacity-0'
+                                        )}
+                                      />
+                                    </CommandItem>
+                                  ))}
+                                </CommandGroup>
+                              </CommandList>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
                         <FormMessage />
                       </FormItem>
                     )}
