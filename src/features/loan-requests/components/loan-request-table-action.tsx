@@ -287,7 +287,7 @@ export default function LoanRequestTableAction({
       {isAdmin && (
         <DataTableFilterBox
           filterKey='managers'
-          title='Responsables'
+          title='Gestores'
           options={MANAGER_OPTIONS}
           setFilterValue={setManagerFilterValue}
           filterValue={managerFilter}
