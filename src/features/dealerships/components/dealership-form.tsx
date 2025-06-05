@@ -50,22 +50,29 @@ const formSchema = z.object({
   name: z.string().min(2, {
     message: 'El nombre debe tener al menos 2 caracteres.'
   }),
-  address: z.string().min(5, {
-    message: 'La dirección debe tener al menos 5 caracteres.'
-  }),
-  phoneNumber: z.string().length(8, {
-    message: 'El teléfono debe tener 8 dígitos.'
-  }),
-  email: z.string().email({
-    message: 'Por favor ingrese un correo electrónico válido.'
-  }),
-  isActive: z.boolean(),
-  managerId: z
-    .string({
-      required_error:
-        "Por favor seleccione un oficial de negocio o 'Sin asignar'"
+  address: z
+    .string()
+    .min(5, {
+      message: 'La dirección debe tener al menos 5 caracteres.'
     })
-    .transform((val) => (val === 'null' ? null : val))
+    .optional()
+    .or(z.literal('')),
+  phoneNumber: z
+    .string()
+    .length(8, {
+      message: 'El teléfono debe tener 8 dígitos.'
+    })
+    .optional()
+    .or(z.literal('')),
+  email: z
+    .string()
+    .email({
+      message: 'Por favor ingrese un correo electrónico válido.'
+    })
+    .optional()
+    .or(z.literal('')),
+  isActive: z.boolean(),
+  managerId: z.string().transform((val) => (val === 'null' ? null : val))
 }) satisfies z.ZodType<IDealershipForm>;
 
 type DealershipFormProps = {

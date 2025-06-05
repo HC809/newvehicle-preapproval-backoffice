@@ -1,8 +1,8 @@
 export interface DealershipForm {
   name: string;
-  address: string;
-  phoneNumber: string;
-  email: string;
+  address?: string;
+  phoneNumber?: string;
+  email?: string;
   isActive: boolean;
   managerId: string | null;
 }
