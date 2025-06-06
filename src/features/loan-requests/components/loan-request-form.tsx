@@ -233,7 +233,7 @@ export default function LoanRequestForm({
       }}
     >
       <DialogContent
-        className='sm:max-w-[725px]'
+        className='max-h-[90vh] overflow-y-auto sm:max-w-[725px]'
         onEscapeKeyDown={(event) => {
           if (isFormLocked) {
             event.preventDefault();
@@ -245,11 +245,11 @@ export default function LoanRequestForm({
           }
         }}
       >
-        <DialogHeader>
-          <DialogTitle className='text-lg md:text-xl'>
+        <DialogHeader className='space-y-2'>
+          <DialogTitle className='break-words text-lg md:text-xl'>
             Nueva Solicitud de Préstamo
           </DialogTitle>
-          <DialogDescription className='text-sm md:text-base'>
+          <DialogDescription className='break-words text-sm md:text-base'>
             Complete los datos de la nueva solicitud en el formulario a
             continuación.
           </DialogDescription>
@@ -506,16 +506,21 @@ export default function LoanRequestForm({
                 </Alert>
               )}
 
-              <div className='flex justify-end gap-4'>
+              <div className='mt-6 flex flex-col justify-end gap-4 sm:flex-row'>
                 <Button
                   variant='outline'
                   type='button'
                   disabled={isFormLocked}
                   onClick={handleClose}
+                  className='w-full sm:w-auto'
                 >
                   Cancelar
                 </Button>
-                <Button type='submit' disabled={isFormLocked}>
+                <Button
+                  type='submit'
+                  disabled={isFormLocked}
+                  className='w-full sm:w-auto'
+                >
                   {isFormLocked ? (
                     <ReloadIcon className='mr-2 h-4 w-4 animate-spin' />
                   ) : (
