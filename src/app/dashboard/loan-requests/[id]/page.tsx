@@ -42,7 +42,8 @@ import {
   useApproveForCommittee,
   useAddBranchManagerComment,
   useCompleteLoanRequest,
-  useAcceptTermsByCustomer
+  useAcceptTermsByCustomer,
+  useDeclineTermsByCustomer
 } from '@/features/loan-requests/api/loan-request-service';
 import { useCalculateLoan } from '@/features/loan-requests/api/loan-calculation-service';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -64,6 +65,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { BranchManagerCommentModal } from '@/features/loan-requests/components/branch-manager-comment-modal';
 import { AcceptTermsModal } from '@/features/loan-requests/components/accept-terms-modal';
+import { DeclineTermsModal } from '@/features/loan-requests/components/decline-terms-modal';
 
 export default function LoanRequestDetailPage() {
   const router = useRouter();
@@ -93,6 +95,7 @@ export default function LoanRequestDetailPage() {
     useState(false);
   const [showCompleteModal, setShowCompleteModal] = useState(false);
   const [showAcceptTermsModal, setShowAcceptTermsModal] = useState(false);
+  const [showDeclineTermsModal, setShowDeclineTermsModal] = useState(false);
 
   // Fetch loan request details from API
   const {
@@ -117,6 +120,7 @@ export default function LoanRequestDetailPage() {
   );
   const completeLoanRequestMutation = useCompleteLoanRequest(apiClient!);
   const acceptTermsMutation = useAcceptTermsByCustomer(apiClient!);
+  const declineTermsMutation = useDeclineTermsByCustomer(apiClient!);
 
   // Efecto para eliminar el resaltado en las tabs cuando se presiona una tecla
   // useEffect(() => {
@@ -489,6 +493,25 @@ export default function LoanRequestDetailPage() {
     );
   };
 
+  // Add this function to handle decline terms submission
+  const handleDeclineTermsSubmit = async () => {
+    if (!loanRequestDetail) return;
+
+    try {
+      await declineTermsMutation.mutateAsync(loanRequestDetail.loanRequest.id);
+      await refetch();
+      toast.success('Términos declinados', {
+        description:
+          'Los términos del préstamo han sido declinados por el cliente.'
+      });
+      setShowDeclineTermsModal(false);
+    } catch (error) {
+      toast.error('Error al declinar los términos', {
+        description: error as string
+      });
+    }
+  };
+
   // Renderizar el botón de chat para la solicitud de préstamo
   const renderChatButton = () => {
     if (!loanRequestDetail) return null;
@@ -724,13 +747,22 @@ export default function LoanRequestDetailPage() {
                         Rechazar Solicitud
                       </DropdownMenuItem>
                       {canAcceptTerms(loanRequestDetail.loanRequest.status) && (
-                        <DropdownMenuItem
-                          onClick={() => setShowAcceptTermsModal(true)}
-                          className='text-green-600 focus:text-green-600 dark:text-green-400 dark:focus:text-green-400'
-                        >
-                          <CheckCircle className='mr-2 h-4 w-4' />
-                          Aceptar Términos por el Cliente
-                        </DropdownMenuItem>
+                        <>
+                          <DropdownMenuItem
+                            onClick={() => setShowAcceptTermsModal(true)}
+                            className='text-green-600 focus:text-green-600 dark:text-green-400 dark:focus:text-green-400'
+                          >
+                            <CheckCircle className='mr-2 h-4 w-4' />
+                            Aceptar Términos por el Cliente
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => setShowDeclineTermsModal(true)}
+                            className='text-red-600 focus:text-red-600 dark:text-red-400 dark:focus:text-red-400'
+                          >
+                            <XCircle className='mr-2 h-4 w-4' />
+                            Declinar por el Cliente
+                          </DropdownMenuItem>
+                        </>
                       )}
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -957,6 +989,18 @@ export default function LoanRequestDetailPage() {
                 isSubmitting={acceptTermsMutation.isPending}
                 error={acceptTermsMutation.error?.toString()}
                 client={loanRequestDetail.client}
+              />
+
+              <DeclineTermsModal
+                isOpen={showDeclineTermsModal}
+                onClose={() => {
+                  if (!declineTermsMutation.isPending) {
+                    setShowDeclineTermsModal(false);
+                  }
+                }}
+                onConfirm={handleDeclineTermsSubmit}
+                isSubmitting={declineTermsMutation.isPending}
+                error={declineTermsMutation.error?.toString()}
               />
             </>
           )}

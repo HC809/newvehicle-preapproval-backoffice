@@ -399,3 +399,14 @@ export const useAcceptTermsByCustomer = (apiClient: AxiosInstance) => {
     }
   });
 };
+
+export const useDeclineTermsByCustomer = (apiClient: AxiosInstance) => {
+  return useMutation({
+    mutationFn: async (loanRequestId: string) => {
+      const { data } = await apiClient.post(
+        `/loan-requests/decline-by-customer/${loanRequestId}`
+      );
+      return data;
+    }
+  });
+};
