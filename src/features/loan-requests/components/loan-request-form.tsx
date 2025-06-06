@@ -74,7 +74,9 @@ const formSchema = z.object({
   dealershipAdminId: z.string().min(1, {
     message: 'Debe seleccionar un administrador de concesionaria.'
   }),
-  city: z.string().optional(),
+  city: z.string().min(1, {
+    message: 'La ciudad es requerida.'
+  }),
   comment: z.string().optional()
 });
 
