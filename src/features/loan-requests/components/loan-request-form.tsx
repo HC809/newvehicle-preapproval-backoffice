@@ -27,7 +27,7 @@ import {
 } from '@/components/ui/select';
 import { ReloadIcon } from '@radix-ui/react-icons';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { SaveIcon, Loader2, Check, ChevronsUpDown } from 'lucide-react';
+import { SaveIcon, Loader2 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -40,20 +40,7 @@ import { UserRole } from 'types/User';
 import { toast } from 'sonner';
 import { CreateLoanRequest } from 'types/LoanRequests';
 import { NumberInput } from '@/components/number-input';
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList
-} from '@/components/ui/command';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger
-} from '@/components/ui/popover';
-import { cn } from '@/lib/utils';
+import { SearchableSelect } from '@/components/searchable-select';
 
 const formSchema = z.object({
   dni: z.string().min(13, {
@@ -103,8 +90,6 @@ export default function LoanRequestForm({
 }: LoanRequestFormProps) {
   const apiClient = useAxios();
   const createLoanRequestMutation = useCreateLoanRequest(apiClient);
-  const [dealershipOpen, setDealershipOpen] = React.useState(false);
-  const [adminOpen, setAdminOpen] = React.useState(false);
 
   const {
     data: vehicleTypes = [],
@@ -421,72 +406,20 @@ export default function LoanRequestForm({
                     control={form.control}
                     name='dealershipId'
                     render={({ field }) => (
-                      <FormItem className='flex flex-col'>
+                      <FormItem>
                         <FormLabel>Concesionaria</FormLabel>
-                        <Popover
-                          open={dealershipOpen}
-                          onOpenChange={setDealershipOpen}
-                        >
-                          <PopoverTrigger asChild>
-                            <FormControl>
-                              <Button
-                                variant='outline'
-                                role='combobox'
-                                aria-expanded={dealershipOpen}
-                                className={cn(
-                                  'w-full justify-between',
-                                  !field.value && 'text-muted-foreground'
-                                )}
-                              >
-                                {field.value
-                                  ? dealerships.find(
-                                      (dealership) =>
-                                        dealership.id === field.value
-                                    )?.name
-                                  : 'Seleccione una concesionaria'}
-                                <ChevronsUpDown className='ml-2 h-4 w-4 shrink-0 opacity-50' />
-                              </Button>
-                            </FormControl>
-                          </PopoverTrigger>
-                          <PopoverContent className='w-full p-0'>
-                            <Command>
-                              <CommandInput
-                                placeholder='Buscar concesionaria...'
-                                className='h-9'
-                              />
-                              <CommandList>
-                                <CommandEmpty>
-                                  No se encontraron concesionarias.
-                                </CommandEmpty>
-                                <CommandGroup>
-                                  {dealerships.map((dealership) => (
-                                    <CommandItem
-                                      key={dealership.id}
-                                      value={dealership.name}
-                                      onSelect={() => {
-                                        form.setValue(
-                                          'dealershipId',
-                                          dealership.id
-                                        );
-                                        setDealershipOpen(false);
-                                      }}
-                                    >
-                                      {dealership.name}
-                                      <Check
-                                        className={cn(
-                                          'ml-auto h-4 w-4',
-                                          field.value === dealership.id
-                                            ? 'opacity-100'
-                                            : 'opacity-0'
-                                        )}
-                                      />
-                                    </CommandItem>
-                                  ))}
-                                </CommandGroup>
-                              </CommandList>
-                            </Command>
-                          </PopoverContent>
-                        </Popover>
+                        <FormControl>
+                          <SearchableSelect
+                            options={dealerships.map((d) => ({
+                              value: d.id,
+                              label: d.name
+                            }))}
+                            placeholder='Seleccione una concesionaria'
+                            searchPlaceholder='Buscar concesionaria...'
+                            value={field.value || ''}
+                            onSelect={field.onChange}
+                          />
+                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -496,68 +429,20 @@ export default function LoanRequestForm({
                     control={form.control}
                     name='dealershipAdminId'
                     render={({ field }) => (
-                      <FormItem className='flex flex-col'>
+                      <FormItem>
                         <FormLabel>Asesor de Concesionaria</FormLabel>
-                        <Popover open={adminOpen} onOpenChange={setAdminOpen}>
-                          <PopoverTrigger asChild>
-                            <FormControl>
-                              <Button
-                                variant='outline'
-                                role='combobox'
-                                aria-expanded={adminOpen}
-                                className={cn(
-                                  'w-full justify-between',
-                                  !field.value && 'text-muted-foreground'
-                                )}
-                              >
-                                {field.value
-                                  ? dealershipAdmins.find(
-                                      (admin) => admin.id === field.value
-                                    )?.name
-                                  : 'Seleccione un administrador'}
-                                <ChevronsUpDown className='ml-2 h-4 w-4 shrink-0 opacity-50' />
-                              </Button>
-                            </FormControl>
-                          </PopoverTrigger>
-                          <PopoverContent className='w-full p-0'>
-                            <Command>
-                              <CommandInput
-                                placeholder='Buscar administrador...'
-                                className='h-9'
-                              />
-                              <CommandList>
-                                <CommandEmpty>
-                                  No se encontraron administradores.
-                                </CommandEmpty>
-                                <CommandGroup>
-                                  {dealershipAdmins.map((admin) => (
-                                    <CommandItem
-                                      key={admin.id}
-                                      value={admin.name}
-                                      onSelect={() => {
-                                        form.setValue(
-                                          'dealershipAdminId',
-                                          admin.id
-                                        );
-                                        setAdminOpen(false);
-                                      }}
-                                    >
-                                      {admin.name}
-                                      <Check
-                                        className={cn(
-                                          'ml-auto h-4 w-4',
-                                          field.value === admin.id
-                                            ? 'opacity-100'
-                                            : 'opacity-0'
-                                        )}
-                                      />
-                                    </CommandItem>
-                                  ))}
-                                </CommandGroup>
-                              </CommandList>
-                            </Command>
-                          </PopoverContent>
-                        </Popover>
+                        <FormControl>
+                          <SearchableSelect
+                            options={dealershipAdmins.map((a) => ({
+                              value: a.id,
+                              label: a.name
+                            }))}
+                            placeholder='Seleccione un asesor'
+                            searchPlaceholder='Buscar asesor...'
+                            value={field.value || ''}
+                            onSelect={field.onChange}
+                          />
+                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
