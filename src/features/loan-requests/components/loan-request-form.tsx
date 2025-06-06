@@ -41,6 +41,7 @@ import { toast } from 'sonner';
 import { CreateLoanRequest } from 'types/LoanRequests';
 import { NumberInput } from '@/components/number-input';
 import { SearchableSelect } from '@/components/searchable-select';
+import { useCities } from '@/features/cities/api/city-service';
 
 const formSchema = z.object({
   dni: z.string().min(13, {
@@ -111,6 +112,13 @@ export default function LoanRequestForm({
     isFetching: isUsersFetching,
     isSuccess: isUsersSuccess
   } = useUsers(apiClient, open);
+
+  const {
+    data: cities = [],
+    isLoading: isCitiesLoading,
+    isFetching: isCitiesFetching,
+    isSuccess: isCitiesSuccess
+  } = useCities(apiClient);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -211,7 +219,10 @@ export default function LoanRequestForm({
     !isDealershipsSuccess ||
     isUsersLoading ||
     isUsersFetching ||
-    !isUsersSuccess;
+    !isUsersSuccess ||
+    isCitiesLoading ||
+    isCitiesFetching ||
+    !isCitiesSuccess;
 
   return (
     <Dialog
@@ -456,7 +467,16 @@ export default function LoanRequestForm({
                     <FormItem>
                       <FormLabel>Ciudad</FormLabel>
                       <FormControl>
-                        <Input {...field} placeholder='Ingrese la ciudad' />
+                        <SearchableSelect
+                          options={cities.map((city: string) => ({
+                            value: city,
+                            label: city
+                          }))}
+                          placeholder='Seleccione una ciudad'
+                          searchPlaceholder='Buscar ciudad...'
+                          value={field.value || ''}
+                          onSelect={field.onChange}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
