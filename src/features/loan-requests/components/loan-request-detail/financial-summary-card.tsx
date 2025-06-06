@@ -14,6 +14,8 @@ import { DollarSign, Calculator } from 'lucide-react';
 import { LoanRequest } from 'types/LoanRequests';
 import { LoanCalculation } from 'types/LoanCalculation';
 import { Client } from 'types/Client';
+import html2canvas from 'html2canvas';
+import { useRef } from 'react';
 
 interface FinancialSummaryCardProps {
   loanRequest: LoanRequest;
@@ -28,6 +30,33 @@ export const FinancialSummaryCard = ({
 }: FinancialSummaryCardProps) => {
   // Create a key that will change when relevant loan request data changes
   const dataKey = `${loanRequest.id}-${loanRequest.requestedAmount}-${loanRequest.vehicleInsuranceRate}-${loanRequest.appliedInterestRate}-${loanRequest.requestedLoanTermMonths}`;
+
+  const imageRef = useRef<HTMLDivElement>(null);
+
+  const handleCopyImage = async () => {
+    if (!imageRef.current) return;
+    const canvas = await html2canvas(imageRef.current, {
+      backgroundColor: '#fff',
+      scale: 2
+    });
+    canvas.toBlob(async (blob) => {
+      if (!blob) return;
+      try {
+        await navigator.clipboard.write([
+          new window.ClipboardItem({ 'image/png': blob })
+        ]);
+        alert('Imagen copiada al portapapeles');
+      } catch (err) {
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'resumen-financiero.png';
+        link.click();
+        URL.revokeObjectURL(url);
+        alert('No se pudo copiar, pero la imagen fue descargada.');
+      }
+    });
+  };
 
   return (
     <Card
@@ -104,9 +133,30 @@ export const FinancialSummaryCard = ({
                 <DialogTitle className='text-xl'>
                   Desglose del Cálculo Financiero
                 </DialogTitle>
+                <Button
+                  variant='secondary'
+                  size='sm'
+                  className='absolute right-0 top-0 z-10 mr-12 mt-2'
+                  onClick={handleCopyImage}
+                >
+                  Copiar imagen
+                </Button>
               </DialogHeader>
+              {loanCalculation && (
+                <div
+                  ref={imageRef}
+                  style={{ position: 'absolute', left: '-9999px', top: 0 }}
+                >
+                  <FinancialSummaryImage
+                    clientName={client?.name || loanRequest.clientName || ''}
+                    loanCalculation={loanCalculation}
+                    loanRequest={loanRequest}
+                    riskScore={client?.lastRiskScore || 'No disponible'}
+                  />
+                </div>
+              )}
               <ScrollArea className='h-full max-h-[calc(90vh-80px)] pr-4'>
-                <div className='relative grid gap-12 py-6 sm:grid-cols-2 lg:grid-cols-3'>
+                <div className='relative grid gap-12 bg-white py-6 sm:grid-cols-2 lg:grid-cols-3'>
                   {/* Columna 1 - Información del Préstamo */}
                   <div className='relative space-y-8'>
                     <h3 className='flex items-center gap-2 text-lg font-semibold'>
@@ -269,3 +319,174 @@ const FinancialItem = ({ label, value, highlight }: FinancialItemProps) => {
     </div>
   );
 };
+
+// Componente para la imagen con formato tipo tarjeta resumen
+const FinancialSummaryImage = ({
+  clientName,
+  loanCalculation,
+  loanRequest,
+  riskScore
+}: {
+  clientName: string;
+  loanCalculation: LoanCalculation;
+  loanRequest: LoanRequest;
+  riskScore: string | number;
+}) => (
+  <div
+    style={{
+      width: 500,
+      fontFamily: 'Arial, sans-serif',
+      background: '#fff',
+      color: '#222',
+      border: '2px solid #0a3970',
+      borderRadius: 12,
+      padding: 24
+    }}
+  >
+    <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 8 }}>
+      <img
+        src={'/images/logo.png'}
+        alt='Logo Cofisa'
+        style={{ maxWidth: 320, maxHeight: 60, objectFit: 'contain' }}
+      />
+    </div>
+    <div
+      style={{
+        background: '#FFD600',
+        color: '#0a3970',
+        height: 44,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderRadius: 6,
+        textAlign: 'center',
+        fontWeight: 'bold',
+        fontSize: 20,
+        letterSpacing: 1,
+        marginBottom: 6
+      }}
+    >
+      CÁLCULO DE CUOTA MENSUAL
+    </div>
+    <div
+      style={{
+        background: '#0a3970',
+        color: '#fff',
+        fontWeight: 'bold',
+        textAlign: 'center',
+        fontSize: 17,
+        letterSpacing: 1,
+        paddingTop: 10,
+        paddingBottom: 10,
+        borderRadius: 6,
+        marginBottom: 16
+      }}
+    >
+      {clientName}
+    </div>
+    <table
+      style={{
+        width: '100%',
+        borderCollapse: 'collapse',
+        fontSize: 15,
+        marginTop: 8
+      }}
+    >
+      <tbody>
+        <tr style={{ borderBottom: '1px solid #b0b0b0' }}>
+          <td style={{ fontWeight: 'bold', padding: 6 }}>Valor Vehículo</td>
+          <td style={{ textAlign: 'right', padding: 6 }}>
+            L{' '}
+            {formatHNL(loanCalculation.totalVehicleValue).replace(/^L\s*/, '')}
+          </td>
+        </tr>
+        <tr style={{ borderBottom: '1px solid #b0b0b0' }}>
+          <td style={{ fontWeight: 'bold', padding: 6 }}>Plazo</td>
+          <td style={{ textAlign: 'right', padding: 6 }}>
+            {loanRequest.requestedLoanTermMonths} Meses
+          </td>
+        </tr>
+        <tr style={{ borderBottom: '1px solid #b0b0b0' }}>
+          <td style={{ fontWeight: 'bold', padding: 6 }}>Prima</td>
+          <td style={{ textAlign: 'right', padding: 6 }}>
+            L {formatHNL(loanCalculation.downPaymentValue).replace(/^L\s*/, '')}
+          </td>
+        </tr>
+        <tr style={{ borderBottom: '1px solid #b0b0b0' }}>
+          <td style={{ fontWeight: 'bold', padding: 6 }}>
+            Porcentaje de la prima
+          </td>
+          <td style={{ textAlign: 'right', padding: 6 }}>
+            {loanCalculation.downPaymentPercentage.toFixed(2)}%
+          </td>
+        </tr>
+        <tr style={{ borderBottom: '1px solid #b0b0b0' }}>
+          <td style={{ fontWeight: 'bold', padding: 6 }}>
+            Tasa de interés (anual)
+          </td>
+          <td style={{ textAlign: 'right', padding: 6 }}>
+            {loanRequest.appliedInterestRate}%
+          </td>
+        </tr>
+        <tr style={{ borderBottom: '1px solid #b0b0b0' }}>
+          <td style={{ fontWeight: 'bold', padding: 6 }}>Monto a financiar</td>
+          <td style={{ textAlign: 'right', padding: 6 }}>
+            L{' '}
+            {formatHNL(loanCalculation.requestedLoanAmount).replace(
+              /^L\s*/,
+              ''
+            )}
+          </td>
+        </tr>
+        <tr style={{ borderBottom: '1px solid #b0b0b0' }}>
+          <td style={{ fontWeight: 'bold', padding: 6 }}>
+            Cuota mensual (Capital + Interés)
+          </td>
+          <td style={{ textAlign: 'right', padding: 6 }}>
+            L {formatHNL(loanCalculation.monthlyPayment).replace(/^L\s*/, '')}
+          </td>
+        </tr>
+        <tr style={{ borderBottom: '1px solid #b0b0b0' }}>
+          <td style={{ fontWeight: 'bold', padding: 6 }}>Seguro vida</td>
+          <td style={{ textAlign: 'right', padding: 6 }}>
+            L{' '}
+            {formatHNL(loanCalculation.lifeAndAccidentInsurance).replace(
+              /^L\s*/,
+              ''
+            )}
+          </td>
+        </tr>
+        <tr style={{ borderBottom: '1px solid #b0b0b0' }}>
+          <td style={{ fontWeight: 'bold', padding: 6 }}>
+            Seguro daños y robo
+          </td>
+          <td style={{ textAlign: 'right', padding: 6 }}>
+            L {formatHNL(loanCalculation.vehicleInsurance).replace(/^L\s*/, '')}
+          </td>
+        </tr>
+        <tr style={{ borderBottom: '1px solid #b0b0b0' }}>
+          <td style={{ fontWeight: 'bold', padding: 6 }}>Cobertura GPS</td>
+          <td style={{ textAlign: 'right', padding: 6 }}>
+            L {formatHNL(loanCalculation.monthlyGpsFee).replace(/^L\s*/, '')}
+          </td>
+        </tr>
+        <tr style={{ borderBottom: '1px solid #b0b0b0' }}>
+          <td style={{ fontWeight: 'bold', padding: 6 }}>
+            Cuota total mensual
+          </td>
+          <td style={{ textAlign: 'right', padding: 6 }}>
+            L{' '}
+            {formatHNL(loanCalculation.totalMonthlyPayment).replace(
+              /^L\s*/,
+              ''
+            )}
+          </td>
+        </tr>
+        <tr>
+          <td style={{ fontWeight: 'bold', padding: 6 }}>Scoring de riesgo</td>
+          <td style={{ textAlign: 'right', padding: 6 }}>{riskScore}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+);
