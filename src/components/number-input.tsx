@@ -143,10 +143,10 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
           {...props}
         />
 
-        <div className='flex flex-col'>
+        <div className='flex h-9 flex-col'>
           <Button
             aria-label='Increase value'
-            className='h-5 rounded-l-none rounded-br-none border-b-[0.5px] border-l-0 border-input px-2 focus-visible:relative'
+            className='h-[18px] rounded-l-none rounded-br-none border-b-[0.5px] border-l-0 border-input px-2 focus-visible:relative'
             variant='outline'
             onClick={handleIncrement}
             disabled={value === max}
@@ -156,7 +156,7 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
           </Button>
           <Button
             aria-label='Decrease value'
-            className='h-5 rounded-l-none rounded-tr-none border-l-0 border-t-[0.5px] border-input px-2 focus-visible:relative'
+            className='h-[18px] rounded-l-none rounded-tr-none border-l-0 border-t-[0.5px] border-input px-2 focus-visible:relative'
             variant='outline'
             onClick={handleDecrement}
             disabled={value === min}

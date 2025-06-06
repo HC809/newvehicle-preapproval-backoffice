@@ -212,9 +212,9 @@ export default function LoanRequestEditForm({
             onSubmit={form.handleSubmit(handleSubmit)}
             className='space-y-4 md:space-y-6'
           >
-            <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
+            <div className='grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6'>
               {/* Primera columna */}
-              <div className='space-y-4'>
+              <div className='space-y-4 md:space-y-6'>
                 <FormField
                   control={form.control}
                   name='vehicleBrand'
@@ -330,7 +330,7 @@ export default function LoanRequestEditForm({
               </div>
 
               {/* Segunda columna */}
-              <div className='space-y-4'>
+              <div className='space-y-4 md:space-y-6'>
                 <FormField
                   control={form.control}
                   name='interestRate'
