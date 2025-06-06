@@ -41,7 +41,8 @@ import {
   useRejectByManager,
   useApproveForCommittee,
   useAddBranchManagerComment,
-  useCompleteLoanRequest
+  useCompleteLoanRequest,
+  useAcceptTermsByCustomer
 } from '@/features/loan-requests/api/loan-request-service';
 import { useCalculateLoan } from '@/features/loan-requests/api/loan-calculation-service';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -62,6 +63,7 @@ import {
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import { BranchManagerCommentModal } from '@/features/loan-requests/components/branch-manager-comment-modal';
+import { AcceptTermsModal } from '@/features/loan-requests/components/accept-terms-modal';
 
 export default function LoanRequestDetailPage() {
   const router = useRouter();
@@ -90,6 +92,7 @@ export default function LoanRequestDetailPage() {
   const [showBranchManagerCommentModal, setShowBranchManagerCommentModal] =
     useState(false);
   const [showCompleteModal, setShowCompleteModal] = useState(false);
+  const [showAcceptTermsModal, setShowAcceptTermsModal] = useState(false);
 
   // Fetch loan request details from API
   const {
@@ -113,6 +116,7 @@ export default function LoanRequestDetailPage() {
     apiClient!
   );
   const completeLoanRequestMutation = useCompleteLoanRequest(apiClient!);
+  const acceptTermsMutation = useAcceptTermsByCustomer(apiClient!);
 
   // Efecto para eliminar el resaltado en las tabs cuando se presiona una tecla
   // useEffect(() => {
@@ -449,6 +453,42 @@ export default function LoanRequestDetailPage() {
     }
   };
 
+  // Add this function to handle accept terms submission
+  const handleAcceptTermsSubmit = async (values: {
+    phoneNumber: string;
+    city: string;
+    address: string;
+  }) => {
+    if (!loanRequestDetail) return;
+
+    try {
+      await acceptTermsMutation.mutateAsync({
+        loanRequestId: loanRequestDetail.loanRequest.id,
+        data: values
+      });
+      await refetch();
+      toast.success('Términos aceptados', {
+        description:
+          'Los términos del préstamo han sido aceptados por el cliente correctamente.'
+      });
+      setShowAcceptTermsModal(false);
+    } catch (error) {
+      toast.error('Error al aceptar los términos', {
+        description: error as string
+      });
+    }
+  };
+
+  // Add this function to check if user can accept terms
+  const canAcceptTerms = (status: LoanRequestStatus) => {
+    if (!userRole) return false;
+    return (
+      status === LoanRequestStatus.ApprovedByManager &&
+      (userRole === UserRole.BusinessDevelopment_User ||
+        userRole === UserRole.BusinessDevelopment_Admin)
+    );
+  };
+
   // Renderizar el botón de chat para la solicitud de préstamo
   const renderChatButton = () => {
     if (!loanRequestDetail) return null;
@@ -681,8 +721,17 @@ export default function LoanRequestDetailPage() {
                         className='text-red-600 focus:text-red-600 dark:text-red-400 dark:focus:text-red-400'
                       >
                         <XCircle className='mr-2 h-4 w-4' />
-                        Rechazar solicitud
+                        Rechazar Solicitud
                       </DropdownMenuItem>
+                      {canAcceptTerms(loanRequestDetail.loanRequest.status) && (
+                        <DropdownMenuItem
+                          onClick={() => setShowAcceptTermsModal(true)}
+                          className='text-green-600 focus:text-green-600 dark:text-green-400 dark:focus:text-green-400'
+                        >
+                          <CheckCircle className='mr-2 h-4 w-4' />
+                          Aceptar Términos por el Cliente
+                        </DropdownMenuItem>
+                      )}
                     </DropdownMenuContent>
                   </DropdownMenu>
                 )}
@@ -895,6 +944,19 @@ export default function LoanRequestDetailPage() {
                 description='¿Está seguro que desea marcar esta solicitud como completada? Esta acción no se puede deshacer.'
                 isSubmitting={completeLoanRequestMutation.isPending}
                 buttonText='Completar'
+              />
+
+              <AcceptTermsModal
+                isOpen={showAcceptTermsModal}
+                onClose={() => {
+                  if (!acceptTermsMutation.isPending) {
+                    setShowAcceptTermsModal(false);
+                  }
+                }}
+                onSubmit={handleAcceptTermsSubmit}
+                isSubmitting={acceptTermsMutation.isPending}
+                error={acceptTermsMutation.error?.toString()}
+                client={loanRequestDetail.client}
               />
             </>
           )}

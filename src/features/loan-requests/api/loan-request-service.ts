@@ -377,3 +377,25 @@ export const useCompleteLoanRequest = (apiClient: AxiosInstance) => {
     }
   });
 };
+
+export const useAcceptTermsByCustomer = (apiClient: AxiosInstance) => {
+  return useMutation({
+    mutationFn: async ({
+      loanRequestId,
+      data
+    }: {
+      loanRequestId: string;
+      data: {
+        phoneNumber: string;
+        city: string;
+        address: string;
+      };
+    }) => {
+      const response = await apiClient.post(
+        `/loan-requests/accept-by-customer/${loanRequestId}`,
+        data
+      );
+      return response.data;
+    }
+  });
+};
