@@ -99,7 +99,7 @@ export const FinancialSummaryCard = ({
                 Ver Desglose Completo
               </Button>
             </DialogTrigger>
-            <DialogContent className='max-h-[90vh] sm:max-w-[900px]'>
+            <DialogContent className='max-h-[90vh] sm:max-w-[900px] [&>button]:outline-none [&>button]:ring-0 [&>button]:focus:ring-0 [&>button]:focus-visible:ring-0'>
               <DialogHeader className='relative pb-2'>
                 <DialogTitle className='text-xl'>
                   Desglose del Cálculo Financiero
@@ -168,6 +168,10 @@ export const FinancialSummaryCard = ({
                       <FinancialItem
                         label='Seguro del vehículo'
                         value={formatHNL(loanCalculation.vehicleInsurance)}
+                      />
+                      <FinancialItem
+                        label='Impuesto del seguro de vehículo'
+                        value={formatHNL(loanCalculation.vehicleInsuranceTax)}
                       />
                       <FinancialItem
                         label='Valor de GPS'
