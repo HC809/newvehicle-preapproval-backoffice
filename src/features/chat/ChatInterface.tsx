@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
-import { SendHorizontal, X, User } from 'lucide-react';
+import { SendHorizontal, X, User, UserCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
@@ -71,13 +71,7 @@ export function ChatInterface({
   // Log extremadamente claro para entender qué está pasando
   useEffect(() => {
     if (messages.length > 0) {
-      console.log('====== DEBUGGING CHAT INTERFACE ======');
-      console.log('Current user NAME from session:', userName);
-      messages.forEach((msg) => {
-        console.log(
-          `Message: ${msg.id} | SenderUserId: ${msg.senderUserId} | SenderUserName: ${msg.senderUserName} | Match by name: ${msg.senderUserName === userName}`
-        );
-      });
+      messages.forEach((msg) => {});
     }
   }, [messages, userId, userName]);
 
@@ -147,15 +141,6 @@ export function ChatInterface({
     // Enfocar el input después de seleccionar
     if (inputRef.current) {
       inputRef.current.focus();
-    }
-  };
-
-  // Manejar el keydown para detectar @ para menciones
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === '@' && !selectedParticipant) {
-      e.preventDefault(); // Prevenir que el @ se escriba en el input
-      setMentionOpen(true);
-      setMentionText('');
     }
   };
 
@@ -449,6 +434,24 @@ export function ChatInterface({
             )}
 
             <div className='flex gap-2'>
+              <Button
+                type='button'
+                variant='outline'
+                size='icon'
+                onClick={() => setMentionOpen(true)}
+                disabled={!hasParticipants}
+                className={cn(
+                  'flex-shrink-0',
+                  selectedParticipant &&
+                    'border-primary text-primary hover:bg-primary/10'
+                )}
+              >
+                {selectedParticipant ? (
+                  <UserCheck className='h-4 w-4' />
+                ) : (
+                  <User className='h-4 w-4' />
+                )}
+              </Button>
               <Input
                 ref={inputRef}
                 placeholder={
@@ -456,11 +459,10 @@ export function ChatInterface({
                     ? 'No hay participantes disponibles para chatear'
                     : selectedParticipant
                       ? `Escribe un mensaje para ${selectedParticipant.name}...`
-                      : 'Usa @ para seleccionar un destinatario...'
+                      : 'Selecciona un destinatario...'
                 }
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
-                onKeyDown={handleKeyDown}
                 className='flex-1'
                 disabled={!hasParticipants}
               />
