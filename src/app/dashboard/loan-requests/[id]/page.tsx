@@ -934,7 +934,7 @@ export default function LoanRequestDetailPage() {
               <LoanRequestEditForm
                 open={showEditModal}
                 onOpenChange={setShowEditModal}
-                loanRequest={loanRequestDetail.loanRequest}
+                loanRequest={loanRequestDetail}
                 onSuccess={() => {
                   refetch();
                 }}

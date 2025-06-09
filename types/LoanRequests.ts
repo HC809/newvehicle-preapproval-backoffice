@@ -25,6 +25,11 @@ export enum IncomeType {
   Both = 'Both'
 }
 
+export enum DownPaymentType {
+  Percentage = 'Percentage',
+  Amount = 'Amount'
+}
+
 export interface LoanRequest {
   id: string;
   dealershipId: string;
@@ -37,7 +42,9 @@ export interface LoanRequest {
   vehicleTypeName: string;
   requestedLoanTermMonths: number;
   approvedLoanTermMonths: number;
-  approvedDownPaymentPercentage: number;
+  downPaymentType: DownPaymentType;
+  approvedDownPaymentPercentage: number | null;
+  requestedDownPaymentAmount: number | null;
   requestedAmount: number;
   appliedInterestRate: number;
   vehicleInsuranceRate: number;
@@ -95,7 +102,9 @@ export interface UpdateLoanRequestForm {
   vehicleTypeId: string;
   requestedAmount: number;
   approvedLoanTermMonths: number;
-  approvedDownPaymentPercentage: number;
+  downPaymentType: DownPaymentType;
+  approvedDownPaymentPercentage: number | null;
+  requestedDownPaymentAmount: number | null;
   vehicleInsuranceRate: number;
   monthlyIncome: number | null;
 }

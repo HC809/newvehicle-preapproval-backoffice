@@ -1,3 +1,5 @@
+import { DownPaymentType } from './LoanRequests';
+
 export interface LoanCalculation {
   totalVehicleValue: number;
   downPaymentValue: number;
@@ -15,4 +17,5 @@ export interface LoanCalculation {
   monthlyGpsFee: number;
   closingCosts: number;
   downPaymentPercentage: number;
+  downPaymentType: DownPaymentType;
 }
