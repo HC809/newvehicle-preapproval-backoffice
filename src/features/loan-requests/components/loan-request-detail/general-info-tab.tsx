@@ -8,11 +8,14 @@ import {
   DollarSign,
   Copy,
   User,
-  Star
+  Star,
+  UserCircle
 } from 'lucide-react';
 import { useState } from 'react';
 import { Client } from 'types/Client';
 import { translateIncomeType } from '@/utils/translateIncomeType';
+import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
 
 interface GeneralInfoTabProps {
   loanRequest: LoanRequest;
@@ -23,6 +26,7 @@ export const GeneralInfoTab = ({
   loanRequest,
   client
 }: GeneralInfoTabProps) => {
+  const router = useRouter();
   const [copiedDNI, setCopiedDNI] = useState(false);
   const [copiedPhone, setCopiedPhone] = useState(false);
 
@@ -43,6 +47,12 @@ export const GeneralInfoTab = ({
     const cleaned = phoneNumber.replace(/\D/g, '');
     // Format as XXXX-XXXX
     return cleaned.replace(/(\d{4})(\d{4})/, '$1-$2');
+  };
+
+  const handleViewClientProfile = () => {
+    if (client?.id) {
+      router.push(`/dashboard/clients/${client.id}`);
+    }
   };
 
   return (
@@ -71,7 +81,22 @@ export const GeneralInfoTab = ({
         <InfoItem
           icon={<User className='h-4 w-4 text-purple-500' />}
           label='Nombre del Cliente'
-          value={client.name}
+          value={
+            <div className='flex items-center gap-2'>
+              <span>{client.name}</span>
+              {loanRequest.isExistingClient && client.id && (
+                <Button
+                  variant='ghost'
+                  size='icon'
+                  className='h-6 w-6'
+                  onClick={handleViewClientProfile}
+                  title='Ver perfil del cliente'
+                >
+                  <UserCircle className='h-4 w-4 text-blue-500' />
+                </Button>
+              )}
+            </div>
+          }
         />
       )}
 

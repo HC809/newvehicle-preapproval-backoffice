@@ -166,7 +166,7 @@ export default function ClientDetailPage() {
                 <ArrowLeft className='h-4 w-4' />
               </Button>
               <Heading
-                title='Detalle de Cliente'
+                title='Perfil del Cliente'
                 description='Cliente no encontrado'
               />
             </div>
