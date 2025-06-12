@@ -13,7 +13,7 @@ import { toast } from 'sonner';
 import { useDocumentContent } from '../api/loan-request-service';
 import { useDeleteLoanDocument } from '@/features/loan-documents/api/loan-document-service';
 import useAxios from '@/hooks/use-axios';
-import { format } from 'date-fns';
+import { format, isValid } from 'date-fns';
 import { es } from 'date-fns/locale/es';
 import Image from 'next/image';
 import {
@@ -44,6 +44,15 @@ const getDocumentIcon = (contentType: string) => {
     return <FileImage className='h-6 w-6 text-blue-500' />;
   }
   return <FileText className='h-6 w-6 text-red-500' />;
+};
+
+// Helper function to safely format dates
+const formatDate = (dateString: string) => {
+  const date = new Date(dateString);
+  if (!isValid(date)) {
+    return 'Fecha no disponible';
+  }
+  return format(date, 'PPP', { locale: es });
 };
 
 export default function DocumentViewer({
@@ -174,11 +183,7 @@ export default function DocumentViewer({
                     doc.documentType}
                 </span>
                 <span>•</span>
-                <span>
-                  {format(new Date(doc.uploadedAt), 'PPP', {
-                    locale: es
-                  })}
-                </span>
+                <span>{formatDate(doc.uploadedAt)}</span>
               </div>
             </div>
           </div>
@@ -329,9 +334,7 @@ export default function DocumentViewer({
             doc.documentType}
         </span>
         <span className='text-xs text-muted-foreground'>
-          {format(new Date(doc.uploadedAt), 'PPP', {
-            locale: es
-          })}
+          {formatDate(doc.uploadedAt)}
         </span>
         <div className='mt-2 grid w-full grid-cols-4 gap-1'>
           <Button

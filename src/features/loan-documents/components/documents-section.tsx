@@ -9,10 +9,11 @@ type ViewMode = 'grid' | 'list';
 
 interface DocumentsSectionProps {
   documents: LoanDocument[];
-  loanRequestId: string;
+  loanRequestId?: string;
   clientId?: string;
   onDocumentUploaded: () => void;
   onDocumentDeleted: () => void;
+  height?: string;
 }
 
 export function DocumentsSection({
@@ -20,7 +21,8 @@ export function DocumentsSection({
   loanRequestId,
   clientId,
   onDocumentUploaded,
-  onDocumentDeleted
+  onDocumentDeleted,
+  height = '300px'
 }: DocumentsSectionProps) {
   const [viewMode, setViewMode] = useState<ViewMode>('list');
 
@@ -32,11 +34,13 @@ export function DocumentsSection({
         <p className='mb-6 text-muted-foreground'>
           No se han cargado documentos para esta solicitud.
         </p>
-        <UploadDocumentButton
-          loanRequestId={loanRequestId}
-          clientId={clientId}
-          onDocumentUploaded={onDocumentUploaded}
-        />
+        {loanRequestId && (
+          <UploadDocumentButton
+            loanRequestId={loanRequestId}
+            clientId={clientId}
+            onDocumentUploaded={onDocumentUploaded}
+          />
+        )}
       </div>
     );
   }
@@ -49,7 +53,10 @@ export function DocumentsSection({
     );
 
   return (
-    <div className='flex h-[300px] flex-col rounded-lg border border-l-4 border-l-primary p-4 shadow-sm'>
+    <div
+      className={`flex flex-col rounded-lg border border-l-4 border-l-primary p-4 shadow-sm`}
+      style={{ height }}
+    >
       <div className='mb-4 flex items-center justify-between'>
         <div className='flex items-center gap-4'>
           <h3 className='flex items-center gap-2 text-lg font-semibold'>
@@ -75,13 +82,15 @@ export function DocumentsSection({
             </Button>
           </div>
         </div>
-        <UploadDocumentButton
-          loanRequestId={loanRequestId}
-          clientId={clientId}
-          variant='outline'
-          size='sm'
-          onDocumentUploaded={onDocumentUploaded}
-        />
+        {loanRequestId && (
+          <UploadDocumentButton
+            loanRequestId={loanRequestId}
+            clientId={clientId}
+            variant='outline'
+            size='sm'
+            onDocumentUploaded={onDocumentUploaded}
+          />
+        )}
       </div>
       <div
         className={`flex-1 overflow-y-auto ${

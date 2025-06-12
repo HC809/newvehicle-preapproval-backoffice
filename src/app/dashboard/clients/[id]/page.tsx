@@ -2,7 +2,19 @@
 
 import React, { useMemo } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { ArrowLeft, User, Mail, Phone, MapPin, FileText } from 'lucide-react';
+import {
+  ArrowLeft,
+  User,
+  MapPin,
+  FileText,
+  Calendar,
+  Clock,
+  CreditCard,
+  Building,
+  UserCog
+} from 'lucide-react';
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
 
 import PageContainer from '@/components/layout/page-container';
 import { Heading } from '@/components/ui/heading';
@@ -12,10 +24,27 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from '@/components/ui/table';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 import useAxios from '@/hooks/use-axios';
 import { useClientDetail } from '@/features/clients/api/client-service';
 import { useClientStore } from '@/stores/client-store';
+import { formatHNL } from '@/utils/formatCurrency';
+import {
+  translateStatus,
+  getStatusVariant,
+  getStatusClassName
+} from '@/utils/getStatusColor';
+import { formatLoanRequestId } from '@/utils/formatId';
+import { DocumentsSection } from '@/features/loan-documents/components/documents-section';
 
 export default function ClientDetailPage() {
   const router = useRouter();
@@ -192,137 +221,216 @@ export default function ClientDetailPage() {
 
         <div className='grid grid-cols-1 gap-6 lg:grid-cols-2'>
           {/* Información principal del cliente */}
-          <Card>
-            <CardHeader>
-              <CardTitle className='flex items-center gap-2'>
-                <User className='h-5 w-5 text-primary' />
-                Información Personal
-              </CardTitle>
+          <Card className='h-[400px]'>
+            <CardHeader className='pb-2'>
+              <div className='flex items-center justify-between'>
+                <CardTitle className='flex items-center gap-2'>
+                  <h3 className='flex items-center gap-2 text-lg font-semibold'>
+                    <User className='h-5 w-5 text-purple-500' />
+                    Información Personal
+                  </h3>
+                </CardTitle>
+                <div className='flex items-center gap-2'>
+                  <Badge
+                    className={getRiskScoreColor(displayClient.lastRiskScore)}
+                  >
+                    Scoring: {displayClient.lastRiskScore}
+                  </Badge>
+                </div>
+              </div>
             </CardHeader>
-            <CardContent className='space-y-4'>
-              <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
-                <div>
-                  <p className='text-sm font-medium text-muted-foreground'>
-                    Nombre
-                  </p>
-                  <p className='text-lg font-semibold'>{displayClient.name}</p>
-                </div>
-                <div>
-                  <p className='text-sm font-medium text-muted-foreground'>
-                    DNI
-                  </p>
-                  <p className='text-lg font-semibold'>{displayClient.dni}</p>
-                </div>
-              </div>
-
-              <div>
-                <p className='text-sm font-medium text-muted-foreground'>
-                  Dirección
-                </p>
-                <div className='flex items-start gap-2'>
-                  <MapPin className='mt-1 h-4 w-4 text-muted-foreground' />
-                  <p className='text-base'>
-                    {displayClient?.residentialAddress}
-                  </p>
-                </div>
-              </div>
-
-              <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
-                <div>
-                  <p className='text-sm font-medium text-muted-foreground'>
-                    Correo Electrónico
-                  </p>
-                  <div className='flex items-center gap-2'>
-                    <Mail className='h-4 w-4 text-muted-foreground' />
-                    <p className='text-base'>{displayClient.email}</p>
+            <CardContent className='h-[calc(500px-60px)] space-y-6 overflow-y-auto'>
+              {/* Información básica */}
+              <div className='space-y-4'>
+                <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
+                  <div className='space-y-2'>
+                    <p className='text-sm font-medium text-muted-foreground'>
+                      Nombre
+                    </p>
+                    <p className='text-base font-semibold'>
+                      {displayClient.name}
+                    </p>
+                  </div>
+                  <div className='space-y-2'>
+                    <p className='text-sm font-medium text-muted-foreground'>
+                      DNI
+                    </p>
+                    <div className='flex items-center gap-2'>
+                      <CreditCard className='h-4 w-4 text-purple-500' />
+                      <p className='text-base font-semibold'>
+                        {displayClient.dni}
+                      </p>
+                    </div>
                   </div>
                 </div>
-                <div>
+              </div>
+
+              {/* Información de contacto */}
+              <div className='space-y-4'>
+                <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
+                  <div className='space-y-2'>
+                    <p className='text-sm font-medium text-muted-foreground'>
+                      Teléfono
+                    </p>
+                    <div className='flex items-center gap-2'>
+                      <span className='text-green-500'>📞</span>
+                      <p className='text-base'>{displayClient.phoneNumber}</p>
+                    </div>
+                  </div>
+                  <div className='space-y-2'>
+                    <p className='text-sm font-medium text-muted-foreground'>
+                      Ciudad
+                    </p>
+                    <div className='flex items-center gap-2'>
+                      <MapPin className='h-4 w-4 text-purple-500' />
+                      <p className='text-base'>{displayClient.city}</p>
+                    </div>
+                  </div>
+                </div>
+                <div className='space-y-2'>
                   <p className='text-sm font-medium text-muted-foreground'>
-                    Teléfono
+                    Dirección
                   </p>
-                  <div className='flex items-center gap-2'>
-                    <Phone className='h-4 w-4 text-muted-foreground' />
-                    <p className='text-base'>{displayClient.phoneNumber}</p>
+                  <div className='flex items-start gap-2'>
+                    <MapPin className='mt-1 h-4 w-4 text-orange-500' />
+                    <p className='text-base'>
+                      {displayClient.residentialAddress}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Información temporal */}
+              <div className='space-y-4'>
+                <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
+                  <div className='space-y-2'>
+                    <p className='text-sm font-medium text-muted-foreground'>
+                      Fecha de Registro
+                    </p>
+                    <div className='flex items-center gap-2'>
+                      <Calendar className='h-4 w-4 text-blue-500' />
+                      <p className='text-base'>
+                        {format(new Date(displayClient.createdAt), 'PP', {
+                          locale: es
+                        })}
+                      </p>
+                    </div>
+                  </div>
+                  <div className='space-y-2'>
+                    <p className='text-sm font-medium text-muted-foreground'>
+                      Última Actualización
+                    </p>
+                    <div className='flex items-center gap-2'>
+                      <Clock className='h-4 w-4 text-blue-500' />
+                      <p className='text-base'>
+                        {format(new Date(displayClient.updatedAt), 'PP', {
+                          locale: es
+                        })}
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          {/* Información de riesgo */}
-          <div className='space-y-6'>
-            <Card>
-              <CardHeader>
-                <CardTitle className='flex items-center gap-2'>
-                  <FileText className='h-5 w-5 text-primary' />
-                  Perfil de Riesgo
-                </CardTitle>
-              </CardHeader>
-              <CardContent className='space-y-4'>
-                <div>
-                  <p className='text-sm font-medium text-muted-foreground'>
-                    Puntuación de Riesgo
-                  </p>
-                  <div className='mt-2 flex items-center gap-3'>
-                    <div className='flex h-16 w-16 items-center justify-center rounded-full border-4 border-primary/20'>
-                      <span className='text-xl font-bold'>
-                        {displayClient.lastRiskScore}
-                      </span>
-                    </div>
-                    <div>
-                      <p className='text-sm text-muted-foreground'>
-                        Nivel de Riesgo
-                      </p>
-                      <Badge
-                        className={getRiskScoreColor(
-                          displayClient.lastRiskScore
-                        )}
-                      >
-                        {getRiskLevelText(displayClient.lastRiskScore)}
-                      </Badge>
-                    </div>
-                  </div>
-                </div>
-
-                <div className='mt-4'>
-                  <div className='h-2 w-full rounded-full bg-gray-200 dark:bg-gray-700'>
-                    <div
-                      className='h-2 rounded-full bg-primary'
-                      style={{
-                        width: `${(displayClient.lastRiskScore / 850) * 100}%`
-                      }}
-                    ></div>
-                  </div>
-                  <div className='mt-1 flex justify-between text-xs text-muted-foreground'>
-                    <span>0</span>
-                    <span>850</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Acciones */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Acciones</CardTitle>
-              </CardHeader>
-              <CardContent className='space-y-2'>
-                <Button
-                  variant='outline'
-                  className='w-full justify-start gap-2 border-primary/30 text-primary hover:bg-primary/10 hover:text-primary dark:border-primary/30 dark:hover:bg-primary/20'
-                  onClick={() =>
-                    router.push(
-                      '/dashboard/loan-requests?dni=' + displayClient.dni
-                    )
-                  }
-                >
-                  <FileText className='h-4 w-4' />
-                  Ver Solicitudes de Préstamo
-                </Button>
-              </CardContent>
-            </Card>
+          {/* Documentos */}
+          <div className='h-[400px]'>
+            <DocumentsSection
+              documents={displayClient.documents || []}
+              loanRequestId={displayClient.loanRequests?.[0]?.id}
+              clientId={displayClient.id}
+              onDocumentUploaded={() => {}}
+              onDocumentDeleted={() => {}}
+              height='400px'
+            />
           </div>
+
+          {/* Lista de solicitudes */}
+          <Card className='lg:col-span-2'>
+            <CardHeader className='pb-2'>
+              <CardTitle className='flex items-center gap-2'>
+                <h3 className='flex items-center gap-2 text-lg font-semibold'>
+                  <FileText className='h-5 w-5 text-primary' />
+                  Solicitudes de Préstamo
+                </h3>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ScrollArea className='h-[400px]'>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>ID</TableHead>
+                      <TableHead>Concesionaria</TableHead>
+                      <TableHead>Creado por</TableHead>
+                      <TableHead>Monto</TableHead>
+                      <TableHead>Ciudad</TableHead>
+                      <TableHead>Estado</TableHead>
+                      <TableHead>Responsable</TableHead>
+                      <TableHead>Fecha</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {displayClient.loanRequests?.map((request) => (
+                      <TableRow
+                        key={request.id}
+                        className='cursor-pointer hover:bg-muted/50'
+                        onClick={() =>
+                          router.push(`/dashboard/loan-requests/${request.id}`)
+                        }
+                      >
+                        <TableCell className='font-medium'>
+                          {formatLoanRequestId(request.id)}
+                        </TableCell>
+                        <TableCell>
+                          <div className='flex items-center gap-2'>
+                            <Building className='h-4 w-4 text-blue-500 dark:text-blue-400' />
+                            <span className='font-medium text-blue-700 dark:text-blue-300'>
+                              {request.dealershipName}
+                            </span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className='flex items-center gap-2'>
+                            <User className='h-4 w-4 text-green-500 dark:text-green-400' />
+                            <span className='font-medium text-green-700 dark:text-green-300'>
+                              {request.creatorName}
+                            </span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          {formatHNL(request.requestedAmount)}
+                        </TableCell>
+                        <TableCell>{request.city}</TableCell>
+                        <TableCell>
+                          <Badge
+                            variant={getStatusVariant(request.status)}
+                            className={getStatusClassName(request.status)}
+                          >
+                            {translateStatus(request.status)}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className='flex items-center gap-2'>
+                            <UserCog className='h-4 w-4 text-purple-500 dark:text-purple-400' />
+                            <span className='font-medium text-purple-700 dark:text-purple-300'>
+                              {request.managerName}
+                            </span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          {format(new Date(request.createdAt), 'PP', {
+                            locale: es
+                          })}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </ScrollArea>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </PageContainer>
