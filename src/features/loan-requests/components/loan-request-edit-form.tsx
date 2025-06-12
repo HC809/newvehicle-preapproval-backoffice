@@ -49,6 +49,7 @@ import {
   TooltipTrigger
 } from '@/components/ui/tooltip';
 import { InfoIcon } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
 
 // Schema for form validation
 const formSchema = z.object({
@@ -99,7 +100,8 @@ const formSchema = z.object({
     .number()
     .min(0, { message: 'El ingreso mensual no puede ser negativo.' })
     .nullable()
-    .transform((val) => (val === 0 ? null : val))
+    .transform((val) => (val === 0 ? null : val)),
+  comment: z.string().optional()
 }) satisfies z.ZodType<UpdateLoanRequestForm>;
 
 type FormValues = z.infer<typeof formSchema>;
@@ -139,7 +141,8 @@ export default function LoanRequestEditForm({
       approvedDownPaymentPercentage: 0,
       requestedDownPaymentAmount: null,
       vehicleInsuranceRate: 0,
-      monthlyIncome: 0
+      monthlyIncome: 0,
+      comment: ''
     },
     mode: 'onChange'
   });
@@ -174,7 +177,8 @@ export default function LoanRequestEditForm({
         requestedDownPaymentAmount:
           downPaymentType === DownPaymentType.Amount ? downPaymentValue : null,
         vehicleInsuranceRate: loanRequest.loanRequest.vehicleInsuranceRate || 0,
-        monthlyIncome: loanRequest.loanRequest.monthlyIncome || 0
+        monthlyIncome: loanRequest.loanRequest.monthlyIncome || 0,
+        comment: loanRequest.loanRequest.comment || ''
       });
     }
   }, [open, loanRequest, form]);
@@ -256,7 +260,7 @@ export default function LoanRequestEditForm({
       }}
     >
       <DialogContent
-        className='sm:max-w-[725px]'
+        className='max-h-[90vh] overflow-y-auto sm:max-w-[725px]'
         onEscapeKeyDown={(event) => {
           if (isFormLocked) {
             event.preventDefault();
@@ -647,6 +651,26 @@ export default function LoanRequestEditForm({
                 />
               </div>
             </div>
+
+            {/* Comentario - Ocupa ambas columnas */}
+            <FormField
+              control={form.control}
+              name='comment'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Comentario</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      {...field}
+                      placeholder='Ingrese un comentario'
+                      rows={1}
+                      className='resize-none'
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             {updateLoanRequestMutation.error && (
               <Alert variant='destructive'>

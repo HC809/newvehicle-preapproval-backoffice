@@ -45,6 +45,7 @@ import {
 } from '@/utils/getStatusColor';
 import { formatLoanRequestId } from '@/utils/formatId';
 import { DocumentsSection } from '@/features/loan-documents/components/documents-section';
+import { translateIncomeType } from '@/utils/translateIncomeType';
 
 export default function ClientDetailPage() {
   const router = useRouter();
@@ -214,14 +215,12 @@ export default function ClientDetailPage() {
 
         <div className='grid grid-cols-1 gap-6 lg:grid-cols-2'>
           {/* Información principal del cliente */}
-          <Card className='h-[400px]'>
+          <Card className='h-[450px]'>
             <CardHeader className='pb-2'>
               <div className='flex items-center justify-between'>
                 <CardTitle className='flex items-center gap-2'>
-                  <h3 className='flex items-center gap-2 text-lg font-semibold'>
-                    <User className='h-5 w-5 text-purple-500' />
-                    Información Personal
-                  </h3>
+                  <User className='h-5 w-5 text-purple-500' />
+                  Información Personal
                 </CardTitle>
                 <div className='flex items-center gap-2'>
                   <Badge
@@ -255,6 +254,38 @@ export default function ClientDetailPage() {
                       </p>
                     </div>
                   </div>
+                </div>
+              </div>
+
+              {/* Información de ingresos */}
+              <div className='space-y-4'>
+                <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
+                  {displayClient.incomeType && (
+                    <div className='space-y-2'>
+                      <p className='text-sm font-medium text-muted-foreground'>
+                        Tipo de Ingreso
+                      </p>
+                      <div className='flex items-center gap-2'>
+                        <Building className='h-4 w-4 text-purple-500' />
+                        <p className='text-base'>
+                          {translateIncomeType(displayClient.incomeType)}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                  {displayClient.monthlyIncome && (
+                    <div className='space-y-2'>
+                      <p className='text-sm font-medium text-muted-foreground'>
+                        Ingreso Mensual
+                      </p>
+                      <div className='flex items-center gap-2'>
+                        <CreditCard className='h-4 w-4 text-green-500' />
+                        <p className='text-base'>
+                          {formatHNL(displayClient.monthlyIncome)}
+                        </p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -328,14 +359,14 @@ export default function ClientDetailPage() {
           </Card>
 
           {/* Documentos */}
-          <div className='h-[400px]'>
+          <div className='h-[450px]'>
             <DocumentsSection
               documents={displayClient.documents || []}
               loanRequestId={displayClient.loanRequests?.[0]?.id}
               clientId={displayClient.id}
               onDocumentUploaded={() => {}}
               onDocumentDeleted={() => {}}
-              height='400px'
+              height='450px'
               showUploadButton={false}
             />
           </div>
@@ -344,10 +375,8 @@ export default function ClientDetailPage() {
           <Card className='lg:col-span-2'>
             <CardHeader className='pb-2'>
               <CardTitle className='flex items-center gap-2'>
-                <h3 className='flex items-center gap-2 text-lg font-semibold'>
-                  <FileText className='h-5 w-5 text-primary' />
-                  Solicitudes de Préstamo
-                </h3>
+                <FileText className='h-5 w-5 text-primary' />
+                Solicitudes de Préstamo
               </CardTitle>
             </CardHeader>
             <CardContent>

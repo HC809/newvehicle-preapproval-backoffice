@@ -107,6 +107,7 @@ export interface UpdateLoanRequestForm {
   requestedDownPaymentAmount: number | null;
   vehicleInsuranceRate: number;
   monthlyIncome: number | null;
+  comment?: string;
 }
 
 export interface CreateLoanRequest {

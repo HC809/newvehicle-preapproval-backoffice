@@ -12,6 +12,7 @@ export interface Client {
   phoneNumber: string;
   residentialAddress: string;
   incomeType: IncomeType | null;
+  monthlyIncome: number | null;
   createdAt: string;
   updatedAt: string;
   loanRequests?: LoanRequest[];

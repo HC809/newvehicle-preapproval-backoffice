@@ -1,6 +1,6 @@
 'use client';
 
-import { ReloadIcon } from '@radix-ui/react-icons';
+import { ReloadIcon, MagnifyingGlassIcon } from '@radix-ui/react-icons';
 import PageContainer from '@/components/layout/page-container';
 import { Heading } from '@/components/ui/heading';
 import { Separator } from '@/components/ui/separator';
@@ -11,9 +11,13 @@ import ErrorAlert from '@/components/custom/error-alert';
 import ClientListingPage from '@/features/clients/components/client-listing';
 import { useClients } from '@/features/clients/api/client-service';
 import KBar from '@/components/kbar';
+import { Input } from '@/components/ui/input';
+import { useState, useMemo } from 'react';
 
 function ClientContent() {
   const apiClient = useAxios();
+  const [searchFilter, setSearchFilter] = useState('');
+
   const {
     isLoading,
     isFetching,
@@ -21,6 +25,22 @@ function ClientContent() {
     error,
     refetch
   } = useClients(apiClient);
+
+  // Filter clients based on search input
+  const filteredClients = useMemo(() => {
+    if (!clients) return [];
+    if (!searchFilter.trim()) return clients;
+
+    const normalizedSearch = searchFilter.toLowerCase().trim();
+    return clients.filter((client) => {
+      const normalizedName = client.name.toLowerCase();
+      const normalizedDni = client.dni.toLowerCase();
+      return (
+        normalizedName.includes(normalizedSearch) ||
+        normalizedDni.includes(normalizedSearch)
+      );
+    });
+  }, [clients, searchFilter]);
 
   const kbarActions = {};
 
@@ -49,6 +69,16 @@ function ClientContent() {
 
           <Separator />
 
+          <div className='relative w-[300px]'>
+            <MagnifyingGlassIcon className='absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground' />
+            <Input
+              placeholder='Buscar por DNI o nombre...'
+              value={searchFilter}
+              onChange={(e) => setSearchFilter(e.target.value)}
+              className='pl-9'
+            />
+          </div>
+
           {error ? (
             <div className='space-y-4'>
               <ErrorAlert error={error?.message || String(error)} />
@@ -56,8 +86,8 @@ function ClientContent() {
           ) : (
             <>
               <ClientListingPage
-                clients={clients || []}
-                totalItems={clients?.length || 0}
+                clients={filteredClients}
+                totalItems={filteredClients.length}
                 isLoading={isLoading || !clients}
               />
             </>
