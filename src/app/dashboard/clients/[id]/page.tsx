@@ -132,7 +132,7 @@ export default function ClientDetailPage() {
                 <ArrowLeft className='h-4 w-4' />
               </Button>
               <Heading
-                title='Detalle de Cliente'
+                title='Perfil del Cliente'
                 description='Error al cargar la información'
               />
             </div>
@@ -205,7 +205,7 @@ export default function ClientDetailPage() {
               <ArrowLeft className='h-4 w-4' />
             </Button>
             <Heading
-              title='Detalle de Cliente'
+              title='Perfil del Cliente'
               description='Información completa del cliente'
             />
           </div>
