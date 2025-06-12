@@ -14,6 +14,7 @@ interface DocumentsSectionProps {
   onDocumentUploaded: () => void;
   onDocumentDeleted: () => void;
   height?: string;
+  showUploadButton?: boolean;
 }
 
 export function DocumentsSection({
@@ -22,7 +23,8 @@ export function DocumentsSection({
   clientId,
   onDocumentUploaded,
   onDocumentDeleted,
-  height = '300px'
+  height = '300px',
+  showUploadButton = true
 }: DocumentsSectionProps) {
   const [viewMode, setViewMode] = useState<ViewMode>('list');
 
@@ -34,7 +36,7 @@ export function DocumentsSection({
         <p className='mb-6 text-muted-foreground'>
           No se han cargado documentos para esta solicitud.
         </p>
-        {loanRequestId && (
+        {loanRequestId && showUploadButton && (
           <UploadDocumentButton
             loanRequestId={loanRequestId}
             clientId={clientId}
@@ -82,7 +84,7 @@ export function DocumentsSection({
             </Button>
           </div>
         </div>
-        {loanRequestId && (
+        {loanRequestId && showUploadButton && (
           <UploadDocumentButton
             loanRequestId={loanRequestId}
             clientId={clientId}

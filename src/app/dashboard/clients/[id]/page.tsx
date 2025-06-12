@@ -84,13 +84,6 @@ export default function ClientDetailPage() {
     return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
   };
 
-  // Función para determinar el texto del nivel de riesgo
-  const getRiskLevelText = (score: number) => {
-    if (score >= 700) return 'Bajo';
-    if (score >= 500) return 'Medio';
-    return 'Alto';
-  };
-
   // Loading state - show skeleton if no selectedClient is available
   if (isLoading && !displayClient) {
     return (
@@ -343,6 +336,7 @@ export default function ClientDetailPage() {
               onDocumentUploaded={() => {}}
               onDocumentDeleted={() => {}}
               height='400px'
+              showUploadButton={false}
             />
           </div>
 
@@ -357,7 +351,7 @@ export default function ClientDetailPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <ScrollArea className='h-[400px]'>
+              <ScrollArea>
                 <Table>
                   <TableHeader>
                     <TableRow>
