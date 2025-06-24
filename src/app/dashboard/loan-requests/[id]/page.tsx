@@ -418,12 +418,13 @@ export default function LoanRequestDetailPage() {
     return false;
   };
 
-  // Check if user can assign visit (when status is AcceptedByCustomer and user is BusinessDevelopment_User)
+  // Check if user can assign visit (when status is AcceptedByCustomer and user is BusinessDevelopment_User or BusinessDevelopment_Admin)
   const canAssignVisit = (status: LoanRequestStatus) => {
     if (!userRole) return false;
     return (
       status === LoanRequestStatus.AcceptedByCustomer &&
-      userRole === UserRole.BusinessDevelopment_User
+      (userRole === UserRole.BusinessDevelopment_User ||
+        userRole === UserRole.BusinessDevelopment_Admin)
     );
   };
 
