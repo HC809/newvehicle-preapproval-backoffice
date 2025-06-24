@@ -81,6 +81,11 @@ export const MainInfoCard = ({
             <span className='text-green-700 dark:text-green-300'>
               Creada por {loanRequest.creatorName}
             </span>
+            {loanRequest.referredName && (
+              <span className='text-gray-600 dark:text-gray-400'>
+                {`(asignada por ${loanRequest.referredName})`}
+              </span>
+            )}
           </CardDescription>
         </div>
         <Badge

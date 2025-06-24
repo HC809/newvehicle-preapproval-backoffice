@@ -64,6 +64,7 @@ export interface LoanRequest {
   bantotalChecked: boolean;
   financingCalculated: boolean;
   managerId?: string;
+  referredName?: string;
 }
 
 export interface Visit {
