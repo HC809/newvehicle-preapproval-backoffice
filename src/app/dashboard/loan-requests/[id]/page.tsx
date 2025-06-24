@@ -404,8 +404,15 @@ export default function LoanRequestDetailPage() {
     }
 
     if (isBusinessDevAdmin) {
-      // Para BusinessDevelopment_Admin, solo mostrar botones si está en ApprovedByAgent
-      return status === LoanRequestStatus.ApprovedByAgent;
+      // Para BusinessDevelopment_Admin, mostrar botones si está en Pending con todas las verificaciones completadas
+      // o si está en ApprovedByAgent
+      return (
+        (status === LoanRequestStatus.Pending &&
+          request.equifaxChecked &&
+          request.bantotalChecked &&
+          request.financingCalculated) ||
+        status === LoanRequestStatus.ApprovedByAgent
+      );
     }
 
     return false;
@@ -829,21 +836,15 @@ export default function LoanRequestDetailPage() {
                   client={loanRequestDetail.client}
                 />
 
-                {!isAdmin ? (
-                  <VerificationChecklistCard
-                    loanRequest={loanRequestDetail.loanRequest}
-                    onCheckEquifax={handleCheckEquifax}
-                    onCheckBantotal={handleCheckBantotal}
-                    onCalculateLoan={handleCalculateLoan}
-                    isCheckingEquifax={equifaxMutation.isPending}
-                    isCheckingBantotal={bantotalMutation.isPending}
-                    isCalculatingLoan={loanCalculationMutation.isPending}
-                  />
-                ) : (
-                  <ResponsiblePersonsCard
-                    loanRequest={loanRequestDetail.loanRequest}
-                  />
-                )}
+                <VerificationChecklistCard
+                  loanRequest={loanRequestDetail.loanRequest}
+                  onCheckEquifax={handleCheckEquifax}
+                  onCheckBantotal={handleCheckBantotal}
+                  onCalculateLoan={handleCalculateLoan}
+                  isCheckingEquifax={equifaxMutation.isPending}
+                  isCheckingBantotal={bantotalMutation.isPending}
+                  isCalculatingLoan={loanCalculationMutation.isPending}
+                />
               </div>
             </div>
           ) : (
