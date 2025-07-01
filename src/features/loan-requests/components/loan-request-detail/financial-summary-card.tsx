@@ -16,6 +16,7 @@ import { LoanCalculation } from 'types/LoanCalculation';
 import { Client } from 'types/Client';
 import html2canvas from 'html2canvas';
 import { useRef } from 'react';
+import Image from 'next/image';
 
 interface FinancialSummaryCardProps {
   loanRequest: LoanRequest;
@@ -344,10 +345,12 @@ const FinancialSummaryImage = ({
     }}
   >
     <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 8 }}>
-      <img
-        src={'/images/logo.png'}
+      <Image
+        src='/images/logo.png'
         alt='Logo Cofisa'
-        style={{ maxWidth: 320, maxHeight: 60, objectFit: 'contain' }}
+        width={320}
+        height={60}
+        style={{ objectFit: 'contain' }}
       />
     </div>
     <div
@@ -403,7 +406,13 @@ const FinancialSummaryImage = ({
         <tr style={{ borderBottom: '1px solid #b0b0b0' }}>
           <td style={{ fontWeight: 'bold', padding: 6 }}>Plazo</td>
           <td style={{ textAlign: 'right', padding: 6 }}>
-            {loanRequest.requestedLoanTermMonths} Meses
+            {loanRequest.approvedLoanTermMonths &&
+            loanRequest.approvedLoanTermMonths > 0 &&
+            loanRequest.approvedLoanTermMonths !==
+              loanRequest.requestedLoanTermMonths
+              ? loanRequest.approvedLoanTermMonths
+              : loanRequest.requestedLoanTermMonths}{' '}
+            Meses
           </td>
         </tr>
         <tr style={{ borderBottom: '1px solid #b0b0b0' }}>
