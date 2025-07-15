@@ -17,14 +17,12 @@ import { ChatMessage } from 'types/ChatMessage';
 // Helper function for development logging
 const logDev = (message: string, ...args: any[]) => {
   if (process.env.NODE_ENV === 'development') {
-    console.log(message, ...args);
   }
 };
 
 // Helper function for development error logging
 const logDevError = (message: string, error: any) => {
   if (process.env.NODE_ENV === 'development') {
-    console.error(message, error);
   }
 };
 
@@ -72,8 +70,6 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
     // Subscribe to notifications from the unified service and filter for chat messages
     const unsubscribe = notificationService.onNotification(
       (notification: UnifiedNotification) => {
-        console.log('Notification received in ChatContext:', notification);
-
         // Caso 1: Verificar si es una notificación de tipo Message
         if (
           'type' in notification &&

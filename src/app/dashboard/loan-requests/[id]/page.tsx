@@ -26,9 +26,7 @@ import {
   MainInfoCard,
   RejectionAlert,
   FinancialSummaryCard,
-  //ResponsiblePersonsCard,
-  VerificationChecklistCard,
-  ResponsiblePersonsCard
+  VerificationChecklistCard
 } from '@/features/loan-requests/components/loan-request-detail';
 import useAxios from '@/hooks/use-axios';
 import {
@@ -72,7 +70,6 @@ export default function LoanRequestDetailPage() {
   const { id } = useParams();
 
   const { data: session } = useSession();
-  const isAdmin = !!session?.isSystemAdmin;
   const userRole = session?.role;
 
   const apiClient = useAxios();

@@ -21,12 +21,10 @@ export const useChatMessages = (
       if (!apiClient) throw new Error('API client not initialized');
       if (!loanRequestId) throw new Error('LoanRequest ID is required');
 
-      console.log(`Fetching messages for loan request: ${loanRequestId}`);
       const response = await apiClient.get<ChatMessage[]>(
         `${CHAT_MESSAGES_ENDPOINT}/${loanRequestId}`
       );
 
-      console.log(`Received ${response.data?.length || 0} messages`);
       return response.data;
     },
     enabled: !!apiClient && enabled && !!loanRequestId,
@@ -54,10 +52,6 @@ export const useSendMessage = () => {
       receiverUserName: string;
     }): Promise<ChatMessage> => {
       if (!apiClient) throw new Error('API client not initialized');
-
-      console.log(
-        `Sending message to ${receiverUserName} for loan request: ${loanRequestId}`
-      );
 
       // Enviar solo las propiedades requeridas
       const response = await apiClient.post<ChatMessage>(CHAT_SEND_ENDPOINT, {

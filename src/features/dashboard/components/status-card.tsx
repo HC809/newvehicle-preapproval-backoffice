@@ -1,9 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  getStatusVariant,
-  translateStatus,
-  getStatusClassName
-} from '@/utils/getStatusColor';
+import { translateStatus } from '@/utils/getStatusColor';
 import { LoanRequestStatus } from 'types/LoanRequests';
 import { cn } from '@/lib/utils';
 
@@ -53,9 +49,7 @@ function getTextColor(status: LoanRequestStatus): string {
 }
 
 export function StatusCard({ status, count }: StatusCardProps) {
-  const variant = getStatusVariant(status);
   const translatedStatus = translateStatus(status);
-  const customClass = getStatusClassName(status);
 
   // Get pastel background color based on status
   const bgColorClass = getPastelBackgroundColor(status);

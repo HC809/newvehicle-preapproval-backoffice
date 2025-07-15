@@ -2,7 +2,6 @@
 
 import { useState, useCallback, useMemo } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-//import { DataTableSearch } from '@/components/ui/table/data-table-search';
 import { DataTableFilterBox } from '@/components/ui/table/data-table-filter-box';
 import { DataTableResetFilter } from '@/components/ui/table/data-table-reset-filter';
 import { useSession } from 'next-auth/react';
@@ -22,7 +21,7 @@ export function useLoanRequestTableFilters() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const [page, setPage] = useState(1);
+  const [page] = useState(1);
   const [dniFilter, setDniFilter] = useState(searchParams.get('dni') || '');
   const [dealershipFilter, setDealershipFilter] = useState(
     searchParams.get('dealership') || ''
