@@ -11,19 +11,19 @@ import { LoanNotification } from 'types/Notifications';
 // Helper functions for logging
 const logDev = (message: string, ...args: any[]) => {
   if (process.env.NODE_ENV === 'development') {
-    console.log(message, ...args);
+    //console.log(message, ...args);
   }
 };
 
 const logDevError = (message: string, error: any) => {
   if (process.env.NODE_ENV === 'development') {
-    console.error(message, error);
+    //console.error(message, error);
   }
 };
 
 const logDevWarn = (message: string, ...args: any[]) => {
   if (process.env.NODE_ENV === 'development') {
-    console.warn(message, ...args);
+    //console.warn(message, ...args);
   }
 };
 
@@ -92,7 +92,7 @@ class SignalRNotificationService {
       this.connection.on(
         'ReceiveNotification',
         (notification: UnifiedNotification) => {
-          console.log('Received notification:', notification);
+          //console.log('Received notification:', notification);
           this.handleNotification(notification);
         }
       );

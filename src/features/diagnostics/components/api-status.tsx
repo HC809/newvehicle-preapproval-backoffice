@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { CheckCircle, XCircle, Clock } from 'lucide-react';
 import useAxios from '@/hooks/use-axios';
@@ -19,7 +19,7 @@ export function ApiConnectivityTest({
   const [responseTime, setResponseTime] = useState<number | null>(null);
   const apiClient = useAxios();
 
-  const testApiConnection = async () => {
+  const testApiConnection = useCallback(async () => {
     if (!apiClient) {
       setStatus('error');
       setStatusMessage('Cliente API no inicializado');
@@ -54,14 +54,14 @@ export function ApiConnectivityTest({
         error instanceof Error ? `Error: ${error.message}` : 'Error desconocido'
       );
     }
-  };
+  }, [apiClient]);
 
   // Verificar conexión al cargar el componente
   useEffect(() => {
     if (apiClient) {
       testApiConnection();
     }
-  }, [apiClient]);
+  }, [apiClient, testApiConnection]);
 
   if (minimal) {
     return (

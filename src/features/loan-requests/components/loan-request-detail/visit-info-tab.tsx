@@ -1,7 +1,6 @@
 import { InfoItem } from '@/components/custom/info-item';
 import { Visit } from 'types/LoanRequests';
 import { MapPin, Building, User, FileText } from 'lucide-react';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 interface VisitInfoTabProps {
   visit: Visit;

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { useToken } from '@/features/auth/TokenContext';
 import { CheckCircle, XCircle, AlertCircle } from 'lucide-react';
@@ -56,7 +56,7 @@ export function TokenValidator({ minimal = false }: TokenValidatorProps) {
     return decodedToken.exp < currentTime;
   };
 
-  const analyzeToken = () => {
+  const analyzeToken = useCallback(() => {
     setIsLoading(true);
     setError(null);
 
@@ -84,14 +84,14 @@ export function TokenValidator({ minimal = false }: TokenValidatorProps) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [accessToken]);
 
   // Analizar automáticamente cuando se carga el componente
   useEffect(() => {
     if (accessToken) {
       analyzeToken();
     }
-  }, [accessToken]);
+  }, [accessToken, analyzeToken]);
 
   if (minimal) {
     return (

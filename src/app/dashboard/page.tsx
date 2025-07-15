@@ -4,14 +4,13 @@ import useAxios from '@/hooks/use-axios';
 import PageContainer from '@/components/layout/page-container';
 import { useDashboardData } from '@/features/dashboard/api/dashboard-service';
 import { StatusStatistics } from '@/features/dashboard/components/status-statistics';
-import { StatusChart } from '@/features/dashboard/components/status-chart';
 import { DealershipBarChart } from '@/features/dashboard/components/dealership-bar-chart';
 import { VehicleTypeBarChart } from '@/features/dashboard/components/vehicle-type-bar-chart';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ReloadIcon } from '@radix-ui/react-icons';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { BarChart4, CarIcon, ShieldCheck, StoreIcon } from 'lucide-react';
+import { CarIcon, ShieldCheck, StoreIcon } from 'lucide-react';
 
 export default function DashboardPage() {
   const apiClient = useAxios();

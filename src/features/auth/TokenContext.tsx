@@ -58,7 +58,6 @@ export const TokenProvider: React.FC<{ children: React.ReactNode }> = ({
 
       // Obtener el rol de la sesión
       const sessionRole = (session as any).role;
-      console.log('Rol obtenido de la sesión:', sessionRole);
 
       // Establecer el rol como string - no como array
       setUserRole(sessionRole || null);
@@ -99,11 +98,8 @@ export const TokenProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // Función para verificar si el usuario tiene un rol específico
   const hasRole = (role: string) => {
-    console.log(`Verificando si el usuario tiene el rol '${role}'`, userRole);
-
     // Si no hay rol, devolver false
     if (!userRole) {
-      console.log('No hay rol definido, retornando false');
       return false;
     }
 
@@ -111,11 +107,9 @@ export const TokenProvider: React.FC<{ children: React.ReactNode }> = ({
     const hasExactRole = userRole === role;
 
     if (hasExactRole) {
-      console.log(`Rol '${role}' encontrado`);
       return true;
     }
 
-    console.log(`Rol '${role}' no encontrado`);
     return false;
   };
 

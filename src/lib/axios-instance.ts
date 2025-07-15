@@ -5,15 +5,6 @@ import { CustomError, ProblemDetails } from 'types/ResponseErrorTypes';
 export const createAxiosInstance = (
   accessToken?: string | null
 ): AxiosInstance => {
-  console.log('🔍 Verificando variables de entorno:');
-  console.log(
-    'NEXT_PUBLIC_API_BASE_URL:',
-    process.env.NEXT_PUBLIC_API_BASE_URL
-  );
-  console.log('NEXT_PUBLIC_API_URL:', process.env.NEXT_PUBLIC_API_URL);
-  console.log('NEXT_PUBLIC_API_TIMEOUT:', process.env.NEXT_PUBLIC_API_TIMEOUT);
-  console.log('NODE_ENV:', process.env.NODE_ENV);
-
   const instance = axios.create({
     baseURL: process.env.NEXT_PUBLIC_API_BASE_URL,
     headers: {
