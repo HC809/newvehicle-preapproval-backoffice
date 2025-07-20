@@ -23,16 +23,38 @@ export const ResponsiblePersonsCard = ({
         <div className='flex items-center space-x-4'>
           <Avatar className='border-2 border-green-200 bg-green-50 dark:bg-green-900/20'>
             <AvatarFallback className='text-green-700 dark:text-green-300'>
-              {loanRequest.creatorName.charAt(0)}
+              {loanRequest.dealershipAdminName.charAt(0)}
             </AvatarFallback>
           </Avatar>
           <div>
             <p className='text-sm font-medium text-green-700 dark:text-green-300'>
-              {loanRequest.creatorName}
+              {loanRequest.dealershipAdminName}
             </p>
-            <p className='text-xs text-muted-foreground'>Creador</p>
+            <p className='text-xs text-muted-foreground'>
+              Vendedor de Concesionaria
+            </p>
           </div>
         </div>
+        {loanRequest.creatorName !== loanRequest.dealershipAdminName && (
+          <>
+            <Separator />
+            <div className='flex items-center space-x-4'>
+              <Avatar className='border-2 border-blue-200 bg-blue-50 dark:bg-blue-900/20'>
+                <AvatarFallback className='text-blue-700 dark:text-blue-300'>
+                  {loanRequest.creatorName.charAt(0)}
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                <p className='text-sm font-medium text-blue-700 dark:text-blue-300'>
+                  {loanRequest.creatorName}
+                </p>
+                <p className='text-xs text-muted-foreground'>
+                  Creador del Registro
+                </p>
+              </div>
+            </div>
+          </>
+        )}
         <Separator />
         <div className='flex items-center space-x-4'>
           <Avatar className='border-2 border-purple-200 bg-purple-50 dark:bg-purple-900/20'>

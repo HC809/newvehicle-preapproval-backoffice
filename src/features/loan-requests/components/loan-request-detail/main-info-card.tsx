@@ -2,7 +2,6 @@ import { Badge } from '@/components/ui/badge';
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
   CardFooter
@@ -76,17 +75,29 @@ export const MainInfoCard = ({
               <span className='text-xs text-green-500'>¡Copiado!</span>
             )}
           </CardTitle>
-          <CardDescription className='flex items-center gap-2'>
-            <User className='h-4 w-4 text-green-500 dark:text-green-400' />
-            <span className='text-green-700 dark:text-green-300'>
-              Creada por {loanRequest.creatorName}
-            </span>
-            {loanRequest.referredName && (
-              <span className='text-gray-600 dark:text-gray-400'>
-                {`(asignada por ${loanRequest.referredName})`}
+          <div className='flex flex-col gap-1'>
+            <div className='flex items-center gap-2'>
+              <User className='h-4 w-4 text-green-500 dark:text-green-400' />
+              <span className='text-green-700 dark:text-green-300'>
+                Vendedor: {loanRequest.dealershipAdminName}
               </span>
+            </div>
+            {loanRequest.creatorName !== loanRequest.dealershipAdminName && (
+              <div className='flex items-center gap-2'>
+                <User className='h-4 w-4 text-blue-500 dark:text-blue-400' />
+                <span className='text-sm text-blue-700 dark:text-blue-300'>
+                  Creada por: {loanRequest.creatorName}
+                </span>
+              </div>
             )}
-          </CardDescription>
+            {loanRequest.referredName && (
+              <div className='flex items-center gap-2'>
+                <span className='text-sm text-gray-600 dark:text-gray-400'>
+                  {`(asignada por ${loanRequest.referredName})`}
+                </span>
+              </div>
+            )}
+          </div>
         </div>
         <Badge
           variant={getStatusVariant(loanRequest.status)}

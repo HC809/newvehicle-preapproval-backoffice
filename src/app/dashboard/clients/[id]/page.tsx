@@ -386,7 +386,7 @@ export default function ClientDetailPage() {
                     <TableRow>
                       <TableHead>ID</TableHead>
                       <TableHead>Concesionaria</TableHead>
-                      <TableHead>Creado por</TableHead>
+                      <TableHead>Vendedor</TableHead>
                       <TableHead>Monto</TableHead>
                       <TableHead>Ciudad</TableHead>
                       <TableHead>Estado</TableHead>
@@ -418,7 +418,7 @@ export default function ClientDetailPage() {
                           <div className='flex items-center gap-2'>
                             <User className='h-4 w-4 text-green-500 dark:text-green-400' />
                             <span className='font-medium text-green-700 dark:text-green-300'>
-                              {request.creatorName}
+                              {request.dealershipAdminName}
                             </span>
                           </div>
                         </TableCell>
