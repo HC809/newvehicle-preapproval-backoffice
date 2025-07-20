@@ -90,13 +90,13 @@ export const MainInfoCard = ({
                 </span>
               </div>
             )}
-            {loanRequest.referredName && (
+            {/* {loanRequest.referredName && (
               <div className='flex items-center gap-2'>
                 <span className='text-sm text-gray-600 dark:text-gray-400'>
                   {`(asignada por ${loanRequest.referredName})`}
                 </span>
               </div>
-            )}
+            )} */}
           </div>
         </div>
         <Badge
