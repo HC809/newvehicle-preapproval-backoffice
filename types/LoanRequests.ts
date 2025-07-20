@@ -35,6 +35,8 @@ export interface LoanRequest {
   dealershipId: string;
   dealershipName: string;
   creatorName: string;
+  dealershipAdminId: string;
+  dealershipAdminName: string;
   managerName: string;
   clientName: string;
   dni: string;
@@ -64,6 +66,7 @@ export interface LoanRequest {
   bantotalChecked: boolean;
   financingCalculated: boolean;
   managerId?: string;
+  referredId?: string;
   referredName?: string;
 }
 

@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { ColumnDef } from '@tanstack/react-table';
-import { Building, User, UserCog, Briefcase } from 'lucide-react';
+import { Building, User, UserCog, Briefcase, Info } from 'lucide-react';
 import { LoanRequest, LoanRequestStatus } from 'types/LoanRequests';
 import { Badge } from '@/components/ui/badge';
 import { formatHNL } from '@/utils/formatCurrency';
@@ -16,6 +16,12 @@ import {
   getStatusClassName
 } from '@/utils/getStatusColor';
 import { translateIncomeType } from '@/utils/translateIncomeType';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger
+} from '@/components/ui/tooltip';
 
 export const LoanRequestColumns = (
   viewMode: 'assigned' | 'all' = 'assigned',
@@ -52,14 +58,26 @@ export const LoanRequestColumns = (
       )
     },
     {
-      accessorKey: 'creatorName',
-      header: () => <span className='font-bold'>Creado por</span>,
+      accessorKey: 'dealershipAdminName',
+      header: () => <span className='font-bold'>Vendedor</span>,
       cell: ({ row }) => (
         <div className='flex items-center gap-2'>
           <User className='h-4 w-4 text-green-500 dark:text-green-400' />
           <span className='font-medium text-green-700 dark:text-green-300'>
-            {row.original.creatorName}
+            {row.original.dealershipAdminName}
           </span>
+          {row.original.referredId && row.original.referredName && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Info className='h-4 w-4 cursor-help text-blue-500 dark:text-blue-400' />
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Creado por {row.original.referredName}.</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
         </div>
       )
     },
