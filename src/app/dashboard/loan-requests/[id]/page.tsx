@@ -977,7 +977,7 @@ export default function LoanRequestDetailPage() {
                 }}
                 onSubmit={handleApproveForCommittee}
                 title='Aprobar Solicitud para Comité'
-                description=''
+                description='¿Está seguro que desea aprobar esta solicitud para comité? Esta acción permitirá que la solicitud sea revisada por el comité correspondiente.'
                 isSubmitting={approveForCommitteeMutation.isPending}
               />
 
