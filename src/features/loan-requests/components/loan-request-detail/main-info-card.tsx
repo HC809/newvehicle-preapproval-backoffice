@@ -13,13 +13,12 @@ import {
   getStatusClassName
 } from '@/utils/getStatusColor';
 import { formatLoanRequestId } from '@/utils/formatId';
-import { User, FileText, MapPin, Copy, Building } from 'lucide-react';
-import { LoanRequest, LoanRequestStatus, Visit } from 'types/LoanRequests';
+import { User, FileText, MapPin, Copy } from 'lucide-react';
+import { LoanRequest, Visit } from 'types/LoanRequests';
 import { GeneralInfoTab } from './general-info-tab';
 import { VehicleInfoTab } from './vehicle-info-tab';
 import { FinancialInfoTab } from './financial-info-tab';
 import { VisitInfoTab } from './visit-info-tab';
-import { BranchManagerTab } from './branch-manager-tab';
 import { Client } from 'types/Client';
 import { useState } from 'react';
 
@@ -38,8 +37,6 @@ export const MainInfoCard = ({
 }: MainInfoCardProps) => {
   const [copiedId, setCopiedId] = useState(false);
   const showVisitTab = visit?.branchCode && visit?.branchName;
-  const showBranchManagerTab =
-    loanRequest.status === LoanRequestStatus.BranchManagerReview && visit;
 
   const copyId = () => {
     navigator.clipboard.writeText(loanRequest.id.toString());
@@ -47,16 +44,13 @@ export const MainInfoCard = ({
     setTimeout(() => setCopiedId(false), 2000);
   };
 
-  // Si está en estado VisitAssigned, la pestaña de visita debería ser la predeterminada
-  // Si está en estado BranchManagerReview, la pestaña de gerente agencia debería ser la predeterminada
-  const defaultTab = showVisitTab
-    ? 'visit'
-    : showBranchManagerTab
-      ? 'branchManager'
-      : 'general';
+  // Si hay información de visita, mostrar la pestaña de visita como predeterminada
+  const defaultTab = showVisitTab ? 'visit' : 'general';
 
-  // Determinar el número de columnas para el TabsList
-  const tabsCount = 3 + (showVisitTab ? 1 : 0) + (showBranchManagerTab ? 1 : 0);
+  // Función para obtener la clase de grid correcta basada en el número de tabs
+  const getGridClass = () => {
+    return showVisitTab ? 'grid-cols-4' : 'grid-cols-3';
+  };
 
   return (
     <Card className='border-l-4 border-l-blue-500 dark:border-l-blue-400'>
@@ -108,7 +102,7 @@ export const MainInfoCard = ({
       </CardHeader>
       <CardContent>
         <Tabs defaultValue={defaultTab} className='w-full'>
-          <TabsList className={`grid w-full grid-cols-${tabsCount}`}>
+          <TabsList className={`grid w-full ${getGridClass()}`}>
             <TabsTrigger value='general'>General</TabsTrigger>
             <TabsTrigger value='vehicle'>Vehículo</TabsTrigger>
             <TabsTrigger value='financial'>Financiero</TabsTrigger>
@@ -116,15 +110,6 @@ export const MainInfoCard = ({
               <TabsTrigger value='visit' className='flex items-center gap-1'>
                 <MapPin className='h-3.5 w-3.5' />
                 Visita
-              </TabsTrigger>
-            )}
-            {showBranchManagerTab && (
-              <TabsTrigger
-                value='branchManager'
-                className='flex items-center gap-1'
-              >
-                <Building className='h-3.5 w-3.5' />
-                Agencia
               </TabsTrigger>
             )}
           </TabsList>
@@ -165,15 +150,6 @@ export const MainInfoCard = ({
                   No hay información de visita disponible
                 </div>
               )}
-            </TabsContent>
-          )}
-
-          {showBranchManagerTab && (
-            <TabsContent
-              value='branchManager'
-              className='mt-4 space-y-4 focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0'
-            >
-              <BranchManagerTab visit={visit} />
             </TabsContent>
           )}
         </Tabs>
