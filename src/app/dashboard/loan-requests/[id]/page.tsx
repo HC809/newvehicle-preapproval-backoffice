@@ -40,6 +40,7 @@ import {
   useApproveForCommittee,
   useAddBranchManagerComment,
   useCompleteLoanRequest,
+  useCompleteLoanRequestWithDate,
   useAcceptTermsByCustomer,
   useDeclineTermsByCustomer
 } from '@/features/loan-requests/api/loan-request-service';
@@ -64,6 +65,7 @@ import {
 import { BranchManagerCommentModal } from '@/features/loan-requests/components/branch-manager-comment-modal';
 import { AcceptTermsModal } from '@/features/loan-requests/components/accept-terms-modal';
 import { DeclineTermsModal } from '@/features/loan-requests/components/decline-terms-modal';
+import { CompleteRequestModal } from '@/features/loan-requests/components/complete-request-modal';
 
 export default function LoanRequestDetailPage() {
   const router = useRouter();
@@ -93,6 +95,8 @@ export default function LoanRequestDetailPage() {
   const [showCompleteModal, setShowCompleteModal] = useState(false);
   const [showAcceptTermsModal, setShowAcceptTermsModal] = useState(false);
   const [showDeclineTermsModal, setShowDeclineTermsModal] = useState(false);
+  const [showCompleteWithDateModal, setShowCompleteWithDateModal] =
+    useState(false);
 
   // Fetch loan request details from API
   const {
@@ -116,6 +120,9 @@ export default function LoanRequestDetailPage() {
     apiClient!
   );
   const completeLoanRequestMutation = useCompleteLoanRequest(apiClient!);
+  const completeLoanRequestWithDateMutation = useCompleteLoanRequestWithDate(
+    apiClient!
+  );
   const acceptTermsMutation = useAcceptTermsByCustomer(apiClient!);
   const declineTermsMutation = useDeclineTermsByCustomer(apiClient!);
 
@@ -446,6 +453,22 @@ export default function LoanRequestDetailPage() {
     );
   };
 
+  // Check if user can complete loan request with date (when NOT in ApprovedForCommittee status)
+  const canCompleteLoanRequestWithDate = (status: LoanRequestStatus) => {
+    if (!userRole) return false;
+    return (
+      status !== LoanRequestStatus.ApprovedForCommittee &&
+      status !== LoanRequestStatus.RejectedByAgent &&
+      status !== LoanRequestStatus.RejectedByManager &&
+      status !== LoanRequestStatus.DeclinedByCustomer &&
+      status !== LoanRequestStatus.Cancelled &&
+      status !== LoanRequestStatus.Completed &&
+      status !== LoanRequestStatus.Pending &&
+      (userRole === UserRole.BusinessDevelopment_User ||
+        userRole === UserRole.BusinessDevelopment_Admin)
+    );
+  };
+
   // Handle complete loan request submission
   const handleCompleteLoanRequest = async () => {
     if (!loanRequestDetail) return;
@@ -457,6 +480,23 @@ export default function LoanRequestDetailPage() {
       await refetch();
       toast.success('Solicitud completada exitosamente');
       setShowCompleteModal(false);
+    } catch (error: any) {
+      toast.error(error.message || 'Error al completar la solicitud');
+    }
+  };
+
+  // Handle complete loan request with date submission
+  const handleCompleteLoanRequestWithDate = async (approvalDate: string) => {
+    if (!loanRequestDetail) return;
+
+    try {
+      await completeLoanRequestWithDateMutation.mutateAsync({
+        loanRequestId: loanRequestDetail.loanRequest.id,
+        approvalDate
+      });
+      await refetch();
+      toast.success('Solicitud completada exitosamente');
+      setShowCompleteWithDateModal(false);
     } catch (error: any) {
       toast.error(error.message || 'Error al completar la solicitud');
     }
@@ -751,6 +791,17 @@ export default function LoanRequestDetailPage() {
                         <XCircle className='mr-2 h-4 w-4' />
                         Rechazar Solicitud
                       </DropdownMenuItem>
+                      {canCompleteLoanRequestWithDate(
+                        loanRequestDetail.loanRequest.status
+                      ) && (
+                        <DropdownMenuItem
+                          onClick={() => setShowCompleteWithDateModal(true)}
+                          className='text-green-600 focus:text-green-600 dark:text-green-400 dark:focus:text-green-400'
+                        >
+                          <CheckCircle className='mr-2 h-4 w-4' />
+                          Completar Solicitud
+                        </DropdownMenuItem>
+                      )}
                       {canAcceptTerms(loanRequestDetail.loanRequest.status) && (
                         <>
                           <DropdownMenuItem
@@ -926,7 +977,7 @@ export default function LoanRequestDetailPage() {
                 }}
                 onSubmit={handleApproveForCommittee}
                 title='Aprobar Solicitud para Comité'
-                description=''
+                description='¿Está seguro que desea aprobar esta solicitud para comité? Esta acción permitirá que la solicitud sea revisada por el comité correspondiente.'
                 isSubmitting={approveForCommitteeMutation.isPending}
               />
 
@@ -1000,6 +1051,19 @@ export default function LoanRequestDetailPage() {
                 onConfirm={handleDeclineTermsSubmit}
                 isSubmitting={declineTermsMutation.isPending}
                 error={declineTermsMutation.error?.toString()}
+              />
+
+              <CompleteRequestModal
+                isOpen={showCompleteWithDateModal}
+                onClose={() => {
+                  if (!completeLoanRequestWithDateMutation.isPending) {
+                    setShowCompleteWithDateModal(false);
+                  }
+                }}
+                onSubmit={handleCompleteLoanRequestWithDate}
+                currentStatus={loanRequestDetail.loanRequest.status}
+                isSubmitting={completeLoanRequestWithDateMutation.isPending}
+                error={completeLoanRequestWithDateMutation.error?.toString()}
               />
             </>
           )}

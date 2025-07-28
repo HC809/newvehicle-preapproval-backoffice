@@ -378,6 +378,34 @@ export const useCompleteLoanRequest = (apiClient: AxiosInstance) => {
   });
 };
 
+export const useCompleteLoanRequestWithDate = (apiClient: AxiosInstance) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      loanRequestId,
+      approvalDate
+    }: {
+      loanRequestId: string;
+      approvalDate: string;
+    }) => {
+      const response = await apiClient.post(
+        `/loan-requests/complete-with-date/${loanRequestId}`,
+        { approvalDate }
+      );
+      return response.data;
+    },
+    onSuccess: (_, variables) => {
+      // Invalidate the specific loan request to update its details
+      queryClient.invalidateQueries({
+        queryKey: [LOAN_REQUESTS_KEY, 'detail', variables.loanRequestId]
+      });
+      // Also invalidate the list of loan requests
+      queryClient.invalidateQueries({ queryKey: [LOAN_REQUESTS_KEY] });
+    }
+  });
+};
+
 export const useAcceptTermsByCustomer = (apiClient: AxiosInstance) => {
   return useMutation({
     mutationFn: async ({
