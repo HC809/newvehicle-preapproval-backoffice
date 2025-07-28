@@ -44,8 +44,8 @@ import { SearchableSelect } from '@/components/searchable-select';
 import { useCities } from '@/features/cities/api/city-service';
 
 const formSchema = z.object({
-  dni: z.string().min(13, {
-    message: 'El DNI debe tener 13 caracteres.'
+  dni: z.string().length(13, {
+    message: 'El DNI debe tener ser de 13 dígitos.'
   }),
   vehicleTypeId: z.string().min(1, {
     message: 'Debe seleccionar un tipo de vehículo.'
@@ -278,6 +278,7 @@ export default function LoanRequestForm({
                         <FormControl>
                           <Input
                             {...field}
+                            type='number'
                             placeholder='Ingrese el DNI del cliente'
                             autoFocus
                           />
