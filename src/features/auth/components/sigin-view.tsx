@@ -1,9 +1,6 @@
 'use client';
 
-import { buttonVariants } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
 import { Metadata } from 'next';
-import Link from 'next/link';
 import Image from 'next/image';
 import UserAuthForm from './user-auth-form';
 import { useTheme } from 'next-themes';
@@ -17,7 +14,7 @@ export const metadata: Metadata = {
   description: 'Authentication forms built using the components.'
 };
 
-export default function SignInViewPage({ stars }: { stars: number }) {
+export default function SignInViewPage() {
   const { resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
@@ -29,16 +26,6 @@ export default function SignInViewPage({ stars }: { stars: number }) {
 
   return (
     <div className='relative h-screen flex-col items-center justify-center md:grid lg:max-w-none lg:grid-cols-2 lg:px-0'>
-      <Link
-        href='/examples/authentication'
-        className={cn(
-          buttonVariants({ variant: 'ghost' }),
-          'absolute right-4 top-4 hidden md:right-8 md:top-8'
-        )}
-      >
-        Login
-      </Link>
-
       {/* Mitad Izquierda - Cambiado a azul marino muy oscuro, casi negro */}
       <div className='relative hidden h-full flex-col overflow-hidden p-10 text-white lg:flex'>
         {/* Contenedor para el fondo animado - Note that we're now applying background color in the component */}

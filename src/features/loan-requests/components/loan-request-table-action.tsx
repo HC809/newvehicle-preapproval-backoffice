@@ -4,7 +4,6 @@ import { useState, useCallback, useMemo } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { DataTableFilterBox } from '@/components/ui/table/data-table-filter-box';
 import { DataTableResetFilter } from '@/components/ui/table/data-table-reset-filter';
-import { useSession } from 'next-auth/react';
 import { Options } from 'nuqs';
 import useAxios from '@/hooks/use-axios';
 import { useUsers } from '@/features/users/api/user-service';
@@ -15,6 +14,7 @@ import { translateStatus, getStatusVariant } from '@/utils/getStatusColor';
 import { Input } from '@/components/ui/input';
 import { MagnifyingGlassIcon } from '@radix-ui/react-icons';
 import { Dispatch, SetStateAction } from 'react';
+import { usePermissions } from '@/hooks/use-permissions';
 
 export function useLoanRequestTableFilters() {
   const router = useRouter();
@@ -184,8 +184,8 @@ export default function LoanRequestTableAction({
   setDniFilter: externalSetDniFilter,
   resetAllFilters: externalResetFilters
 }: LoanRequestTableActionProps = {}) {
-  const { data: session } = useSession();
-  const isAdmin = !!session?.isSystemAdmin;
+  const { canManageUsers } = usePermissions();
+  const isAdmin = canManageUsers();
   const apiClient = useAxios();
 
   // Obtener usuarios con rol BusinessDevelopment_User y que estén activos
