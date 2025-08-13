@@ -16,7 +16,6 @@ import { LoanCalculation } from 'types/LoanCalculation';
 import { Client } from 'types/Client';
 import html2canvas from 'html2canvas';
 import { useRef } from 'react';
-import Image from 'next/image';
 
 interface FinancialSummaryCardProps {
   loanRequest: LoanRequest;
@@ -36,27 +35,49 @@ export const FinancialSummaryCard = ({
 
   const handleCopyImage = async () => {
     if (!imageRef.current) return;
-    const canvas = await html2canvas(imageRef.current, {
-      backgroundColor: '#fff',
-      scale: 2
-    });
-    canvas.toBlob(async (blob) => {
-      if (!blob) return;
-      try {
-        await navigator.clipboard.write([
-          new window.ClipboardItem({ 'image/png': blob })
-        ]);
-        alert('Imagen copiada al portapapeles');
-      } catch (err) {
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = 'resumen-financiero.png';
-        link.click();
-        URL.revokeObjectURL(url);
-        alert('No se pudo copiar, pero la imagen fue descargada.');
+
+    try {
+      // Asegurar que la imagen esté completamente cargada
+      const logoImg = imageRef.current.querySelector('img');
+      if (logoImg) {
+        await new Promise((resolve, reject) => {
+          if (logoImg.complete) {
+            resolve(true);
+          } else {
+            logoImg.onload = resolve;
+            logoImg.onerror = reject;
+          }
+        });
       }
-    });
+
+      const canvas = await html2canvas(imageRef.current, {
+        backgroundColor: '#fff',
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        logging: false
+      });
+
+      canvas.toBlob(async (blob) => {
+        if (!blob) return;
+        try {
+          await navigator.clipboard.write([
+            new window.ClipboardItem({ 'image/png': blob })
+          ]);
+          alert('Imagen copiada al portapapeles');
+        } catch (err) {
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = 'resumen-financiero.png';
+          link.click();
+          URL.revokeObjectURL(url);
+          alert('No se pudo copiar, pero la imagen fue descargada.');
+        }
+      });
+    } catch (error) {
+      alert('Error al generar la imagen. Intente nuevamente.');
+    }
   };
 
   return (
@@ -249,7 +270,7 @@ export const FinancialSummaryCard = ({
                   {/* Columna 3 - Información Adicional */}
                   <div className='relative space-y-8'>
                     <h3 className='flex items-center gap-2 text-lg font-semibold text-foreground'>
-                      <div className='flex h-7 w-7 items-center justify-center rounded-full bg-emerald-700 text-emerald-100 dark:bg-emerald-400 dark:text-emerald-900'>
+                      <div className='flex h-7 w-7 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30'>
                         3
                       </div>
                       <span>Información Adicional</span>
@@ -351,12 +372,14 @@ const FinancialSummaryImage = ({
     }}
   >
     <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 8 }}>
-      <Image
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
         src='/images/logo.png'
         alt='Logo Cofisa'
         width={320}
         height={60}
-        style={{ objectFit: 'contain' }}
+        style={{ objectFit: 'contain', maxWidth: '100%', height: 'auto' }}
+        crossOrigin='anonymous'
       />
     </div>
     <div
