@@ -362,13 +362,16 @@ const FinancialSummaryImage = ({
 }) => (
   <div
     style={{
-      width: 500,
+      width: 490,
       fontFamily: 'Arial, sans-serif',
       background: '#fff',
       color: '#222',
-      border: '2px solid #0a3970',
-      borderRadius: 12,
-      padding: 24
+      border: '3px solid #0a3970',
+      borderRadius: 0,
+      padding: 24,
+      boxShadow: '0 4px 8px rgba(10, 57, 112, 0.2)',
+      boxSizing: 'border-box',
+      overflow: 'hidden'
     }}
   >
     <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 8 }}>
@@ -390,7 +393,7 @@ const FinancialSummaryImage = ({
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        borderRadius: 6,
+        borderRadius: 0,
         textAlign: 'center',
         fontWeight: 'bold',
         fontSize: 20,
@@ -410,7 +413,7 @@ const FinancialSummaryImage = ({
         letterSpacing: 1,
         paddingTop: 10,
         paddingBottom: 10,
-        borderRadius: 6,
+        borderRadius: 0,
         marginBottom: 16
       }}
     >
