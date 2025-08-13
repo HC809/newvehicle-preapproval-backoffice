@@ -157,10 +157,10 @@ export const FinancialSummaryCard = ({
                 </div>
               )}
               <ScrollArea className='h-full max-h-[calc(90vh-80px)] pr-4'>
-                <div className='relative grid gap-12 bg-white py-6 sm:grid-cols-2 lg:grid-cols-3'>
+                <div className='relative grid gap-12 bg-background py-6 sm:grid-cols-2 lg:grid-cols-3'>
                   {/* Columna 1 - Información del Préstamo */}
                   <div className='relative space-y-8'>
-                    <h3 className='flex items-center gap-2 text-lg font-semibold'>
+                    <h3 className='flex items-center gap-2 text-lg font-semibold text-foreground'>
                       <div className='flex h-7 w-7 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30'>
                         1
                       </div>
@@ -193,13 +193,16 @@ export const FinancialSummaryCard = ({
                     </div>
                     {/* Separador Vertical 1 */}
                     <div className='absolute -right-4 top-0 hidden h-full sm:block lg:block'>
-                      <Separator orientation='vertical' className='h-full' />
+                      <Separator
+                        orientation='vertical'
+                        className='h-full bg-border'
+                      />
                     </div>
                   </div>
 
                   {/* Columna 2 - Pagos Mensuales */}
                   <div className='relative space-y-8'>
-                    <h3 className='flex items-center gap-2 text-lg font-semibold'>
+                    <h3 className='flex items-center gap-2 text-lg font-semibold text-foreground'>
                       <div className='flex h-7 w-7 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30'>
                         2
                       </div>
@@ -236,14 +239,17 @@ export const FinancialSummaryCard = ({
                     </div>
                     {/* Separador Vertical 2 */}
                     <div className='absolute -right-4 top-0 hidden h-full lg:block'>
-                      <Separator orientation='vertical' className='h-full' />
+                      <Separator
+                        orientation='vertical'
+                        className='h-full bg-border'
+                      />
                     </div>
                   </div>
 
                   {/* Columna 3 - Información Adicional */}
                   <div className='relative space-y-8'>
-                    <h3 className='flex items-center gap-2 text-lg font-semibold'>
-                      <div className='flex h-7 w-7 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30'>
+                    <h3 className='flex items-center gap-2 text-lg font-semibold text-foreground'>
+                      <div className='flex h-7 w-7 items-center justify-center rounded-full bg-emerald-700 text-emerald-100 dark:bg-emerald-400 dark:text-emerald-900'>
                         3
                       </div>
                       <span>Información Adicional</span>
@@ -313,7 +319,7 @@ const FinancialItem = ({ label, value, highlight }: FinancialItemProps) => {
         {label}
       </span>
       <span
-        className={`text-right text-base font-medium tabular-nums ${highlight ? getHighlightClasses() + ' font-semibold' : ''}`}
+        className={`text-right text-base font-medium tabular-nums ${highlight ? getHighlightClasses() + ' font-semibold' : 'text-foreground'}`}
       >
         {value}
       </span>
