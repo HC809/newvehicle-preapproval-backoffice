@@ -4,7 +4,9 @@ export enum UserRole {
   BusinessDevelopment_User = 'BusinessDevelopment_User',
   Dealership_Admin = 'Dealership_Admin',
   PYMEAdvisor = 'PYMEAdvisor',
-  BranchManager = 'BranchManager'
+  BranchManager = 'BranchManager',
+  ContactCenterAgent = 'ContactCenterAgent',
+  FinancialAdvisor = 'FinancialAdvisor'
 }
 
 export enum VerificationType {

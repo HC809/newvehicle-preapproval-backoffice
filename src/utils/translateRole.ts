@@ -6,5 +6,7 @@ export const translateRole: Record<UserRole, string> = {
   [UserRole.BusinessDevelopment_User]: 'Oficial de Negocio',
   [UserRole.Dealership_Admin]: 'Asesor de Concesionaria',
   [UserRole.PYMEAdvisor]: 'Asesor Pyme',
-  [UserRole.BranchManager]: 'Gerente de Agencia'
+  [UserRole.BranchManager]: 'Gerente de Agencia',
+  [UserRole.ContactCenterAgent]: 'Agente de Contact Center',
+  [UserRole.FinancialAdvisor]: 'Asesor Financiero'
 };
