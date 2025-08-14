@@ -17,10 +17,31 @@ export const metadata: Metadata = {
 export default function SignInViewPage() {
   const { resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Error boundary for the component
+  if (error) {
+    return (
+      <div className='flex h-screen items-center justify-center'>
+        <div className='text-center'>
+          <h1 className='mb-4 text-2xl font-bold text-red-600'>
+            Error de Carga
+          </h1>
+          <p className='mb-4 text-gray-600'>{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className='rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700'
+          >
+            Recargar Página
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   const logoSrc = mounted && resolvedTheme === 'dark' ? logoDark : logo;
 

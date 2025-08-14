@@ -50,10 +50,15 @@ export default async function RootLayout({
           <NextTopLoader showSpinner={false} />
           <NuqsAdapter>
             <Toaster />
-            {children}
+            <ErrorBoundary>{children}</ErrorBoundary>
           </NuqsAdapter>
         </ThemeProvider>
       </body>
     </html>
   );
+}
+
+// Error Boundary Component
+function ErrorBoundary({ children }: { children: React.ReactNode }) {
+  return <div>{children}</div>;
 }
