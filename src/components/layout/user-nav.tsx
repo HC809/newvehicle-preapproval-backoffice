@@ -4,18 +4,35 @@ import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
+  // DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuShortcut,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
-import { signIn, signOut, useSession } from 'next-auth/react';
+import { signOut, useSession } from 'next-auth/react';
 
 export function UserNav() {
-  const { data: session } = useSession();
-  if (session) {
+  const { data: session, status } = useSession();
+
+  // Mostrar loading mientras se verifica la sesión
+  if (status === 'loading') {
+    return (
+      <Button
+        variant='ghost'
+        className='relative h-8 w-8 rounded-full'
+        disabled
+      >
+        <Avatar className='h-8 w-8'>
+          <AvatarFallback>...</AvatarFallback>
+        </Avatar>
+      </Button>
+    );
+  }
+
+  // Solo mostrar el menú si hay una sesión válida
+  if (session?.user) {
     return (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
@@ -41,26 +58,39 @@ export function UserNav() {
             </div>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuGroup>
-            <DropdownMenuItem>
+          {/* <DropdownMenuGroup>
+            <DropdownMenuItem
+              onClick={() => {
+                // TODO: Implementar navegación al perfil
+                console.log('Navegar al perfil');
+              }}
+            >
               Perfil
               <DropdownMenuShortcut>⇧⌘P</DropdownMenuShortcut>
             </DropdownMenuItem>
-            {/* <DropdownMenuItem>
-              Facturación
-              <DropdownMenuShortcut>⌘B</DropdownMenuShortcut>
-            </DropdownMenuItem> */}
-            <DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => {
+                // TODO: Implementar navegación a configuración
+                console.log('Navegar a configuración');
+              }}
+            >
               Configuración
               <DropdownMenuShortcut>⌘S</DropdownMenuShortcut>
             </DropdownMenuItem>
-            {/* <DropdownMenuItem>Nuevo Equipo</DropdownMenuItem> */}
-          </DropdownMenuGroup>
-          <DropdownMenuSeparator />
+          </DropdownMenuGroup> */}
+          {/* <DropdownMenuSeparator /> */}
           <DropdownMenuItem
             onClick={async () => {
-              await signOut();
-              await signIn();
+              try {
+                await signOut({
+                  callbackUrl: '/auth/signin',
+                  redirect: true
+                });
+              } catch (error) {
+                console.error('Error al cerrar sesión:', error);
+                // Fallback: redirigir manualmente
+                window.location.href = '/auth/signin';
+              }
             }}
           >
             Cerrar sesión
@@ -70,4 +100,7 @@ export function UserNav() {
       </DropdownMenu>
     );
   }
+
+  // Si no hay sesión, no mostrar nada
+  return null;
 }
