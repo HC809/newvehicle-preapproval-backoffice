@@ -16,7 +16,6 @@ import { LoanCalculation } from 'types/LoanCalculation';
 import { Client } from 'types/Client';
 import html2canvas from 'html2canvas';
 import { useRef } from 'react';
-import Image from 'next/image';
 
 interface FinancialSummaryCardProps {
   loanRequest: LoanRequest;
@@ -36,27 +35,49 @@ export const FinancialSummaryCard = ({
 
   const handleCopyImage = async () => {
     if (!imageRef.current) return;
-    const canvas = await html2canvas(imageRef.current, {
-      backgroundColor: '#fff',
-      scale: 2
-    });
-    canvas.toBlob(async (blob) => {
-      if (!blob) return;
-      try {
-        await navigator.clipboard.write([
-          new window.ClipboardItem({ 'image/png': blob })
-        ]);
-        alert('Imagen copiada al portapapeles');
-      } catch (err) {
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = 'resumen-financiero.png';
-        link.click();
-        URL.revokeObjectURL(url);
-        alert('No se pudo copiar, pero la imagen fue descargada.');
+
+    try {
+      // Asegurar que la imagen esté completamente cargada
+      const logoImg = imageRef.current.querySelector('img');
+      if (logoImg) {
+        await new Promise((resolve, reject) => {
+          if (logoImg.complete) {
+            resolve(true);
+          } else {
+            logoImg.onload = resolve;
+            logoImg.onerror = reject;
+          }
+        });
       }
-    });
+
+      const canvas = await html2canvas(imageRef.current, {
+        backgroundColor: '#fff',
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        logging: false
+      });
+
+      canvas.toBlob(async (blob) => {
+        if (!blob) return;
+        try {
+          await navigator.clipboard.write([
+            new window.ClipboardItem({ 'image/png': blob })
+          ]);
+          alert('Imagen copiada al portapapeles');
+        } catch (err) {
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = 'resumen-financiero.png';
+          link.click();
+          URL.revokeObjectURL(url);
+          alert('No se pudo copiar, pero la imagen fue descargada.');
+        }
+      });
+    } catch (error) {
+      alert('Error al generar la imagen. Intente nuevamente.');
+    }
   };
 
   return (
@@ -157,10 +178,10 @@ export const FinancialSummaryCard = ({
                 </div>
               )}
               <ScrollArea className='h-full max-h-[calc(90vh-80px)] pr-4'>
-                <div className='relative grid gap-12 bg-white py-6 sm:grid-cols-2 lg:grid-cols-3'>
+                <div className='relative grid gap-12 bg-background py-6 sm:grid-cols-2 lg:grid-cols-3'>
                   {/* Columna 1 - Información del Préstamo */}
                   <div className='relative space-y-8'>
-                    <h3 className='flex items-center gap-2 text-lg font-semibold'>
+                    <h3 className='flex items-center gap-2 text-lg font-semibold text-foreground'>
                       <div className='flex h-7 w-7 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30'>
                         1
                       </div>
@@ -193,13 +214,16 @@ export const FinancialSummaryCard = ({
                     </div>
                     {/* Separador Vertical 1 */}
                     <div className='absolute -right-4 top-0 hidden h-full sm:block lg:block'>
-                      <Separator orientation='vertical' className='h-full' />
+                      <Separator
+                        orientation='vertical'
+                        className='h-full bg-border'
+                      />
                     </div>
                   </div>
 
                   {/* Columna 2 - Pagos Mensuales */}
                   <div className='relative space-y-8'>
-                    <h3 className='flex items-center gap-2 text-lg font-semibold'>
+                    <h3 className='flex items-center gap-2 text-lg font-semibold text-foreground'>
                       <div className='flex h-7 w-7 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30'>
                         2
                       </div>
@@ -236,13 +260,16 @@ export const FinancialSummaryCard = ({
                     </div>
                     {/* Separador Vertical 2 */}
                     <div className='absolute -right-4 top-0 hidden h-full lg:block'>
-                      <Separator orientation='vertical' className='h-full' />
+                      <Separator
+                        orientation='vertical'
+                        className='h-full bg-border'
+                      />
                     </div>
                   </div>
 
                   {/* Columna 3 - Información Adicional */}
                   <div className='relative space-y-8'>
-                    <h3 className='flex items-center gap-2 text-lg font-semibold'>
+                    <h3 className='flex items-center gap-2 text-lg font-semibold text-foreground'>
                       <div className='flex h-7 w-7 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30'>
                         3
                       </div>
@@ -313,7 +340,7 @@ const FinancialItem = ({ label, value, highlight }: FinancialItemProps) => {
         {label}
       </span>
       <span
-        className={`text-right text-base font-medium tabular-nums ${highlight ? getHighlightClasses() + ' font-semibold' : ''}`}
+        className={`text-right text-base font-medium tabular-nums ${highlight ? getHighlightClasses() + ' font-semibold' : 'text-foreground'}`}
       >
         {value}
       </span>
@@ -335,22 +362,27 @@ const FinancialSummaryImage = ({
 }) => (
   <div
     style={{
-      width: 500,
+      width: 490,
       fontFamily: 'Arial, sans-serif',
       background: '#fff',
       color: '#222',
-      border: '2px solid #0a3970',
-      borderRadius: 12,
-      padding: 24
+      border: '3px solid #0a3970',
+      borderRadius: 0,
+      padding: 24,
+      boxShadow: '0 4px 8px rgba(10, 57, 112, 0.2)',
+      boxSizing: 'border-box',
+      overflow: 'hidden'
     }}
   >
     <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 8 }}>
-      <Image
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
         src='/images/logo.png'
         alt='Logo Cofisa'
         width={320}
         height={60}
-        style={{ objectFit: 'contain' }}
+        style={{ objectFit: 'contain', maxWidth: '100%', height: 'auto' }}
+        crossOrigin='anonymous'
       />
     </div>
     <div
@@ -361,7 +393,7 @@ const FinancialSummaryImage = ({
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        borderRadius: 6,
+        borderRadius: 0,
         textAlign: 'center',
         fontWeight: 'bold',
         fontSize: 20,
@@ -381,7 +413,7 @@ const FinancialSummaryImage = ({
         letterSpacing: 1,
         paddingTop: 10,
         paddingBottom: 10,
-        borderRadius: 6,
+        borderRadius: 0,
         marginBottom: 16
       }}
     >

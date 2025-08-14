@@ -63,17 +63,13 @@ const authOptions = {
         return {
           ...session,
           accessToken: '',
-          user: null as any,
-          isSystemAdmin: false
+          user: null as any
         };
       }
 
       session.accessToken = String(token.accessToken);
       session.user = token.data as any;
       session.role = session.user.role;
-      session.isSystemAdmin =
-        session.user.role === 'IT_Admin' ||
-        session.user.role === 'BusinessDevelopment_Admin';
 
       const expiresIn = dayjs(token.expiresIn as Date);
       session.expires = expiresIn.toDate();

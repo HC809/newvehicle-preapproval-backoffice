@@ -11,14 +11,6 @@ type BreadcrumbItem = {
 // This allows to add custom title as well
 const routeMapping: Record<string, BreadcrumbItem[]> = {
   '/dashboard': [{ title: 'Dashboard', link: '/dashboard' }],
-  '/dashboard/employee': [
-    { title: 'Dashboard', link: '/dashboard' },
-    { title: 'Empleados', link: '/dashboard/employee' }
-  ],
-  '/dashboard/product': [
-    { title: 'Dashboard', link: '/dashboard' },
-    { title: 'Productos', link: '/dashboard/product' }
-  ],
   '/dashboard/loan-requests': [
     { title: 'Dashboard', link: '/dashboard' },
     { title: 'Solicitudes', link: '/dashboard/loan-requests' }
@@ -35,19 +27,25 @@ const routeMapping: Record<string, BreadcrumbItem[]> = {
     { title: 'Dashboard', link: '/dashboard' },
     { title: 'Tipos de Vehículos', link: '/dashboard/vehicle-types' }
   ],
-  '/dashboard/overview': [
+  '/dashboard/notifications': [
     { title: 'Dashboard', link: '/dashboard' },
-    { title: 'Resumen', link: '/dashboard/overview' }
+    { title: 'Notificaciones', link: '/dashboard/notifications' }
   ],
-  '/dashboard/kanban': [
+  '/dashboard/clients': [
     { title: 'Dashboard', link: '/dashboard' },
-    { title: 'Kanban', link: '/dashboard/kanban' }
+    { title: 'Clientes', link: '/dashboard/clients' }
   ],
-  '/dashboard/profile': [
+  '/dashboard/company-configurations': [
     { title: 'Dashboard', link: '/dashboard' },
-    { title: 'Perfil', link: '/dashboard/profile' }
+    {
+      title: 'Configuración Financiera',
+      link: '/dashboard/company-configurations'
+    }
+  ],
+  '/dashboard/diagnostics': [
+    { title: 'Dashboard', link: '/dashboard' },
+    { title: 'Diagnósticos', link: '/dashboard/diagnostics' }
   ]
-  // Add more custom mappings as needed
 };
 
 export function useBreadcrumbs() {
@@ -75,55 +73,30 @@ export function useBreadcrumbs() {
       ];
     }
 
-    // Handle dynamic routes for product details
+    // Handle dynamic routes for clients
     if (
       segments.length > 2 &&
       segments[0] === 'dashboard' &&
-      segments[1] === 'product'
+      segments[1] === 'clients'
     ) {
       return [
         { title: 'Dashboard', link: '/dashboard' },
-        { title: 'Productos', link: '/dashboard/product' },
+        { title: 'Clientes', link: '/dashboard/clients' },
         { title: 'Detalle', link: pathname }
       ];
     }
 
-    // Handle dynamic routes for users
+    // Handle dynamic routes for chat
     if (
-      segments.length > 2 &&
+      segments.length > 3 &&
       segments[0] === 'dashboard' &&
-      segments[1] === 'users'
+      segments[1] === 'chat' &&
+      segments[2] === 'loanRequestId'
     ) {
       return [
         { title: 'Dashboard', link: '/dashboard' },
-        { title: 'Usuarios', link: '/dashboard/users' },
-        { title: 'Detalle', link: pathname }
-      ];
-    }
-
-    // Handle dynamic routes for dealerships
-    if (
-      segments.length > 2 &&
-      segments[0] === 'dashboard' &&
-      segments[1] === 'dealerships'
-    ) {
-      return [
-        { title: 'Dashboard', link: '/dashboard' },
-        { title: 'Concesionarias', link: '/dashboard/dealerships' },
-        { title: 'Detalle', link: pathname }
-      ];
-    }
-
-    // Handle dynamic routes for vehicle-types
-    if (
-      segments.length > 2 &&
-      segments[0] === 'dashboard' &&
-      segments[1] === 'vehicle-types'
-    ) {
-      return [
-        { title: 'Dashboard', link: '/dashboard' },
-        { title: 'Tipos de Vehículos', link: '/dashboard/vehicle-types' },
-        { title: 'Detalle', link: pathname }
+        { title: 'Chat', link: '/dashboard/chat' },
+        { title: 'Solicitud', link: pathname }
       ];
     }
 
@@ -140,11 +113,12 @@ export function useBreadcrumbs() {
         users: 'Usuarios',
         dealerships: 'Concesionarias',
         'vehicle-types': 'Tipos de Vehículos',
-        overview: 'Resumen',
-        kanban: 'Kanban',
-        profile: 'Perfil',
-        employee: 'Empleados',
-        product: 'Productos'
+        notifications: 'Notificaciones',
+        clients: 'Clientes',
+        'company-configurations': 'Configuración Financiera',
+        diagnostics: 'Diagnósticos',
+        chat: 'Chat',
+        loanRequestId: 'Solicitud'
       };
 
       if (translations[segment]) {

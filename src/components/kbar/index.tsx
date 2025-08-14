@@ -1,5 +1,6 @@
 'use client';
-import { adminNavItems, navItems } from '@/constants/data';
+import { navItems } from '@/constants/data';
+import { hasRoleAccess } from '@/lib/routes';
 import {
   KBarAnimator,
   KBarPortal,
@@ -39,8 +40,9 @@ export default function KBar({
   );
 
   const userNavItems = useMemo(() => {
-    return session?.isSystemAdmin ? adminNavItems : navItems;
-  }, [session]);
+    // Usar todos los elementos y dejar que el sistema de permisos los filtre
+    return navItems;
+  }, []); // Removido 'session' ya que no se usa
 
   const actions = useMemo(
     () => [
@@ -81,7 +83,7 @@ export default function KBar({
               shortcut: ['a', 'g'],
               keywords: 'nuevo usuario agregar crear add',
               section: 'Usuarios',
-              subtitle: 'Crear nuevo usuario', // Texto en español
+              subtitle: 'Crear nuevo usuario',
               perform: customActions.openUserForm
             }
           ]
@@ -91,15 +93,21 @@ export default function KBar({
             {
               id: 'logout',
               name: 'Cerrar Sesión',
-              shortcut: ['ctrl', 'q'], // Cambiado a ctrl + q
+              shortcut: ['ctrl', 'q'],
               keywords: 'logout salir exit',
               section: 'Sistema',
               perform: customActions.handleLogout
             }
           ]
         : []),
-      // Mantener las acciones de navegación 'GENERAL' existentes
-      ...userNavItems.flatMap((navItem) => {
+      // Mantener las acciones de navegación filtradas según permisos
+      ...userNavItems.flatMap((navItem: any) => {
+        // Verificar si el usuario tiene acceso a este elemento
+        if (session?.role) {
+          const hasAccess = hasRoleAccess(session.role, navItem.url);
+          if (!hasAccess) return [];
+        }
+
         // Only include base action if the navItem has a real URL and is not just a container
         const baseAction =
           navItem.url !== '#'
@@ -108,15 +116,15 @@ export default function KBar({
                 name: navItem.title,
                 shortcut: navItem.shortcut,
                 keywords: navItem.title.toLowerCase(),
-                section: 'Navegación', // Cambiado de 'Navigation' a 'Navegación'
-                subtitle: `Ir a ${navItem.title}`, // Cambiado de 'Go to' a 'Ir a'
+                section: 'Navegación',
+                subtitle: `Ir a ${navItem.title}`,
                 perform: () => navigateTo(navItem.url)
               }
             : null;
 
         // Map child items into actions
         const childActions =
-          navItem.items?.map((childItem) => ({
+          navItem.items?.map((childItem: any) => ({
             id: `${childItem.title.toLowerCase()}Action`,
             name: childItem.title,
             shortcut: childItem.shortcut,
@@ -130,7 +138,7 @@ export default function KBar({
         return baseAction ? [baseAction, ...childActions] : childActions;
       })
     ],
-    [navigateTo, customActions, userNavItems]
+    [navigateTo, customActions, userNavItems, session?.role] // Agregado session?.role
   );
 
   return (

@@ -1,4 +1,5 @@
 'use client';
+
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   Collapsible,
@@ -28,16 +29,11 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
   SidebarRail
-  //useSidebar
 } from '@/components/ui/sidebar';
-import { adminNavItems, navItems } from '@/constants/data';
 import {
-  //BadgeCheck,
   Bell,
   ChevronRight,
   ChevronsUpDown,
-  //CreditCard,
-  //GalleryVerticalEnd,
   LogOut,
   CarFrontIcon
 } from 'lucide-react';
@@ -48,20 +44,21 @@ import Image from 'next/image';
 import * as React from 'react';
 import { Icons } from '../icons';
 import { useTheme } from 'next-themes';
+import { navItems } from '@/constants/data';
+import { FilteredNav } from './filtered-nav';
 
 export default function AppSidebar() {
   const { data: session } = useSession();
   const pathname = usePathname();
   const { resolvedTheme } = useTheme();
   const [mounted, setMounted] = React.useState(false);
-  // const { state, isMobile } = useSidebar();
 
   // Efecto para manejar el montaje del cliente
   React.useEffect(() => {
     setMounted(true);
   }, []);
 
-  const userNavItems = session?.isSystemAdmin ? adminNavItems : navItems;
+  const navigationItems = navItems;
 
   const logos = {
     light: {
@@ -98,61 +95,65 @@ export default function AppSidebar() {
       </SidebarHeader>
       <SidebarContent className='overflow-x-hidden'>
         <SidebarGroup>
-          <SidebarGroupLabel>Overview</SidebarGroupLabel>
+          <SidebarGroupLabel>Navegación</SidebarGroupLabel>
           <SidebarMenu>
-            {userNavItems.map((item) => {
-              const Icon = item.icon ? Icons[item.icon] : Icons.logo;
-              return item?.items && item?.items?.length > 0 ? (
-                <Collapsible
-                  key={item.title}
-                  asChild
-                  defaultOpen={item.isActive}
-                  className='group/collapsible'
-                >
-                  <SidebarMenuItem>
-                    <CollapsibleTrigger asChild>
+            <FilteredNav items={navigationItems}>
+              {(filteredItems) =>
+                filteredItems.map((item) => {
+                  const Icon = item.icon ? Icons[item.icon] : Icons.logo;
+                  return item?.items && item?.items?.length > 0 ? (
+                    <Collapsible
+                      key={item.title}
+                      asChild
+                      defaultOpen={item.isActive}
+                      className='group/collapsible'
+                    >
+                      <SidebarMenuItem>
+                        <CollapsibleTrigger asChild>
+                          <SidebarMenuButton
+                            tooltip={item.title}
+                            isActive={pathname === item.url}
+                          >
+                            {item.icon && <Icon />}
+                            <span>{item.title}</span>
+                            <ChevronRight className='ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90' />
+                          </SidebarMenuButton>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent>
+                          <SidebarMenuSub>
+                            {item.items?.map((subItem) => (
+                              <SidebarMenuSubItem key={subItem.title}>
+                                <SidebarMenuSubButton
+                                  asChild
+                                  isActive={pathname === subItem.url}
+                                >
+                                  <Link href={subItem.url}>
+                                    <span>{subItem.title}</span>
+                                  </Link>
+                                </SidebarMenuSubButton>
+                              </SidebarMenuSubItem>
+                            ))}
+                          </SidebarMenuSub>
+                        </CollapsibleContent>
+                      </SidebarMenuItem>
+                    </Collapsible>
+                  ) : (
+                    <SidebarMenuItem key={item.title}>
                       <SidebarMenuButton
+                        asChild
                         tooltip={item.title}
                         isActive={pathname === item.url}
                       >
-                        {item.icon && <Icon />}
-                        <span>{item.title}</span>
-                        <ChevronRight className='ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90' />
+                        <Link href={item.url}>
+                          <Icon />
+                          <span>{item.title}</span>
+                        </Link>
                       </SidebarMenuButton>
-                    </CollapsibleTrigger>
-                    <CollapsibleContent>
-                      <SidebarMenuSub>
-                        {item.items?.map((subItem) => (
-                          <SidebarMenuSubItem key={subItem.title}>
-                            <SidebarMenuSubButton
-                              asChild
-                              isActive={pathname === subItem.url}
-                            >
-                              <Link href={subItem.url}>
-                                <span>{subItem.title}</span>
-                              </Link>
-                            </SidebarMenuSubButton>
-                          </SidebarMenuSubItem>
-                        ))}
-                      </SidebarMenuSub>
-                    </CollapsibleContent>
-                  </SidebarMenuItem>
-                </Collapsible>
-              ) : (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton
-                    asChild
-                    tooltip={item.title}
-                    isActive={pathname === item.url}
-                  >
-                    <Link href={item.url}>
-                      <Icon />
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              );
-            })}
+                    </SidebarMenuItem>
+                  );
+                })
+              }
+            </FilteredNav>
           </SidebarMenu>
         </SidebarGroup>
       </SidebarContent>
@@ -217,14 +218,6 @@ export default function AppSidebar() {
                 <DropdownMenuSeparator />
 
                 <DropdownMenuGroup>
-                  {/* <DropdownMenuItem>
-                    <BadgeCheck />
-                    Account
-                  </DropdownMenuItem>
-                  <DropdownMenuItem>
-                    <CreditCard />
-                    Billing
-                  </DropdownMenuItem> */}
                   <DropdownMenuItem>
                     <Bell />
                     Notificationes

@@ -28,11 +28,13 @@ import {
 } from '@/components/ui/select';
 import { Briefcase } from 'lucide-react';
 import LoanRequestForm from '@/features/loan-requests/components/loan-request-form';
+import { usePermissions } from '@/hooks/use-permissions';
 
 function LoanRequestContent() {
   const apiClient = useAxios();
   const { data: session } = useSession();
-  const isAdmin = !!session?.isSystemAdmin;
+  const { canManageUsers } = usePermissions();
+  const isAdmin = canManageUsers();
   const userRole = session?.role as UserRole;
   const isBranchManager = userRole === UserRole.BranchManager;
   const [viewMode, setViewMode] = useState<'assigned' | 'all'>('assigned');
