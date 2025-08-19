@@ -29,6 +29,14 @@ export const navItems: NavItem[] = [
     items: []
   },
   {
+    title: 'Solicitudes de Referidos',
+    url: '/dashboard/referred-loan-requests',
+    icon: 'referredRequests',
+    shortcut: ['s', 'r'],
+    isActive: false,
+    items: []
+  },
+  {
     title: 'Clientes',
     url: '/dashboard/clients',
     icon: 'clients',

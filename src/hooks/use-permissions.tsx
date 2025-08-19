@@ -45,6 +45,10 @@ export function usePermissions() {
     return canAccess('/dashboard/clients');
   };
 
+  const canViewReferredLoanRequests = (): boolean => {
+    return canAccess('/dashboard/referred-loan-requests');
+  };
+
   const canViewDiagnostics = (): boolean => {
     return canAccess('/dashboard/diagnostics');
   };
@@ -58,6 +62,7 @@ export function usePermissions() {
     canManageCompanyConfig,
     canManageVehicleTypes,
     canViewLoanRequests,
+    canViewReferredLoanRequests,
     canViewClients,
     canViewDiagnostics
   };
