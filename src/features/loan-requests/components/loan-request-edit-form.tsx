@@ -391,6 +391,9 @@ export default function LoanRequestEditForm({
                           min={1}
                           thousandSeparator=','
                           prefix='L '
+                          step={0.01}
+                          decimalScale={2}
+                          fixedDecimalScale={false}
                           value={field.value}
                           onValueChange={(value: number | undefined) => {
                             field.onChange(value === undefined ? 0 : value);
@@ -585,6 +588,9 @@ export default function LoanRequestEditForm({
                             max={form.watch('requestedAmount')}
                             thousandSeparator=','
                             prefix='L '
+                            step={0.01}
+                            decimalScale={2}
+                            fixedDecimalScale={false}
                             value={
                               loanRequest.loanCalculation?.downPaymentValue ?? 0
                             }
@@ -639,6 +645,9 @@ export default function LoanRequestEditForm({
                           min={0}
                           thousandSeparator=','
                           prefix='L '
+                          step={0.01}
+                          decimalScale={2}
+                          fixedDecimalScale={false}
                           value={field.value ?? undefined}
                           onValueChange={(value: number | undefined) => {
                             field.onChange(value === undefined ? 0 : value);

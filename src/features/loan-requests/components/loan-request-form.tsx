@@ -299,6 +299,9 @@ export default function LoanRequestForm({
                             placeholder='Ingrese el ingreso mensual'
                             thousandSeparator=','
                             prefix='L '
+                            step={0.01}
+                            decimalScale={2}
+                            fixedDecimalScale={false}
                             value={field.value}
                             onValueChange={(value: number | undefined) => {
                               field.onChange(value === undefined ? 0 : value);
@@ -352,6 +355,9 @@ export default function LoanRequestForm({
                             placeholder='Ingrese el monto solicitado'
                             thousandSeparator=','
                             prefix='L '
+                            step={0.01}
+                            decimalScale={2}
+                            fixedDecimalScale={false}
                             value={field.value}
                             onValueChange={(value: number | undefined) => {
                               field.onChange(value === undefined ? 0 : value);
