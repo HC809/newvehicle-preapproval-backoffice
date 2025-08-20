@@ -49,6 +49,7 @@ import { useTheme } from 'next-themes';
 import { navItems } from '@/constants/data';
 import { FilteredNav } from './filtered-nav';
 import { translateRole } from '@/utils/translateRole';
+import { useSidebar } from '@/components/ui/sidebar';
 
 // Función para obtener las iniciales correctas del nombre
 function getInitials(name: string): string {
@@ -103,6 +104,8 @@ export default function AppSidebar() {
   const pathname = usePathname();
   const { resolvedTheme } = useTheme();
   const [mounted, setMounted] = React.useState(false);
+  const { state } = useSidebar();
+  const isCollapsed = state === 'collapsed';
 
   // Efecto para manejar el montaje del cliente
   React.useEffect(() => {
@@ -127,16 +130,29 @@ export default function AppSidebar() {
     <Sidebar collapsible='icon'>
       <SidebarHeader>
         <div className='flex justify-center py-4'>
-          <div className='h-10 w-48'>
-            <Image
-              src={logoSrc}
-              alt='COFISA'
-              width={192}
-              height={40}
-              className='h-full w-full object-contain'
-              priority
-            />
-          </div>
+          {isCollapsed ? (
+            <div className='h-8 w-8'>
+              <Image
+                src='/images/logo-small.svg'
+                alt='COFISA'
+                width={32}
+                height={32}
+                className='h-full w-full object-contain'
+                priority
+              />
+            </div>
+          ) : (
+            <div className='h-10 w-48'>
+              <Image
+                src={logoSrc}
+                alt='COFISA'
+                width={192}
+                height={40}
+                className='h-full w-full object-contain'
+                priority
+              />
+            </div>
+          )}
         </div>
       </SidebarHeader>
       <SidebarContent className='overflow-x-hidden'>
@@ -250,9 +266,11 @@ export default function AppSidebar() {
                 <DropdownMenuTrigger asChild>
                   <SidebarMenuButton
                     size='lg'
-                    className='min-h-[4.5rem] rounded-lg py-3 transition-all duration-200 hover:bg-sidebar-accent/80 hover:text-sidebar-accent-foreground data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground'
+                    className={`${isCollapsed ? 'min-h-[3rem] justify-center py-2' : 'min-h-[4.5rem] py-3'} rounded-lg transition-all duration-200 hover:bg-sidebar-accent/80 hover:text-sidebar-accent-foreground data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground`}
                   >
-                    <Avatar className='h-8 w-8 rounded-full shadow-sm ring-2 ring-yellow-500 dark:ring-[#F7E605]'>
+                    <Avatar
+                      className={`${isCollapsed ? 'h-6 w-6' : 'h-8 w-8'} rounded-full shadow-sm ring-2 ring-yellow-500 dark:ring-[#F7E605]`}
+                    >
                       <AvatarImage
                         src={session.user.image || ''}
                         alt={session.user.name || ''}
@@ -261,22 +279,26 @@ export default function AppSidebar() {
                         {getInitials(session.user.name || '')}
                       </AvatarFallback>
                     </Avatar>
-                    <div className='grid flex-1 justify-center gap-1.5 text-left text-sm leading-tight'>
-                      <span className='truncate font-semibold'>
-                        {getShortName(session.user.name || '')}
-                      </span>
-                      <span className='truncate text-xs'>
-                        {session.user.email || ''}
-                      </span>
-                      <span className='truncate text-xs text-sidebar-accent-foreground/70'>
-                        {translateRole[
-                          session.user.role as keyof typeof translateRole
-                        ] ||
-                          session.user.role ||
-                          ''}
-                      </span>
-                    </div>
-                    <ChevronsUpDown className='ml-auto size-4' />
+                    {!isCollapsed && (
+                      <>
+                        <div className='grid flex-1 justify-center gap-1.5 text-left text-sm leading-tight'>
+                          <span className='truncate font-semibold'>
+                            {getShortName(session.user.name || '')}
+                          </span>
+                          <span className='truncate text-xs'>
+                            {session.user.email || ''}
+                          </span>
+                          <span className='truncate text-xs text-sidebar-accent-foreground/70'>
+                            {translateRole[
+                              session.user.role as keyof typeof translateRole
+                            ] ||
+                              session.user.role ||
+                              ''}
+                          </span>
+                        </div>
+                        <ChevronsUpDown className='ml-auto size-4' />
+                      </>
+                    )}
                   </SidebarMenuButton>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent

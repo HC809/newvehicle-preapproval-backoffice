@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import { signOut, useSession } from 'next-auth/react';
+import { translateRole } from '@/utils/translateRole';
 
 // Función para obtener las iniciales correctas del nombre
 function getInitials(name: string): string {
@@ -45,10 +46,10 @@ export function UserNav() {
     return (
       <Button
         variant='ghost'
-        className='relative h-9 w-9 rounded-full shadow-sm ring-2 ring-yellow-500 dark:ring-[#F7E605]'
+        className='relative h-8 w-8 rounded-full shadow-sm ring-2 ring-yellow-500 dark:ring-[#F7E605]'
         disabled
       >
-        <Avatar className='h-9 w-9'>
+        <Avatar className='h-8 w-8'>
           <AvatarFallback className='rounded-full bg-[#013B7C] font-semibold text-white dark:bg-blue-600'>
             ...
           </AvatarFallback>
@@ -64,9 +65,9 @@ export function UserNav() {
         <DropdownMenuTrigger asChild>
           <Button
             variant='ghost'
-            className='relative h-9 w-9 rounded-full shadow-sm ring-2 ring-yellow-500 transition-all duration-200 hover:bg-gray-100 dark:ring-[#F7E605] dark:hover:bg-gray-800'
+            className='relative h-8 w-8 rounded-full shadow-sm ring-2 ring-yellow-500 transition-all duration-200 hover:bg-gray-100 dark:ring-[#F7E605] dark:hover:bg-gray-800'
           >
-            <Avatar className='h-9 w-9'>
+            <Avatar className='h-8 w-8'>
               <AvatarImage
                 src={session.user?.image ?? ''}
                 alt={session.user?.name ?? ''}
@@ -92,6 +93,13 @@ export function UserNav() {
                 </span>
                 <span className='truncate text-sm text-gray-600 dark:text-gray-400'>
                   {session.user?.email}
+                </span>
+                <span className='truncate text-sm font-medium text-gray-500 dark:text-gray-400'>
+                  {translateRole[
+                    session.user?.role as keyof typeof translateRole
+                  ] ||
+                    session.user?.role ||
+                    ''}
                 </span>
               </div>
             </div>
