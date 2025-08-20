@@ -23,6 +23,7 @@ export const ROLE_ROUTES: Record<string, string[]> = {
   BusinessDevelopment_Admin: [
     ...COMMON_ROUTES,
     '/dashboard/loan-requests',
+    '/dashboard/referred-loan-requests',
     '/dashboard/clients',
     '/dashboard/users',
     '/dashboard/dealerships',
@@ -32,6 +33,7 @@ export const ROLE_ROUTES: Record<string, string[]> = {
   BusinessDevelopment_User: [
     ...COMMON_ROUTES,
     '/dashboard/loan-requests',
+    '/dashboard/referred-loan-requests',
     '/dashboard/clients'
   ],
   Dealership_Admin: [
@@ -39,16 +41,14 @@ export const ROLE_ROUTES: Record<string, string[]> = {
     '/dashboard/loan-requests',
     '/dashboard/clients'
   ],
-  PYMEAdvisor: [
-    ...COMMON_ROUTES,
-    '/dashboard/loan-requests',
-    '/dashboard/clients'
-  ],
+  PYMEAdvisor: [...COMMON_ROUTES, '/dashboard/referred-loan-requests'],
   BranchManager: [
     ...COMMON_ROUTES,
     '/dashboard/loan-requests',
     '/dashboard/clients'
-  ]
+  ],
+  FinancialAdvisor: [...COMMON_ROUTES, '/dashboard/referred-loan-requests'],
+  ContactCenterAgent: [...COMMON_ROUTES, '/dashboard/referred-loan-requests']
 };
 
 // Función helper para verificar si un rol tiene acceso a una ruta

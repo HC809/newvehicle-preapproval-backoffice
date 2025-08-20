@@ -34,6 +34,7 @@ import {
   PercentIcon,
   X,
   List,
+  ListRestart,
   Users,
   Terminal,
   BellRing
@@ -73,6 +74,7 @@ export const Icons = {
   concesionaria: Store,
   car: CarIcon,
   requests: List,
+  referredRequests: ListRestart,
   tasas: PercentIcon,
   clients: Users,
   terminal: Terminal,

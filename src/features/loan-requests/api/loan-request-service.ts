@@ -438,3 +438,21 @@ export const useDeclineTermsByCustomer = (apiClient: AxiosInstance) => {
     }
   });
 };
+
+export const useReferredLoanRequests = (
+  apiClient: AxiosInstance | undefined,
+  enabled: boolean = true
+): UseQueryResult<LoanRequest[], Error> => {
+  return useQuery({
+    queryKey: [LOAN_REQUESTS_KEY, 'referred'],
+    queryFn: async (): Promise<LoanRequest[]> => {
+      if (!apiClient) throw new Error('API client not initialized');
+
+      const response = await apiClient.get<LoanRequest[]>(
+        '/loan-requests/referred-loan-requests'
+      );
+      return response.data;
+    },
+    enabled: !!apiClient && enabled
+  });
+};

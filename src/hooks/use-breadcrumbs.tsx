@@ -15,6 +15,13 @@ const routeMapping: Record<string, BreadcrumbItem[]> = {
     { title: 'Dashboard', link: '/dashboard' },
     { title: 'Solicitudes', link: '/dashboard/loan-requests' }
   ],
+  '/dashboard/referred-loan-requests': [
+    { title: 'Dashboard', link: '/dashboard' },
+    {
+      title: 'Solicitudes de Referidos',
+      link: '/dashboard/referred-loan-requests'
+    }
+  ],
   '/dashboard/users': [
     { title: 'Dashboard', link: '/dashboard' },
     { title: 'Usuarios', link: '/dashboard/users' }
