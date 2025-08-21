@@ -5,3 +5,4 @@ export * from './rejection-modal';
 export * from './document-viewer';
 export { default as ReferredLoanRequestListingPage } from './referred-loan-request-listing';
 export { ReferredLoanRequestColumns } from './referred-loan-request-columns';
+export { default as ReferredLoanRequestForm } from './referred-loan-request-form';

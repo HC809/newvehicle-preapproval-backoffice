@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, Suspense, useEffect, useMemo, useCallback } from 'react';
-import { ReloadIcon } from '@radix-ui/react-icons';
+import { ReloadIcon, PlusIcon } from '@radix-ui/react-icons';
 import PageContainer from '@/components/layout/page-container';
 import { Heading } from '@/components/ui/heading';
 import { Separator } from '@/components/ui/separator';
@@ -16,6 +16,7 @@ import { DataTableSkeleton } from '@/components/ui/table/data-table-skeleton';
 import { useSearchParams } from 'next/navigation';
 import { UserRole } from 'types/User';
 import { LoanRequest } from 'types/LoanRequests';
+import ReferredLoanRequestForm from '@/features/loan-requests/components/referred-loan-request-form';
 
 function ReferredLoanRequestContent() {
   const apiClient = useAxios();
@@ -102,6 +103,8 @@ function ReferredLoanRequestContent() {
     // Aquí podrías resetear los otros filtros si es necesario
   }, []);
 
+  const [isFormOpen, setIsFormOpen] = useState(false);
+
   return (
     <PageContainer scrollable={false}>
       <div className='flex flex-1 flex-col space-y-4'>
@@ -111,6 +114,11 @@ function ReferredLoanRequestContent() {
             description='Administración de solicitudes de préstamo referidas por usuarios del sistema.'
           />
           <div className='flex items-center gap-4'>
+            <Button variant='default' onClick={() => setIsFormOpen(true)}>
+              <PlusIcon className='mr-2 h-4 w-4' />
+              Nueva Solicitud de Referido
+            </Button>
+
             <Button
               variant='default'
               size='icon'
@@ -151,16 +159,23 @@ function ReferredLoanRequestContent() {
             <ErrorAlert error={error?.message || String(error)} />
           </div>
         ) : (
-          <Suspense
-            fallback={<DataTableSkeleton columnCount={7} rowCount={10} />}
-          >
-            <ReferredLoanRequestListingPage
-              loanRequests={filteredReferredLoanRequests || []}
-              totalItems={filteredReferredLoanRequests?.length || 0}
-              isLoading={isLoading || !allReferredLoanRequests}
-              userRole={userRole}
+          <>
+            <Suspense
+              fallback={<DataTableSkeleton columnCount={7} rowCount={10} />}
+            >
+              <ReferredLoanRequestListingPage
+                loanRequests={filteredReferredLoanRequests || []}
+                totalItems={filteredReferredLoanRequests?.length || 0}
+                isLoading={isLoading || !allReferredLoanRequests}
+                userRole={userRole}
+              />
+            </Suspense>
+
+            <ReferredLoanRequestForm
+              open={isFormOpen}
+              onOpenChange={setIsFormOpen}
             />
-          </Suspense>
+          </>
         )}
       </div>
     </PageContainer>
