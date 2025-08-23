@@ -9,17 +9,17 @@ import { formatLoanRequestId } from '@/utils/formatId';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale/es';
 import { UserRole } from 'types/User';
+import { translateRole } from '@/utils/translateRole';
 import {
   translateStatus,
   getStatusVariant,
   getStatusClassName
 } from '@/utils/getStatusColor';
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger
-} from '@/components/ui/tooltip';
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger
+} from '@/components/ui/hover-card';
 
 export const ReferredLoanRequestColumns = (
   userRole?: UserRole
@@ -145,6 +145,55 @@ export const ReferredLoanRequestColumns = (
       )
     },
     {
+      accessorKey: 'comment',
+      header: () => <span className='font-bold'>Información del Referido</span>,
+      cell: ({ row }) => {
+        const comment = row.original.comment;
+
+        if (!comment || comment.trim() === '') {
+          return (
+            <span className='text-sm text-gray-400 dark:text-gray-500'>
+              Sin información
+            </span>
+          );
+        }
+
+        const truncatedComment =
+          comment.length > 50 ? `${comment.substring(0, 50)}...` : comment;
+
+        return (
+          <HoverCard>
+            <HoverCardTrigger asChild>
+              <div className='flex cursor-help items-start gap-2'>
+                <Info className='mt-0.5 h-4 w-4 flex-shrink-0 text-amber-500 dark:text-amber-400' />
+                <div className='min-w-0 flex-1'>
+                  <span className='block text-xs leading-relaxed text-gray-600 dark:text-gray-300'>
+                    {truncatedComment}
+                  </span>
+                  {comment.length > 50 && (
+                    <span className='mt-1 block text-xs text-gray-400 dark:text-gray-500'>
+                      Hover para ver completo
+                    </span>
+                  )}
+                </div>
+              </div>
+            </HoverCardTrigger>
+            <HoverCardContent
+              side='top'
+              className='max-w-xs border-[#013B7C] bg-[#013B7C] p-3 text-sm leading-relaxed text-white'
+            >
+              <div className='space-y-2'>
+                <p className='font-medium text-white'>
+                  Información del Referido:
+                </p>
+                <p className='whitespace-pre-wrap text-white'>{comment}</p>
+              </div>
+            </HoverCardContent>
+          </HoverCard>
+        );
+      }
+    },
+    {
       accessorKey: 'createdAt',
       header: () => <span className='font-bold'>Fecha de Solicitud</span>,
       cell: ({ row }) => {
@@ -199,9 +248,9 @@ export const ReferredLoanRequestColumns = (
               <span className='font-medium text-blue-700 dark:text-blue-300'>
                 {referredName || 'Sin nombre'}
               </span>
-              {referredId && (
+              {row.original.referredRole && (
                 <span className='text-xs text-gray-500 dark:text-gray-400'>
-                  ID: {referredId}
+                  {translateRole[row.original.referredRole as UserRole]}
                 </span>
               )}
             </div>

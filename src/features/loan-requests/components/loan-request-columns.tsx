@@ -86,10 +86,17 @@ export const LoanRequestColumns = (
       header: () => <span className='font-bold'>DNI</span>,
       cell: ({ row }) => (
         <div className='flex items-center gap-2'>
-          <span>{row.original.dni}</span>
-          {row.original.clientName && (
-            <span className='text-gray-500'>- {row.original.clientName}</span>
-          )}
+          <UserCog className='h-4 w-4 text-purple-500 dark:text-purple-400' />
+          <div className='flex flex-col'>
+            <span className='font-medium text-purple-700 dark:text-purple-300'>
+              {row.original.dni}
+            </span>
+            {row.original.clientName && (
+              <span className='text-xs text-gray-500 dark:text-gray-400'>
+                {row.original.clientName}
+              </span>
+            )}
+          </div>
         </div>
       )
     },

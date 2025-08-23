@@ -68,6 +68,7 @@ export interface LoanRequest {
   managerId?: string;
   referredId?: string;
   referredName?: string;
+  referredRole?: string;
   IsAssigned?: boolean;
 }
 

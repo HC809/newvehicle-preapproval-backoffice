@@ -7,6 +7,7 @@ import { Heading } from '@/components/ui/heading';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import useAxios from '@/hooks/use-axios';
 import ErrorAlert from '@/components/custom/error-alert';
 import ReferredLoanRequestListingPage from '@/features/loan-requests/components/referred-loan-request-listing';
@@ -17,6 +18,7 @@ import { useSearchParams } from 'next/navigation';
 import { UserRole } from 'types/User';
 import { LoanRequest } from 'types/LoanRequests';
 import ReferredLoanRequestForm from '@/features/loan-requests/components/referred-loan-request-form';
+import { MagnifyingGlassIcon } from '@radix-ui/react-icons';
 
 function ReferredLoanRequestContent() {
   const apiClient = useAxios();
@@ -135,14 +137,14 @@ function ReferredLoanRequestContent() {
         <Separator />
 
         {/* Filtros básicos */}
-        <div className='flex items-center gap-4'>
-          <div className='max-w-sm flex-1'>
-            <input
-              type='text'
-              placeholder='Filtrar por DNI o nombre del cliente...'
+        <div className='flex flex-wrap items-center gap-4'>
+          <div className='relative w-[300px]'>
+            <MagnifyingGlassIcon className='absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground' />
+            <Input
+              placeholder='Buscar por DNI o nombre...'
               value={dniFilter}
               onChange={(e) => setDniFilter(e.target.value)}
-              className='w-full rounded-md border border-gray-300 px-3 py-2 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white'
+              className='pl-9'
             />
           </div>
           <Button
@@ -161,7 +163,7 @@ function ReferredLoanRequestContent() {
         ) : (
           <>
             <Suspense
-              fallback={<DataTableSkeleton columnCount={7} rowCount={10} />}
+              fallback={<DataTableSkeleton columnCount={8} rowCount={10} />}
             >
               <ReferredLoanRequestListingPage
                 loanRequests={filteredReferredLoanRequests || []}

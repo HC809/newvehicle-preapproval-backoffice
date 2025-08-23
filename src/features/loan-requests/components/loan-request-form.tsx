@@ -279,7 +279,7 @@ export default function LoanRequestForm({
                           <Input
                             {...field}
                             type='number'
-                            placeholder='Ingrese el DNI del cliente'
+                            placeholder='Ingrese el DNI del cliente (13 dígitos)'
                             autoFocus
                           />
                         </FormControl>
