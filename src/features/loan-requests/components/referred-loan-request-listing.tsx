@@ -5,9 +5,6 @@ import { DataTable } from '@/components/ui/table/data-table';
 import { ReferredLoanRequestColumns } from './referred-loan-request-columns';
 import { LoanRequest } from 'types/LoanRequests';
 import { DataTableSkeleton } from '@/components/ui/table/data-table-skeleton';
-import { useRouter } from 'next/navigation';
-import { useLoanRequestStore } from '@/stores/loan-request-store';
-import { Row } from '@tanstack/react-table';
 import { UserRole } from 'types/User';
 
 interface ReferredLoanRequestListingPageProps {
@@ -23,11 +20,8 @@ export default function ReferredLoanRequestListingPage({
   isLoading,
   userRole
 }: ReferredLoanRequestListingPageProps) {
-  const router = useRouter();
-  const { setSelectedLoanRequest } = useLoanRequestStore();
-
   if (isLoading) {
-    return <DataTableSkeleton columnCount={7} rowCount={10} />;
+    return <DataTableSkeleton columnCount={8} rowCount={10} />;
   }
 
   if (!loanRequests || loanRequests.length === 0) {
@@ -43,20 +37,11 @@ export default function ReferredLoanRequestListingPage({
     );
   }
 
-  // Función para manejar el clic en la fila
-  const handleRowClick = (row: Row<LoanRequest>) => {
-    const loanRequest = row.original;
-    // Guardamos la solicitud en el store para facilitar la navegación
-    setSelectedLoanRequest(loanRequest);
-    router.push(`/dashboard/loan-requests/${loanRequest.id}`);
-  };
-
   return (
     <DataTable
       columns={ReferredLoanRequestColumns(userRole)}
       data={loanRequests}
       totalItems={totalItems}
-      onRowClick={handleRowClick}
     />
   );
 }
