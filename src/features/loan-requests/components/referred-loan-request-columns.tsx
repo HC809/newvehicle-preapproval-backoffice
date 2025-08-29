@@ -10,6 +10,7 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale/es';
 import { UserRole } from 'types/User';
 import { translateRole } from '@/utils/translateRole';
+import { formatPhoneNumber } from '@/utils/formatPhoneNumber';
 import {
   translateStatus,
   getStatusVariant,
@@ -20,15 +21,17 @@ import {
   HoverCardContent,
   HoverCardTrigger
 } from '@/components/ui/hover-card';
+import { Button } from '@/components/ui/button';
 
 export const ReferredLoanRequestColumns = (
-  userRole?: UserRole
+  userRole?: UserRole,
+  onAssignClick?: (loanRequest: LoanRequest) => void
 ): ColumnDef<LoanRequest>[] => {
   const showReferralColumn =
     userRole === UserRole.BusinessDevelopment_Admin ||
     userRole === UserRole.BusinessDevelopment_User;
 
-  // Función para obtener el estado de la solicitud según IsAssigned
+  // Función para obtener el estado de la solicitud según isAssigned
   const getDisplayStatus = (
     status: LoanRequestStatus,
     isAssigned?: boolean
@@ -75,7 +78,7 @@ export const ReferredLoanRequestColumns = (
       accessorKey: 'dealershipName',
       header: () => <span className='font-bold'>Concesionaria</span>,
       cell: ({ row }) => {
-        const isAssigned = row.original.IsAssigned;
+        const isAssigned = row.original.isAssigned;
 
         if (!isAssigned) {
           return (
@@ -102,7 +105,7 @@ export const ReferredLoanRequestColumns = (
       accessorKey: 'dealershipAdminName',
       header: () => <span className='font-bold'>Vendedor</span>,
       cell: ({ row }) => {
-        const isAssigned = row.original.IsAssigned;
+        const isAssigned = row.original.isAssigned;
 
         if (!isAssigned) {
           return (
@@ -145,48 +148,55 @@ export const ReferredLoanRequestColumns = (
       )
     },
     {
-      accessorKey: 'comment',
-      header: () => <span className='font-bold'>Información del Referido</span>,
+      accessorKey: 'phoneNumber',
+      header: () => <span className='font-bold'>Teléfono</span>,
       cell: ({ row }) => {
-        const comment = row.original.comment;
+        const phoneNumber = row.original.phoneNumber;
 
-        if (!comment || comment.trim() === '') {
+        if (!phoneNumber || phoneNumber.trim() === '') {
           return (
             <span className='text-sm text-gray-400 dark:text-gray-500'>
-              Sin información
+              Sin teléfono
             </span>
           );
         }
 
+        return (
+          <div className='flex items-center gap-2'>
+            <span className='text-sm text-gray-600 dark:text-gray-300'>
+              {formatPhoneNumber(phoneNumber)}
+            </span>
+          </div>
+        );
+      }
+    },
+    {
+      accessorKey: 'comment',
+      header: () => <span className='font-bold'>Información del Referido</span>,
+      cell: ({ row }) => {
+        const comment = row.original.comment || '';
         const truncatedComment =
           comment.length > 50 ? `${comment.substring(0, 50)}...` : comment;
 
         return (
           <HoverCard>
             <HoverCardTrigger asChild>
-              <div className='flex cursor-help items-start gap-2'>
-                <Info className='mt-0.5 h-4 w-4 flex-shrink-0 text-amber-500 dark:text-amber-400' />
-                <div className='min-w-0 flex-1'>
-                  <span className='block text-xs leading-relaxed text-gray-600 dark:text-gray-300'>
-                    {truncatedComment}
-                  </span>
-                  {comment.length > 50 && (
-                    <span className='mt-1 block text-xs text-gray-400 dark:text-gray-500'>
-                      Hover para ver completo
-                    </span>
-                  )}
+              <div className='cursor-help'>
+                <div className='text-xs text-gray-600 dark:text-gray-400'>
+                  {truncatedComment.split('\n').map((line, index) => (
+                    <div key={index} className='line-clamp-2'>
+                      {line}
+                    </div>
+                  ))}
                 </div>
               </div>
             </HoverCardTrigger>
             <HoverCardContent
+              className='max-h-40 w-80 overflow-y-auto border-[#013B7C] bg-[#013B7C] text-white'
               side='top'
-              className='max-w-xs border-[#013B7C] bg-[#013B7C] p-3 text-sm leading-relaxed text-white'
             >
-              <div className='space-y-2'>
-                <p className='font-medium text-white'>
-                  Información del Referido:
-                </p>
-                <p className='whitespace-pre-wrap text-white'>{comment}</p>
+              <div className='whitespace-pre-line text-sm'>
+                {comment || 'Sin información adicional'}
               </div>
             </HoverCardContent>
           </HoverCard>
@@ -210,7 +220,7 @@ export const ReferredLoanRequestColumns = (
       header: () => <span className='font-bold'>Estado</span>,
       cell: ({ row }) => {
         const status = row.original.status;
-        const isAssigned = row.original.IsAssigned;
+        const isAssigned = row.original.isAssigned;
         const displayStatus = getDisplayStatus(status, isAssigned);
         const badgeVariant = getStatusBadgeVariant(status, isAssigned);
         const badgeClasses = getStatusBadgeClasses(status, isAssigned);
@@ -254,6 +264,36 @@ export const ReferredLoanRequestColumns = (
                 </span>
               )}
             </div>
+          </div>
+        );
+      }
+    });
+  }
+
+  // Agregar columna de acción "Asignar" solo para gestores
+  const showAssignColumn =
+    userRole === UserRole.BusinessDevelopment_Admin ||
+    userRole === UserRole.BusinessDevelopment_User;
+
+  if (showAssignColumn) {
+    baseColumns.push({
+      accessorKey: 'actions',
+      header: () => <span className='font-bold'>Acciones</span>,
+      cell: ({ row }) => {
+        return (
+          <div className='flex items-center justify-center'>
+            <Button
+              variant='default'
+              size='sm'
+              className='bg-blue-600 text-white hover:bg-blue-700'
+              onClick={() => {
+                if (onAssignClick) {
+                  onAssignClick(row.original);
+                }
+              }}
+            >
+              Asignar
+            </Button>
           </div>
         );
       }

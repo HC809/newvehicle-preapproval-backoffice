@@ -12,16 +12,18 @@ interface ReferredLoanRequestListingPageProps {
   totalItems: number;
   isLoading?: boolean;
   userRole?: UserRole;
+  onAssignClick?: (loanRequest: LoanRequest) => void;
 }
 
 export default function ReferredLoanRequestListingPage({
   loanRequests,
   totalItems,
   isLoading,
-  userRole
+  userRole,
+  onAssignClick
 }: ReferredLoanRequestListingPageProps) {
   if (isLoading) {
-    return <DataTableSkeleton columnCount={8} rowCount={10} />;
+    return <DataTableSkeleton columnCount={10} rowCount={10} />;
   }
 
   if (!loanRequests || loanRequests.length === 0) {
@@ -39,7 +41,7 @@ export default function ReferredLoanRequestListingPage({
 
   return (
     <DataTable
-      columns={ReferredLoanRequestColumns(userRole)}
+      columns={ReferredLoanRequestColumns(userRole, onAssignClick)}
       data={loanRequests}
       totalItems={totalItems}
     />

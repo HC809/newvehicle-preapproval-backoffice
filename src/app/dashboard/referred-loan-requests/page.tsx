@@ -18,6 +18,7 @@ import { useSearchParams } from 'next/navigation';
 import { UserRole } from 'types/User';
 import { LoanRequest } from 'types/LoanRequests';
 import ReferredLoanRequestForm from '@/features/loan-requests/components/referred-loan-request-form';
+import AssignReferredLoanRequestForm from '@/features/loan-requests/components/assign-referred-loan-request-form';
 import { MagnifyingGlassIcon } from '@radix-ui/react-icons';
 
 function ReferredLoanRequestContent() {
@@ -106,6 +107,16 @@ function ReferredLoanRequestContent() {
   }, []);
 
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isAssignFormOpen, setIsAssignFormOpen] = useState(false);
+  const [
+    selectedLoanRequestForAssignment,
+    setSelectedLoanRequestForAssignment
+  ] = useState<LoanRequest | null>(null);
+
+  const handleAssignClick = useCallback((loanRequest: LoanRequest) => {
+    setSelectedLoanRequestForAssignment(loanRequest);
+    setIsAssignFormOpen(true);
+  }, []);
 
   return (
     <PageContainer scrollable={false}>
@@ -163,20 +174,27 @@ function ReferredLoanRequestContent() {
         ) : (
           <>
             <Suspense
-              fallback={<DataTableSkeleton columnCount={8} rowCount={10} />}
+              fallback={<DataTableSkeleton columnCount={10} rowCount={10} />}
             >
               <ReferredLoanRequestListingPage
                 loanRequests={filteredReferredLoanRequests || []}
                 totalItems={filteredReferredLoanRequests?.length || 0}
                 isLoading={isLoading || !allReferredLoanRequests}
                 userRole={userRole}
+                onAssignClick={handleAssignClick}
+              />
+
+              <ReferredLoanRequestForm
+                open={isFormOpen}
+                onOpenChange={setIsFormOpen}
+              />
+
+              <AssignReferredLoanRequestForm
+                open={isAssignFormOpen}
+                onOpenChange={setIsAssignFormOpen}
+                loanRequest={selectedLoanRequestForAssignment}
               />
             </Suspense>
-
-            <ReferredLoanRequestForm
-              open={isFormOpen}
-              onOpenChange={setIsFormOpen}
-            />
           </>
         )}
       </div>

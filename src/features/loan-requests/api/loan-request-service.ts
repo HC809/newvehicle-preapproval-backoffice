@@ -494,3 +494,44 @@ export const useCreateLoanRequestByReferral = (
     }
   });
 };
+
+export const useAssignReferredLoanRequest = (
+  apiClient: AxiosInstance | undefined
+) => {
+  const queryClient = useQueryClient();
+
+  return useMutation<
+    string,
+    Error,
+    {
+      loanRequestId: string;
+      monthlyIncome: number | null;
+      vehicleTypeId: string;
+      requestedAmount: number;
+      vehicleBrand: string;
+      vehicleModel: string;
+      vehicleYear: number;
+      dealershipId: string;
+      dealershipAdminId: string;
+      city: string;
+    }
+  >({
+    mutationFn: async (data) => {
+      if (!apiClient) throw new Error('API client not initialized');
+      try {
+        const response = await apiClient.post<string>(
+          '/loan-requests/assign-referred-loan-request',
+          data
+        );
+        return response.data;
+      } catch (error) {
+        throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: [LOAN_REQUESTS_KEY, 'referred']
+      });
+    }
+  });
+};
