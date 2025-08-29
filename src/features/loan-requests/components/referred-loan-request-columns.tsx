@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { ColumnDef } from '@tanstack/react-table';
-import { Building, User, UserCog, Info } from 'lucide-react';
+import { Building, User, UserCog, Info, Eye } from 'lucide-react';
 import { LoanRequest, LoanRequestStatus } from 'types/LoanRequests';
 import { Badge } from '@/components/ui/badge';
 import { formatLoanRequestId } from '@/utils/formatId';
@@ -36,7 +36,7 @@ export const ReferredLoanRequestColumns = (
     status: LoanRequestStatus,
     isAssigned?: boolean
   ) => {
-    if (status === LoanRequestStatus.Pending && !isAssigned) {
+    if (!isAssigned) {
       return 'Sin Asignar';
     }
     return translateStatus(status);
@@ -47,7 +47,7 @@ export const ReferredLoanRequestColumns = (
     status: LoanRequestStatus,
     isAssigned?: boolean
   ) => {
-    if (status === LoanRequestStatus.Pending && !isAssigned) {
+    if (!isAssigned) {
       return 'secondary';
     }
     return getStatusVariant(status);
@@ -58,7 +58,7 @@ export const ReferredLoanRequestColumns = (
     status: LoanRequestStatus,
     isAssigned?: boolean
   ) => {
-    if (status === LoanRequestStatus.Pending && !isAssigned) {
+    if (!isAssigned) {
       return 'bg-gray-500 text-white hover:bg-gray-600 dark:bg-gray-600 dark:hover:bg-gray-700';
     }
     return getStatusClassName(status);
@@ -123,6 +123,33 @@ export const ReferredLoanRequestColumns = (
             <User className='h-4 w-4 text-green-500 dark:text-green-400' />
             <span className='font-medium text-green-700 dark:text-green-300'>
               {row.original.dealershipAdminName}
+            </span>
+          </div>
+        );
+      }
+    },
+    {
+      accessorKey: 'managerName',
+      header: () => <span className='font-bold'>Gestor</span>,
+      cell: ({ row }) => {
+        const isAssigned = row.original.isAssigned;
+
+        if (!isAssigned) {
+          return (
+            <div className='flex items-center gap-2'>
+              <User className='h-4 w-4 text-gray-500 dark:text-gray-400' />
+              <span className='font-medium text-gray-500 dark:text-gray-400'>
+                Sin Asignar
+              </span>
+            </div>
+          );
+        }
+
+        return (
+          <div className='flex items-center gap-2'>
+            <User className='h-4 w-4 text-orange-500 dark:text-orange-400' />
+            <span className='font-medium text-orange-700 dark:text-orange-300'>
+              {row.original.managerName || 'Sin gestor'}
             </span>
           </div>
         );
@@ -280,20 +307,37 @@ export const ReferredLoanRequestColumns = (
       accessorKey: 'actions',
       header: () => <span className='font-bold'>Acciones</span>,
       cell: ({ row }) => {
+        const isAssigned = row.original.isAssigned;
+
         return (
-          <div className='flex items-center justify-center'>
-            <Button
-              variant='default'
-              size='sm'
-              className='bg-blue-600 text-white hover:bg-blue-700'
-              onClick={() => {
-                if (onAssignClick) {
-                  onAssignClick(row.original);
-                }
-              }}
-            >
-              Asignar
-            </Button>
+          <div className='flex items-center justify-center gap-2'>
+            {!isAssigned ? (
+              <Button
+                variant='default'
+                size='sm'
+                className='bg-blue-600 text-white hover:bg-blue-700'
+                onClick={() => {
+                  if (onAssignClick) {
+                    onAssignClick(row.original);
+                  }
+                }}
+              >
+                Asignar
+              </Button>
+            ) : (
+              <Button
+                variant='outline'
+                size='sm'
+                className='border-blue-600 text-blue-600 hover:bg-blue-50 hover:text-blue-700 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-950 dark:hover:text-blue-300'
+                onClick={() => {
+                  // Navegar a la página de detalle en la misma pestaña
+                  window.location.href = `/dashboard/loan-requests/${row.original.id}`;
+                }}
+              >
+                <Eye className='mr-1 h-3 w-3' />
+                Ver
+              </Button>
+            )}
           </div>
         );
       }

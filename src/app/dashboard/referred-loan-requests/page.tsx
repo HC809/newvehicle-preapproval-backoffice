@@ -174,7 +174,7 @@ function ReferredLoanRequestContent() {
         ) : (
           <>
             <Suspense
-              fallback={<DataTableSkeleton columnCount={10} rowCount={10} />}
+              fallback={<DataTableSkeleton columnCount={11} rowCount={10} />}
             >
               <ReferredLoanRequestListingPage
                 loanRequests={filteredReferredLoanRequests || []}
