@@ -631,6 +631,55 @@ export default function LoanRequestDetailPage() {
     );
   }
 
+  // Protección: No permitir acceso a solicitudes referidas no asignadas
+  if (
+    loanRequestDetail?.loanRequest.isReferred &&
+    !loanRequestDetail?.loanRequest.isAssigned
+  ) {
+    return (
+      <PageContainer>
+        <div className='flex flex-1 flex-col space-y-4'>
+          <div className='flex items-center justify-between'>
+            <div className='flex items-center'>
+              <Button
+                variant='ghost'
+                size='icon'
+                onClick={handleBack}
+                className='mr-2'
+              >
+                <ArrowLeft className='h-5 w-5' />
+              </Button>
+              <Heading
+                title='Acceso Denegado'
+                description='Esta solicitud referida aún no ha sido asignada'
+              />
+            </div>
+          </div>
+
+          <Separator />
+
+          <Alert variant='destructive'>
+            <AlertTitle>Acceso Restringido</AlertTitle>
+            <AlertDescription>
+              No puede ver el detalle de esta solicitud referida porque aún no
+              ha sido asignada a un gestor. Las solicitudes referidas solo
+              pueden ser visualizadas después de ser asignadas.
+            </AlertDescription>
+          </Alert>
+
+          <div className='flex items-center gap-2'>
+            <Button variant='outline' onClick={handleBack}>
+              Volver
+            </Button>
+            <Button variant='default' onClick={handleGoToList}>
+              Ir a Lista de Solicitudes
+            </Button>
+          </div>
+        </div>
+      </PageContainer>
+    );
+  }
+
   return (
     <PageContainer>
       <div className='flex flex-1 flex-col space-y-4'>

@@ -71,6 +71,7 @@ export interface LoanRequest {
   referredRole?: string;
   phoneNumber?: string;
   isAssigned?: boolean;
+  isReferred?: boolean;
 }
 
 export interface Visit {
