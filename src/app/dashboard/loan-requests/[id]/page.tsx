@@ -49,6 +49,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useSession } from 'next-auth/react';
 import { LoanRequestStatus } from 'types/LoanRequests';
 import { UserRole } from 'types/User';
+import { translateRole } from '@/utils/translateRole';
 import { LoanRequestTimeline } from '@/features/loan-requests/components/loan-request-timeline';
 import { RejectionModal } from '@/features/loan-requests/components/rejection-modal';
 import { ApprovalModal } from '@/features/loan-requests/components/approval-modal';
@@ -625,6 +626,109 @@ export default function LoanRequestDetailPage() {
               <Skeleton className='h-[200px] w-full rounded-lg' />
               <Skeleton className='h-[150px] w-full rounded-lg' />
             </div>
+          </div>
+        </div>
+      </PageContainer>
+    );
+  }
+
+  // Protección: No permitir acceso a solicitudes referidas no asignadas
+  if (
+    loanRequestDetail?.loanRequest.isReferred &&
+    !loanRequestDetail?.loanRequest.isAssigned
+  ) {
+    return (
+      <PageContainer>
+        <div className='flex flex-1 flex-col space-y-4'>
+          <div className='flex items-center justify-between'>
+            <div className='flex items-center'>
+              <Button
+                variant='ghost'
+                size='icon'
+                onClick={handleBack}
+                className='mr-2'
+              >
+                <ArrowLeft className='h-5 w-5' />
+              </Button>
+              <Heading
+                title='Acceso Denegado'
+                description='Esta solicitud referida aún no ha sido asignada'
+              />
+            </div>
+          </div>
+
+          <Separator />
+
+          <Alert variant='destructive'>
+            <AlertTitle>Acceso Restringido</AlertTitle>
+            <AlertDescription>
+              No puede ver el detalle de esta solicitud referida porque aún no
+              ha sido asignada a un gestor. Las solicitudes referidas solo
+              pueden ser visualizadas después de ser asignadas.
+            </AlertDescription>
+          </Alert>
+
+          <div className='flex items-center gap-2'>
+            <Button variant='outline' onClick={handleBack}>
+              Volver
+            </Button>
+            <Button variant='default' onClick={handleGoToList}>
+              Ir a Lista de Solicitudes
+            </Button>
+          </div>
+        </div>
+      </PageContainer>
+    );
+  }
+
+  // Protección: Solo usuarios con roles específicos pueden acceder al detalle
+  const allowedRoles = [
+    UserRole.BusinessDevelopment_Admin,
+    UserRole.BusinessDevelopment_User,
+    UserRole.BranchManager
+  ];
+
+  if (!userRole || !allowedRoles.includes(userRole as UserRole)) {
+    return (
+      <PageContainer>
+        <div className='flex flex-1 flex-col space-y-4'>
+          <div className='flex items-center justify-between'>
+            <div className='flex items-center'>
+              <Button
+                variant='ghost'
+                size='icon'
+                onClick={handleBack}
+                className='mr-2'
+              >
+                <ArrowLeft className='h-5 w-5' />
+              </Button>
+              <Heading
+                title='Acceso No Autorizado'
+                description='No tienes permisos para ver el detalle de solicitudes'
+              />
+            </div>
+          </div>
+
+          <Separator />
+
+          <Alert variant='destructive'>
+            <AlertTitle>Acceso Restringido</AlertTitle>
+            <AlertDescription>
+              Tu rol actual (
+              {userRole ? translateRole[userRole as UserRole] : 'No definido'})
+              no tiene permisos para acceder al detalle de solicitudes de
+              préstamo. Solo los gestores de vehículos nuevos y gerentes de
+              agencia pueden ver esta información.
+            </AlertDescription>
+          </Alert>
+
+          <div className='flex items-center gap-2'>
+            <Button variant='outline' onClick={handleBack}>
+              Volver
+            </Button>
+            <Button variant='default' onClick={handleGoToList}>
+              Ir a Lista de Solicitudes
+            </Button>
           </div>
         </div>
       </PageContainer>

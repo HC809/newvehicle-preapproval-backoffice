@@ -456,3 +456,82 @@ export const useReferredLoanRequests = (
     enabled: !!apiClient && enabled
   });
 };
+
+export const useCreateLoanRequestByReferral = (
+  apiClient: AxiosInstance | undefined
+) => {
+  const queryClient = useQueryClient();
+
+  return useMutation<
+    string,
+    Error,
+    {
+      dni: string;
+      phoneNumber: string;
+      comment: string;
+    }
+  >({
+    mutationFn: async (data: {
+      dni: string;
+      phoneNumber: string;
+      comment: string;
+    }) => {
+      if (!apiClient) throw new Error('API client not initialized');
+      try {
+        const response = await apiClient.post<string>(
+          '/loan-requests/create-by-referral',
+          data
+        );
+        return response.data;
+      } catch (error) {
+        throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: [LOAN_REQUESTS_KEY, 'referred']
+      });
+    }
+  });
+};
+
+export const useAssignReferredLoanRequest = (
+  apiClient: AxiosInstance | undefined
+) => {
+  const queryClient = useQueryClient();
+
+  return useMutation<
+    string,
+    Error,
+    {
+      loanRequestId: string;
+      monthlyIncome: number | null;
+      vehicleTypeId: string;
+      requestedAmount: number;
+      vehicleBrand: string;
+      vehicleModel: string;
+      vehicleYear: number;
+      dealershipId: string;
+      dealershipAdminId: string;
+      city: string;
+    }
+  >({
+    mutationFn: async (data) => {
+      if (!apiClient) throw new Error('API client not initialized');
+      try {
+        const response = await apiClient.post<string>(
+          '/loan-requests/assign-referred-loan-request',
+          data
+        );
+        return response.data;
+      } catch (error) {
+        throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: [LOAN_REQUESTS_KEY, 'referred']
+      });
+    }
+  });
+};

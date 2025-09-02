@@ -2,7 +2,14 @@
 
 import React from 'react';
 import { ColumnDef } from '@tanstack/react-table';
-import { Building, User, UserCog, Briefcase, Info } from 'lucide-react';
+import {
+  Building,
+  User,
+  UserCog,
+  Briefcase,
+  UserCheck,
+  Users
+} from 'lucide-react';
 import { LoanRequest, LoanRequestStatus } from 'types/LoanRequests';
 import { Badge } from '@/components/ui/badge';
 import { formatHNL } from '@/utils/formatCurrency';
@@ -17,11 +24,11 @@ import {
 } from '@/utils/getStatusColor';
 import { translateIncomeType } from '@/utils/translateIncomeType';
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger
-} from '@/components/ui/tooltip';
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger
+} from '@/components/ui/hover-card';
+import { translateRole } from '@/utils/translateRole';
 
 export const LoanRequestColumns = (
   viewMode: 'assigned' | 'all' = 'assigned',
@@ -67,16 +74,31 @@ export const LoanRequestColumns = (
             {row.original.dealershipAdminName}
           </span>
           {row.original.referredId && row.original.referredName && (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Info className='h-4 w-4 cursor-help text-blue-500 dark:text-blue-400' />
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Creado por {row.original.referredName}.</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <HoverCard>
+              <HoverCardTrigger asChild>
+                {row.original.isReferred && row.original.isAssigned ? (
+                  <Users className='h-4 w-4 cursor-help text-blue-500 dark:text-blue-400' />
+                ) : (
+                  <UserCheck className='h-4 w-4 cursor-help text-orange-500 dark:text-orange-400' />
+                )}
+              </HoverCardTrigger>
+              <HoverCardContent className='border-[#013B7C] bg-[#013B7C] text-white'>
+                {row.original.isReferred && row.original.isAssigned ? (
+                  <div className='space-y-1'>
+                    <p className='font-medium'>
+                      Referida por {row.original.referredName}
+                    </p>
+                    {row.original.referredRole && (
+                      <p className='text-sm text-blue-200'>
+                        ({translateRole[row.original.referredRole as UserRole]})
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <p>Creada por {row.original.creatorName}.</p>
+                )}
+              </HoverCardContent>
+            </HoverCard>
           )}
         </div>
       )
@@ -86,10 +108,17 @@ export const LoanRequestColumns = (
       header: () => <span className='font-bold'>DNI</span>,
       cell: ({ row }) => (
         <div className='flex items-center gap-2'>
-          <span>{row.original.dni}</span>
-          {row.original.clientName && (
-            <span className='text-gray-500'>- {row.original.clientName}</span>
-          )}
+          <UserCog className='h-4 w-4 text-purple-500 dark:text-purple-400' />
+          <div className='flex flex-col'>
+            <span className='font-medium text-purple-700 dark:text-purple-300'>
+              {row.original.dni}
+            </span>
+            {row.original.clientName && (
+              <span className='text-xs text-gray-500 dark:text-gray-400'>
+                {row.original.clientName}
+              </span>
+            )}
+          </div>
         </div>
       )
     },
@@ -183,8 +212,8 @@ export const LoanRequestColumns = (
     header: () => <span className='font-bold'>Responsable</span>,
     cell: ({ row }) => (
       <div className='flex items-center gap-2'>
-        <UserCog className='h-4 w-4 text-purple-500 dark:text-purple-400' />
-        <span className='font-medium text-purple-700 dark:text-purple-300'>
+        <UserCog className='h-4 w-4 text-orange-500 dark:text-orange-400' />
+        <span className='font-medium text-orange-700 dark:text-orange-300'>
           {row.original.managerName}
         </span>
       </div>
