@@ -24,3 +24,21 @@ export interface LoanRequestStatistics {
   totalRequests: number;
   requestsByStatus: Record<LoanRequestStatus, number>;
 }
+
+// New types for the status and city endpoint
+export interface StatusCityData {
+  status: string;
+  statusDisplayName: string;
+  tegucigalpaCount: number;
+  sanPedroSulaCount: number;
+  ceibaCount: number;
+  unassignedCount: number;
+  unidentifiedCount: number;
+  totalCount: number;
+}
+
+export interface StatusCityStatistics {
+  data: StatusCityData[];
+  totalRequests: number;
+  selectedMonth: string;
+}

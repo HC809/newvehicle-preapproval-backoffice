@@ -3,7 +3,8 @@
 import useAxios from '@/hooks/use-axios';
 import PageContainer from '@/components/layout/page-container';
 import { useDashboardData } from '@/features/dashboard/api/dashboard-service';
-import { StatusStatistics } from '@/features/dashboard/components/status-statistics';
+import { useStatusCityStatistics } from '@/features/dashboard/api/dashboard-service';
+import { StatusCityChart } from '@/features/dashboard/components/status-city-chart';
 import { DealershipBarChart } from '@/features/dashboard/components/dealership-bar-chart';
 import { VehicleTypeBarChart } from '@/features/dashboard/components/vehicle-type-bar-chart';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -11,10 +12,39 @@ import { ReloadIcon } from '@radix-ui/react-icons';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { CarIcon, ShieldCheck, StoreIcon } from 'lucide-react';
+import { useState } from 'react';
 
 export default function DashboardPage() {
   const apiClient = useAxios();
   const { data, isLoading, refetch } = useDashboardData(apiClient);
+
+  // State for month and year selection
+  const [selectedMonth, setSelectedMonth] = useState<number>(
+    new Date().getMonth() + 1
+  );
+  const [selectedYear, setSelectedYear] = useState<number>(
+    new Date().getFullYear()
+  );
+
+  // New hook for status and city data
+  const {
+    data: statusCityData,
+    isLoading: statusCityLoading,
+    refetch: refetchStatusCity
+  } = useStatusCityStatistics(apiClient, selectedMonth, selectedYear);
+
+  const handleRefresh = () => {
+    refetch();
+    refetchStatusCity();
+  };
+
+  const handleMonthChange = (month: number) => {
+    setSelectedMonth(month);
+  };
+
+  const handleYearChange = (year: number) => {
+    setSelectedYear(year);
+  };
 
   return (
     <PageContainer>
@@ -31,11 +61,11 @@ export default function DashboardPage() {
           <Button
             variant='outline'
             size='sm'
-            onClick={() => refetch()}
-            disabled={isLoading}
+            onClick={handleRefresh}
+            disabled={isLoading || statusCityLoading}
             className='self-start sm:self-auto'
           >
-            {isLoading ? (
+            {isLoading || statusCityLoading ? (
               <>
                 <ReloadIcon className='mr-2 h-4 w-4 animate-spin' />
                 Cargando...
@@ -70,7 +100,7 @@ export default function DashboardPage() {
 
           <Separator />
 
-          {/* Overview Tab - Status Cards */}
+          {/* Overview Tab - Status and City Chart */}
           <TabsContent value='overview' className='space-y-6'>
             <div className='space-y-2'>
               <div className='flex items-center gap-2'>
@@ -80,22 +110,13 @@ export default function DashboardPage() {
               <p className='text-sm text-muted-foreground'>
                 Distribución por estado de todas las solicitudes de préstamos
               </p>
-              <StatusStatistics
-                data={data?.loanRequestStats}
-                isLoading={isLoading}
+              <StatusCityChart
+                data={statusCityData}
+                isLoading={statusCityLoading}
+                onMonthChange={handleMonthChange}
+                onYearChange={handleYearChange}
               />
             </div>
-
-            {/* Visualization section - temporarily commented out
-            <div className="space-y-2">
-                <h3 className="text-lg font-medium">Visualización</h3>
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-12">
-                    <StatusChart data={data?.loanRequestStats} isLoading={isLoading} />
-                    
-                    Additional charts can be added here
-                </div>
-            </div>
-            */}
           </TabsContent>
 
           {/* Dealerships Tab - Dealership Bar Chart */}

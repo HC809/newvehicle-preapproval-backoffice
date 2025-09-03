@@ -3,7 +3,8 @@ import { AxiosInstance } from 'axios';
 import {
   DealershipStatistics,
   LoanRequestStatistics,
-  VehicleTypeStatistics
+  VehicleTypeStatistics,
+  StatusCityStatistics
 } from 'types/Dashboard';
 
 const DASHBOARD_KEY = 'dashboard';
@@ -37,6 +38,23 @@ export const useDashboardData = (
         dealershipStats,
         vehicleTypeStats
       };
+    },
+    enabled: !!apiClient && enabled
+  });
+};
+
+// New hook for status and city statistics
+export const useStatusCityStatistics = (
+  apiClient: AxiosInstance | undefined,
+  month?: number,
+  year?: number,
+  enabled: boolean = true
+): UseQueryResult<StatusCityStatistics, Error> => {
+  return useQuery({
+    queryKey: [DASHBOARD_KEY, 'status-city-statistics', month, year],
+    queryFn: async (): Promise<StatusCityStatistics> => {
+      if (!apiClient) throw new Error('API client not initialized');
+      return fetchStatusCityStatistics(apiClient, month, year);
     },
     enabled: !!apiClient && enabled
   });
@@ -109,6 +127,28 @@ async function fetchVehicleTypeStatistics(
 ): Promise<VehicleTypeStatistics> {
   const response = await apiClient.get<VehicleTypeStatistics>(
     '/dashboard/requests-by-vehicle-type'
+  );
+  return response.data;
+}
+
+// New helper function for status and city statistics
+async function fetchStatusCityStatistics(
+  apiClient: AxiosInstance,
+  month?: number,
+  year?: number
+): Promise<StatusCityStatistics> {
+  const currentDate = new Date();
+  const currentMonth = month ?? currentDate.getMonth() + 1; // getMonth() returns 0-11
+  const currentYear = year ?? currentDate.getFullYear();
+
+  const response = await apiClient.get<StatusCityStatistics>(
+    '/dashboard/loan-requests-by-status-and-city',
+    {
+      params: {
+        month: currentMonth,
+        year: currentYear
+      }
+    }
   );
   return response.data;
 }
