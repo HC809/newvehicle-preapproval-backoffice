@@ -54,14 +54,6 @@ const cityColors = {
   unidentified: '#ef4444' // red
 };
 
-const cityLabels = {
-  sanPedroSula: 'San Pedro Sula',
-  tegucigalpa: 'Tegucigalpa',
-  ceiba: 'Ceiba',
-  unassigned: 'Sin Asignar',
-  unidentified: 'No Identificado'
-};
-
 const monthNames = [
   'Enero',
   'Febrero',
@@ -145,6 +137,40 @@ function getStatusColor(status: string): string {
   }
 }
 
+// Helper function to get soft background color for table rows
+function getStatusBackgroundColor(status: string): string {
+  switch (status) {
+    case 'Pending':
+      return 'rgba(234, 179, 8, 0.08)'; // yellow-500 with 8% opacity
+    case 'ApprovedByAgent':
+      return 'rgba(22, 163, 74, 0.08)'; // green-600 with 8% opacity
+    case 'ApprovedByManager':
+      return 'rgba(21, 128, 61, 0.08)'; // green-700 with 8% opacity
+    case 'ApprovedForCommittee':
+      return 'rgba(37, 99, 235, 0.08)'; // blue-600 with 8% opacity
+    case 'RejectedByAgent':
+      return 'rgba(220, 38, 38, 0.08)'; // red-600 with 8% opacity
+    case 'RejectedByManager':
+      return 'rgba(185, 28, 28, 0.08)'; // red-700 with 8% opacity
+    case 'AcceptedByCustomer':
+      return 'rgba(37, 99, 235, 0.08)'; // blue-600 with 8% opacity
+    case 'VisitAssigned':
+      return 'rgba(124, 58, 237, 0.08)'; // purple-600 with 8% opacity
+    case 'VisitRegistered':
+      return 'rgba(107, 33, 168, 0.08)'; // purple-800 with 8% opacity
+    case 'DeclinedByCustomer':
+      return 'rgba(107, 114, 128, 0.08)'; // gray-500 with 8% opacity
+    case 'Cancelled':
+      return 'rgba(107, 114, 128, 0.08)'; // gray-500 with 8% opacity
+    case 'BranchManagerReview':
+      return 'rgba(79, 70, 229, 0.08)'; // indigo-600 with 8% opacity
+    case 'Completed':
+      return 'rgba(5, 150, 105, 0.08)'; // emerald-600 with 8% opacity
+    default:
+      return 'rgba(107, 114, 128, 0.08)'; // gray-500 with 8% opacity
+  }
+}
+
 export function StatusCityChart({
   data,
   isLoading,
@@ -172,7 +198,8 @@ export function StatusCityChart({
       'No Identificado': item.unidentifiedCount,
       total: item.totalCount,
       originalStatus: item.status, // Keep original status for color mapping
-      statusColor: getStatusColor(item.status) // Add status color
+      statusColor: getStatusColor(item.status), // Add status color
+      backgroundColor: getStatusBackgroundColor(item.status) // Add background color
     }));
   }, [data]);
 
@@ -281,7 +308,7 @@ export function StatusCityChart({
                       San Pedro Sula
                     </TableHead>
                     <TableHead className='text-center'>Tegucigalpa</TableHead>
-                    <TableHead className='text-center'>Ceiba</TableHead>
+                    <TableHead className='text-center'>La Ceiba</TableHead>
                     <TableHead className='text-center'>Sin Asignar</TableHead>
                     <TableHead className='text-center'>
                       No Identificado
@@ -293,7 +320,11 @@ export function StatusCityChart({
                 </TableHeader>
                 <TableBody>
                   {chartData.map((item) => (
-                    <TableRow key={item.originalStatus}>
+                    <TableRow
+                      key={item.originalStatus}
+                      style={{ backgroundColor: item.backgroundColor }}
+                      className='transition-opacity hover:opacity-80'
+                    >
                       <TableCell className='font-medium'>
                         {item.status}
                       </TableCell>
@@ -377,29 +408,17 @@ export function StatusCityChart({
                         const data = payload[0].payload;
                         return (
                           <div
+                            className='rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-600 dark:bg-gray-800'
                             style={{
-                              backgroundColor: 'var(--background)',
-                              border: '1px solid var(--border)',
-                              borderRadius: '6px',
-                              padding: '12px',
-                              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                              padding: '16px',
+                              minWidth: '200px',
+                              maxWidth: '300px'
                             }}
                           >
-                            <p
-                              style={{
-                                color: 'var(--foreground)',
-                                fontWeight: 'bold',
-                                marginBottom: '8px'
-                              }}
-                            >
+                            <p className='mb-3 text-base font-bold text-gray-900 dark:text-gray-100'>
                               {data.status}
                             </p>
-                            <div
-                              style={{
-                                color: 'var(--muted-foreground)',
-                                fontSize: '14px'
-                              }}
-                            >
+                            <div className='text-sm text-gray-600 dark:text-gray-300'>
                               <div
                                 style={{
                                   display: 'flex',
@@ -452,7 +471,7 @@ export function StatusCityChart({
                                     marginRight: '8px'
                                   }}
                                 ></div>
-                                Ceiba: {data.Ceiba}
+                                La Ceiba: {data.Ceiba}
                               </div>
                               <div
                                 style={{
@@ -490,13 +509,7 @@ export function StatusCityChart({
                                 ></div>
                                 No Identificado: {data['No Identificado']}
                               </div>
-                              <div
-                                style={{
-                                  borderTop: '1px solid var(--border)',
-                                  paddingTop: '8px',
-                                  fontWeight: 'bold'
-                                }}
-                              >
+                              <div className='mt-2 border-t border-gray-200 pt-3 font-bold text-gray-900 dark:border-gray-600 dark:text-gray-100'>
                                 Total: {data.total}
                               </div>
                             </div>

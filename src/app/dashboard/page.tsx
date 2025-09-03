@@ -51,9 +51,7 @@ export default function DashboardPage() {
       <div className='flex flex-1 flex-col space-y-6'>
         <div className='flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0'>
           <div>
-            <h2 className='text-2xl font-bold tracking-tight'>
-              Panel de Control
-            </h2>
+            <h2 className='text-2xl font-bold tracking-tight'>Dashboard</h2>
             <p className='text-muted-foreground'>
               Vista general de las solicitudes de préstamos
             </p>
@@ -83,7 +81,7 @@ export default function DashboardPage() {
           <TabsList className='grid w-full grid-cols-3 md:w-auto'>
             <TabsTrigger value='overview' className='flex items-center gap-2'>
               <ShieldCheck className='h-4 w-4' />
-              <span>Estado</span>
+              <span>General</span>
             </TabsTrigger>
             <TabsTrigger
               value='dealerships'
@@ -103,13 +101,6 @@ export default function DashboardPage() {
           {/* Overview Tab - Status and City Chart */}
           <TabsContent value='overview' className='space-y-6'>
             <div className='space-y-2'>
-              <div className='flex items-center gap-2'>
-                <ShieldCheck className='text-primary-600 h-5 w-5' />
-                <h3 className='text-lg font-medium'>Estado de Solicitudes</h3>
-              </div>
-              <p className='text-sm text-muted-foreground'>
-                Distribución por estado de todas las solicitudes de préstamos
-              </p>
               <StatusCityChart
                 data={statusCityData}
                 isLoading={statusCityLoading}
