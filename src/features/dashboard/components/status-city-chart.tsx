@@ -35,7 +35,7 @@ import {
   TableHeader,
   TableRow
 } from '@/components/ui/table';
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import { translateStatus } from '@/utils/getStatusColor';
 import { LoanRequestStatus } from 'types/LoanRequests';
 
@@ -175,14 +175,12 @@ export function StatusCityChart({
   data,
   isLoading,
   onMonthChange,
-  onYearChange
-}: StatusCityChartProps) {
-  const [selectedMonth, setSelectedMonth] = useState<number>(
-    new Date().getMonth() + 1
-  );
-  const [selectedYear, setSelectedYear] = useState<number>(
-    new Date().getFullYear()
-  );
+  onYearChange,
+  selectedMonth: externalSelectedMonth,
+  selectedYear: externalSelectedYear
+}: StatusCityChartProps & { selectedMonth?: number; selectedYear?: number }) {
+  const selectedMonth = externalSelectedMonth ?? new Date().getMonth() + 1;
+  const selectedYear = externalSelectedYear ?? new Date().getFullYear();
 
   // Transform data for the stacked bar chart
   const chartData = useMemo(() => {
@@ -215,13 +213,11 @@ export function StatusCityChart({
 
   const handleMonthChange = (value: string) => {
     const month = parseInt(value);
-    setSelectedMonth(month);
     onMonthChange?.(month);
   };
 
   const handleYearChange = (value: string) => {
     const year = parseInt(value);
-    setSelectedYear(year);
     onYearChange?.(year);
   };
 

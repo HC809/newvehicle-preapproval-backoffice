@@ -57,3 +57,18 @@ export interface DealershipRequestStatistics {
   totalReferredUnassigned: number;
   selectedMonth: string;
 }
+
+// New types for the manager endpoint
+export interface ManagerRequestData {
+  managerName: string;
+  totalRequests: number;
+  referredUnassignedCount: number;
+  regularRequestsCount: number;
+}
+
+export interface ManagerRequestStatistics {
+  data: ManagerRequestData[];
+  totalRequests: number;
+  totalReferredUnassigned: number;
+  selectedMonth: string;
+}

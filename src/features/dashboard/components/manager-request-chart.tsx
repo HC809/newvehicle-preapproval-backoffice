@@ -16,7 +16,7 @@ import {
   ResponsiveContainer,
   Tooltip
 } from 'recharts';
-import { DealershipRequestStatistics } from 'types/Dashboard';
+import { ManagerRequestStatistics } from 'types/Dashboard';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   Select,
@@ -36,8 +36,8 @@ import {
 } from '@/components/ui/table';
 import { useMemo } from 'react';
 
-interface DealershipRequestChartProps {
-  data?: DealershipRequestStatistics;
+interface ManagerRequestChartProps {
+  data?: ManagerRequestStatistics;
   isLoading: boolean;
   onMonthChange?: (month: number) => void;
   onYearChange?: (year: number) => void;
@@ -63,14 +63,20 @@ const monthNames = [
   'Diciembre'
 ];
 
-export function DealershipRequestChart({
+// Helper function to truncate long manager names
+function truncateManagerName(name: string, maxLength: number = 20): string {
+  if (name.length <= maxLength) return name;
+  return name.substring(0, maxLength) + '...';
+}
+
+export function ManagerRequestChart({
   data,
   isLoading,
   onMonthChange,
   onYearChange,
   selectedMonth: externalSelectedMonth,
   selectedYear: externalSelectedYear
-}: DealershipRequestChartProps & {
+}: ManagerRequestChartProps & {
   selectedMonth?: number;
   selectedYear?: number;
 }) {
@@ -82,7 +88,8 @@ export function DealershipRequestChart({
     if (!data?.data) return [];
 
     return data.data.map((item) => ({
-      dealership: item.dealershipName,
+      manager: item.managerName,
+      managerShort: truncateManagerName(item.managerName),
       'Solicitudes Regulares': item.regularRequestsCount,
       'Solicitudes Referidas Sin Asignar': item.referredUnassignedCount,
       total: item.totalRequests
@@ -135,10 +142,10 @@ export function DealershipRequestChart({
       <CardHeader>
         <div className='flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0'>
           <div>
-            <CardTitle>Solicitudes por Concesionaria</CardTitle>
+            <CardTitle>Solicitudes por Gestor</CardTitle>
             <CardDescription>
-              Distribución de solicitudes por concesionaria para{' '}
-              {selectedMonthName} {selectedYear}
+              Distribución de solicitudes por gestor para {selectedMonthName}{' '}
+              {selectedYear}
             </CardDescription>
           </div>
           <div className='flex space-x-2'>
@@ -187,7 +194,7 @@ export function DealershipRequestChart({
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Concesionaria</TableHead>
+                    <TableHead>Gestor</TableHead>
                     <TableHead className='text-center'>
                       Solicitudes Regulares
                     </TableHead>
@@ -205,8 +212,8 @@ export function DealershipRequestChart({
                       key={index}
                       className='transition-opacity hover:opacity-80'
                     >
-                      <TableCell className='font-medium'>
-                        {item.dealership}
+                      <TableCell className='font-medium' title={item.manager}>
+                        {item.manager}
                       </TableCell>
                       <TableCell className='text-center'>
                         {item['Solicitudes Regulares']}
@@ -247,21 +254,21 @@ export function DealershipRequestChart({
             <div className='h-[400px] w-full overflow-x-auto'>
               <div
                 style={{
-                  minWidth: `${Math.max(800, chartData.length * 80)}px`,
+                  minWidth: `${Math.max(800, chartData.length * 120)}px`,
                   height: '100%'
                 }}
               >
                 <ResponsiveContainer width='100%' height='100%'>
                   <BarChart
                     data={chartData}
-                    margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+                    margin={{ top: 20, right: 30, left: 20, bottom: 80 }}
                   >
                     <CartesianGrid strokeDasharray='3 3' />
                     <XAxis
-                      dataKey='dealership'
+                      dataKey='managerShort'
                       angle={-45}
                       textAnchor='end'
-                      height={80}
+                      height={100}
                       fontSize={12}
                       interval={0}
                     />
@@ -276,11 +283,11 @@ export function DealershipRequestChart({
                               style={{
                                 padding: '16px',
                                 minWidth: '200px',
-                                maxWidth: '300px'
+                                maxWidth: '350px'
                               }}
                             >
                               <p className='mb-3 text-base font-bold text-gray-900 dark:text-gray-100'>
-                                {data.dealership}
+                                {data.manager}
                               </p>
                               <div className='text-sm text-gray-600 dark:text-gray-300'>
                                 <div
