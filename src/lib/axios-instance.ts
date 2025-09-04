@@ -11,7 +11,7 @@ export const createAxiosInstance = (
       'Content-Type': 'application/json'
     },
 
-    timeout: Number(process.env.NEXT_PUBLIC_API_TIMEOUT || 5000) // 0 significa sin timeoutrrollo, 5 en producción
+    timeout: Number(process.env.NEXT_PUBLIC_API_TIMEOUT || 90000) // 0 significa sin timeoutrrollo, 5 en producción
   });
 
   // Interceptor de solicitud

@@ -10,9 +10,12 @@ module.exports = {
         PORT: 3000
       },
       instances: 1,
-      autorestart: true,
       watch: false,
-      max_memory_restart: '1G'
+      max_memory_restart: '1G',
+      autorestart: true,
+      max_restarts: 1,
+      min_uptime: '10s',
+      restart_delay: 5000
     }
   ]
 };
