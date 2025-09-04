@@ -4,7 +4,8 @@ import {
   DealershipStatistics,
   LoanRequestStatistics,
   VehicleTypeStatistics,
-  StatusCityStatistics
+  StatusCityStatistics,
+  DealershipRequestStatistics
 } from 'types/Dashboard';
 
 const DASHBOARD_KEY = 'dashboard';
@@ -55,6 +56,23 @@ export const useStatusCityStatistics = (
     queryFn: async (): Promise<StatusCityStatistics> => {
       if (!apiClient) throw new Error('API client not initialized');
       return fetchStatusCityStatistics(apiClient, month, year);
+    },
+    enabled: !!apiClient && enabled
+  });
+};
+
+// New hook for dealership request statistics
+export const useDealershipRequestStatistics = (
+  apiClient: AxiosInstance | undefined,
+  month?: number,
+  year?: number,
+  enabled: boolean = true
+): UseQueryResult<DealershipRequestStatistics, Error> => {
+  return useQuery({
+    queryKey: [DASHBOARD_KEY, 'dealership-request-statistics', month, year],
+    queryFn: async (): Promise<DealershipRequestStatistics> => {
+      if (!apiClient) throw new Error('API client not initialized');
+      return fetchDealershipRequestStatistics(apiClient, month, year);
     },
     enabled: !!apiClient && enabled
   });
@@ -143,6 +161,28 @@ async function fetchStatusCityStatistics(
 
   const response = await apiClient.get<StatusCityStatistics>(
     '/dashboard/loan-requests-by-status-and-city',
+    {
+      params: {
+        month: currentMonth,
+        year: currentYear
+      }
+    }
+  );
+  return response.data;
+}
+
+// New helper function for dealership request statistics
+async function fetchDealershipRequestStatistics(
+  apiClient: AxiosInstance,
+  month?: number,
+  year?: number
+): Promise<DealershipRequestStatistics> {
+  const currentDate = new Date();
+  const currentMonth = month ?? currentDate.getMonth() + 1; // getMonth() returns 0-11
+  const currentYear = year ?? currentDate.getFullYear();
+
+  const response = await apiClient.get<DealershipRequestStatistics>(
+    '/dashboard/loan-requests-by-dealership',
     {
       params: {
         month: currentMonth,

@@ -3,15 +3,19 @@
 import useAxios from '@/hooks/use-axios';
 import PageContainer from '@/components/layout/page-container';
 import { useDashboardData } from '@/features/dashboard/api/dashboard-service';
-import { useStatusCityStatistics } from '@/features/dashboard/api/dashboard-service';
+import {
+  useStatusCityStatistics,
+  useDealershipRequestStatistics
+} from '@/features/dashboard/api/dashboard-service';
 import { StatusCityChart } from '@/features/dashboard/components/status-city-chart';
+import { DealershipRequestChart } from '@/features/dashboard/components/dealership-request-chart';
 import { DealershipBarChart } from '@/features/dashboard/components/dealership-bar-chart';
 import { VehicleTypeBarChart } from '@/features/dashboard/components/vehicle-type-bar-chart';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ReloadIcon } from '@radix-ui/react-icons';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { CarIcon, ShieldCheck, StoreIcon } from 'lucide-react';
+import { ShieldCheck, StoreIcon } from 'lucide-react';
 import { useState } from 'react';
 
 export default function DashboardPage() {
@@ -33,9 +37,17 @@ export default function DashboardPage() {
     refetch: refetchStatusCity
   } = useStatusCityStatistics(apiClient, selectedMonth, selectedYear);
 
+  // New hook for dealership request data
+  const {
+    data: dealershipRequestData,
+    isLoading: dealershipRequestLoading,
+    refetch: refetchDealershipRequest
+  } = useDealershipRequestStatistics(apiClient, selectedMonth, selectedYear);
+
   const handleRefresh = () => {
     refetch();
     refetchStatusCity();
+    refetchDealershipRequest();
   };
 
   const handleMonthChange = (month: number) => {
@@ -60,10 +72,12 @@ export default function DashboardPage() {
             variant='outline'
             size='sm'
             onClick={handleRefresh}
-            disabled={isLoading || statusCityLoading}
+            disabled={
+              isLoading || statusCityLoading || dealershipRequestLoading
+            }
             className='self-start sm:self-auto'
           >
-            {isLoading || statusCityLoading ? (
+            {isLoading || statusCityLoading || dealershipRequestLoading ? (
               <>
                 <ReloadIcon className='mr-2 h-4 w-4 animate-spin' />
                 Cargando...
@@ -78,12 +92,19 @@ export default function DashboardPage() {
         </div>
 
         <Tabs defaultValue='overview' className='space-y-6'>
-          <TabsList className='grid w-full grid-cols-3 md:w-auto'>
+          <TabsList className='grid w-full grid-cols-2 md:w-auto'>
             <TabsTrigger value='overview' className='flex items-center gap-2'>
               <ShieldCheck className='h-4 w-4' />
               <span>General</span>
             </TabsTrigger>
             <TabsTrigger
+              value='dealership-requests'
+              className='flex items-center gap-2'
+            >
+              <StoreIcon className='h-4 w-4' />
+              <span>Concesionarias</span>
+            </TabsTrigger>
+            {/* <TabsTrigger
               value='dealerships'
               className='flex items-center gap-2'
             >
@@ -93,7 +114,7 @@ export default function DashboardPage() {
             <TabsTrigger value='vehicles' className='flex items-center gap-2'>
               <CarIcon className='h-4 w-4' />
               <span>Vehículos</span>
-            </TabsTrigger>
+            </TabsTrigger> */}
           </TabsList>
 
           <Separator />
@@ -108,6 +129,16 @@ export default function DashboardPage() {
                 onYearChange={handleYearChange}
               />
             </div>
+          </TabsContent>
+
+          {/* Dealership Requests Tab - Dealership Request Chart */}
+          <TabsContent value='dealership-requests' className='space-y-6'>
+            <DealershipRequestChart
+              data={dealershipRequestData}
+              isLoading={dealershipRequestLoading}
+              onMonthChange={handleMonthChange}
+              onYearChange={handleYearChange}
+            />
           </TabsContent>
 
           {/* Dealerships Tab - Dealership Bar Chart */}

@@ -42,3 +42,18 @@ export interface StatusCityStatistics {
   totalRequests: number;
   selectedMonth: string;
 }
+
+// New types for the dealership endpoint
+export interface DealershipRequestData {
+  dealershipName: string;
+  totalRequests: number;
+  referredUnassignedCount: number;
+  regularRequestsCount: number;
+}
+
+export interface DealershipRequestStatistics {
+  data: DealershipRequestData[];
+  totalRequests: number;
+  totalReferredUnassigned: number;
+  selectedMonth: string;
+}
